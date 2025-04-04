@@ -1,0 +1,147 @@
+{% extends 'base/indice.html' %}
+{% load crispy_forms_tags %}
+{% block titulo %}Adicionar Equipe à Competição{% endblock %}
+
+{% block conteudo %}
+<div class="container" style="margin-top:20px;">
+    <div class="card">
+        <div class="card-body">
+            <h4 class="card-title text-center">Buscar Equipe</h4>
+            <hr>
+            {% if messages %}
+            <div>
+                {% for message in messages %}
+                <div {% if message.tags %} class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert" {% endif %}>
+                    {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}Important: {% endif %}
+                    {{message}}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </button>
+                </div>
+                <hr>
+                {% endfor %}
+            </div>
+            {% endif %}
+            <input type="text" id="search-equipe" class="form-control" placeholder="Buscar Equipe...">
+            <ul id="equipes-list" class="list-group mt-2"></ul>
+
+            <!-- Modal adicionar a competicao-->
+            <div class="modal fade" id="equipoModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header text-center">
+                            <h5 class="modal-title">{{competicao}}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Deseja adicionar <strong><span id="equipe-nome"></span></strong> à(o) {{competicao}}?</p>
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="equipe_id" id="equipe-id-input">
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Sair</button>
+                                    <button type="submit" class="btn btn-outline-primary">Adicionar</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mt-3">
+        <div class="card-body">
+            <h4 class="card-title text-center">{{competicao}}</h4>
+            <p class="text-danger text-center">{{competicao.formato.qtd_times}} Equipes</p>
+            <hr>
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col">Equipe</th>
+                  <th scope="col" class="text-center">Remover</th>
+                </tr>
+              </thead>
+
+            {% for equipe in competicao.equipes.all|dictsort:"nome_equipe" %}
+             <tbody>
+                <tr>
+                  <th scope="row">{{forloop.counter}}</th>
+                  <td>{{equipe.nome_equipe}}</td>
+                  <td class="text-center">
+                      <!-- Button trigger modal -->
+                        <a href="#" class="text-decoration-none text-danger" data-bs-toggle="modal" data-bs-target="#exampleModal{{equipe.pk}}">
+                          <i class="bi bi-trash"></i>
+                        </a>
+
+                        <!-- Modal -->
+                        <div class="modal fade" id="exampleModal{{equipe.pk}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                          <div class="modal-dialog">
+                            <div class="modal-content">
+                              <div class="modal-header">
+                                <h1 class="modal-title fs-5" id="exampleModalLabel">{{equipe.nome_equipe}}</h1>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                              </div>
+                              <div class="modal-body">
+                                  <p>Deseja remover <strong>{{equipe.nome_equipe}}</strong> da(o) {{competicao}}</p>
+                              </div>
+                              <div class="modal-footer">
+                                <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Sair</button>
+                                <a href="{% url 'competicao:remover_equipe_view' equipe_id=equipe.pk pk=competicao.pk %}" class="btn btn-outline-primary">Remover</a>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                  </td>
+                </tr>
+            {% empty %}
+            <p>* Nenhuma equipe participate na competicao</p>
+            {% endfor %}
+            </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Busca dinâmica de equipes
+        $('#search-equipe').on('input', function() {
+            var searchTerm = $(this).val();
+            if (searchTerm === '') {
+                $('#equipes-list').html('');
+                return;
+            }
+
+            $.ajax({
+                url: '{% url "competicao:buscar_equipes" %}',
+                data: { 'search': searchTerm },
+                success: function(data) {
+                    $('#equipes-list').html('');
+                    data.equipes.slice(0, 4).forEach(function(equipe) {
+                        $('#equipes-list').append(
+                            '<li class="list-group-item">' +
+                            '<a href="#" class="equipo-link" data-id="' + equipe.id + '" data-nome="' + equipe.nome_equipe + '">' +
+                            equipe.nome_equipe + '</a></li>'
+                        );
+                    });
+                }
+            });
+        });
+
+        // Abre o modal ao clicar na equipe
+        $(document).on('click', '.equipo-link', function() {
+            var equipeId = $(this).data('id');
+            var nomeEquipe = $(this).data('nome');
+
+            $('#equipe-id').text(equipeId);
+            $('#equipe-nome').text(nomeEquipe);
+            $('#equipe-id-input').val(equipeId);
+
+            $('#equipoModal').modal('show');
+        });
+    });
+</script>
+
+{% endblock %}
