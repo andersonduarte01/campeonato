@@ -1,42 +1,25 @@
+from django.core.validators import MinValueValidator
 from django.db import models
 from ..equipe.models import Equipe, Atleta
-from ..criterios.models import *
+from ..criterios.models import FormatoCompeticao, CriterioClassificacao
 
 
 class FaseCompeticao(models.Model):
+    """Legado — mantido apenas para compatibilidade com migrações existentes."""
     TIPOS_FASE = [
-        ('rodada', 'Rodada'),
-        ('grupos', 'Fase de Grupos'),
-        ('oitavas', 'Oitavas de Final'),
-        ('quartas', 'Quartas de Final'),
-        ('semi', 'Semifinal'),
-        ('final', 'Final'),
-        ('fase', 'Fase Personalizada'),  # Opção para nome customizado
+        ('rodada', 'Rodada'), ('grupos', 'Fase de Grupos'),
+        ('oitavas', 'Oitavas de Final'), ('quartas', 'Quartas de Final'),
+        ('semi', 'Semifinal'), ('final', 'Final'), ('fase', 'Fase Personalizada'),
     ]
-
-    tipo = models.CharField(max_length=20, choices=TIPOS_FASE, default="rodada")
-    nome_customizado = models.CharField(max_length=50, blank=True, null=True)  # Apenas se for "fase"
-    numero = models.PositiveIntegerField(default=1)  # Número da rodada ou fase
-    qtd_times = models.PositiveIntegerField(default=0)  # Número de times na fase
-    ativa = models.BooleanField(default=True)  # Indica se a fase está ativa
-    concluida = models.BooleanField(default=False)  # Indica se a fase foi finalizada
-
-    def __str__(self):
-        return f"{self.get_nome_display()} - {self.competicao.nome} ({self.qtd_times} times)"
-
-    def get_nome_display(self):
-        """Retorna o nome correto da fase, considerando o nome customizado se necessário."""
-        return self.nome_customizado if self.tipo == "fase" else dict(self.TIPOS_FASE)[self.tipo]
-
-
-class Fase(models.Model):
-    nome = models.CharField(max_length=100)  # Exemplo: "Fase de Pontos Corridos"
-    descricao = models.TextField(blank=True, null=True)  # Descrição da fase
-    data_inicio = models.DateField()  # Data de início da fase
-    data_fim = models.DateField(null=True, blank=True)  # Data de término da fase
+    tipo = models.CharField(max_length=20, choices=TIPOS_FASE, default='rodada')
+    nome_customizado = models.CharField(max_length=50, blank=True, null=True)
+    numero = models.PositiveIntegerField(default=1)
+    qtd_times = models.PositiveIntegerField(default=0)
+    ativa = models.BooleanField(default=True)
+    concluida = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.nome
+        return self.nome_customizado or self.get_tipo_display()
 
 
 class Competicao(models.Model):
@@ -44,41 +27,75 @@ class Competicao(models.Model):
     descricao = models.TextField(blank=True, null=True)
     data_inicio = models.DateField(verbose_name='Início')
     data_fim = models.DateField(verbose_name='Final', blank=True, null=True)
-    equipes = models.ManyToManyField(Equipe, related_name="equipes")
-    formato = models.OneToOneField(FormatoCompeticao, on_delete=models.DO_NOTHING, related_name="formato",blank=True, null=True)
-    criterio_classificacao = models.OneToOneField(CriterioClassificacao, on_delete=models.DO_NOTHING, null=True, blank=True)
-    fase = models.ForeignKey(FaseCompeticao, verbose_name='Fase', on_delete=models.DO_NOTHING, null=True, blank=True)
+    equipes = models.ManyToManyField(Equipe, related_name='equipes')
+    formato = models.OneToOneField(
+        FormatoCompeticao, on_delete=models.DO_NOTHING,
+        related_name='formato', blank=True, null=True,
+    )
+    criterio_classificacao = models.OneToOneField(
+        CriterioClassificacao, on_delete=models.DO_NOTHING, null=True, blank=True,
+    )
+    fase_legado = models.ForeignKey(
+        FaseCompeticao, verbose_name='Fase (legado)',
+        on_delete=models.DO_NOTHING, null=True, blank=True,
+    )
 
     def __str__(self):
-        return f"{self.nome}"
+        return self.nome
 
 
-class Rodada(models.Model):
-    competicao = models.ForeignKey(Competicao, on_delete=models.DO_NOTHING)
-    numero = models.PositiveIntegerField()  # Número da rodada (1ª, 2ª, etc.)
+# ---------------------------------------------------------------------------
+# Fases da competição
+# ---------------------------------------------------------------------------
+
+class Fase(models.Model):
+    LIGA = 'liga'
+    GRUPOS = 'grupos'
+    MATA_MATA = 'mata_mata'
+    TIPO_CHOICES = [
+        (LIGA, 'Liga / Pontos Corridos'),
+        (GRUPOS, 'Fase de Grupos'),
+        (MATA_MATA, 'Mata-Mata'),
+    ]
+
+    competicao = models.ForeignKey(Competicao, on_delete=models.CASCADE, related_name='fases')
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default=LIGA)
+    nome = models.CharField(max_length=100)
+    ordem = models.PositiveIntegerField(default=1)
+    ida_e_volta = models.BooleanField(default=False, verbose_name='Ida e Volta')
+    qtd_classificados_por_grupo = models.PositiveIntegerField(
+        default=2, verbose_name='Classificados por grupo',
+        help_text='Quantas equipes de cada grupo avançam (só para fase de grupos).',
+    )
+    concluida = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['ordem']
 
     def __str__(self):
-        return f"{self.competicao}: {self.numero}° Rodada"
+        return f"{self.nome} — {self.competicao.nome}"
+
+    @property
+    def label_tipo(self):
+        return dict(self.TIPO_CHOICES).get(self.tipo, self.tipo)
 
 
-class Jogo(models.Model):
-    rodada = models.ForeignKey(Rodada, on_delete=models.CASCADE, null=True, blank=True)
-    equipe_casa = models.ForeignKey(Equipe, on_delete=models.CASCADE, related_name="jogos_casa")
-    equipe_fora = models.ForeignKey(Equipe, on_delete=models.CASCADE, related_name="jogos_fora")
-    data_hora = models.DateTimeField(null=True, blank=True)
-    gols_casa = models.IntegerField(default=0)
-    gols_fora = models.IntegerField(default=0)
-    finalizado = models.BooleanField(default=False)
-    anulado = models.BooleanField(default=False)  # Permite anular o jogo
+class Grupo(models.Model):
+    fase = models.ForeignKey(Fase, on_delete=models.CASCADE, related_name='grupos')
+    nome = models.CharField(max_length=20, verbose_name='Nome do grupo')
+    equipes = models.ManyToManyField(Equipe, related_name='grupos_competicao', blank=True)
+
+    class Meta:
+        ordering = ['nome']
+        unique_together = [('fase', 'nome')]
 
     def __str__(self):
-        status = "Anulado" if self.anulado else "Finalizado" if self.finalizado else "Pendente"
-        return f"{self.rodada} ==> {self.equipe_casa.nome_equipe} x {self.equipe_fora.nome_equipe} ({status})."
+        return f"Grupo {self.nome}"
 
 
-class Classificacao(models.Model):
-    equipe = models.ForeignKey(Equipe, on_delete=models.CASCADE, related_name="classificacoes")
-    competicao = models.ForeignKey(Competicao, on_delete=models.CASCADE, related_name="classificacoes")
+class ClassificacaoGrupo(models.Model):
+    grupo = models.ForeignKey(Grupo, on_delete=models.CASCADE, related_name='classificacao')
+    equipe = models.ForeignKey(Equipe, on_delete=models.CASCADE)
     jogos = models.IntegerField(default=0)
     vitorias = models.IntegerField(default=0)
     empates = models.IntegerField(default=0)
@@ -89,23 +106,243 @@ class Classificacao(models.Model):
     pontos = models.IntegerField(default=0)
 
     class Meta:
-        ordering = ["-pontos", "-saldo_gols", "-vitorias"]
+        unique_together = [('grupo', 'equipe')]
+        ordering = ['-pontos', '-saldo_gols', '-vitorias', '-gols_pro']
 
     def __str__(self):
-        return f"{self.equipe.nome} - {self.competicao.nome} ({self.pontos} pontos)"
+        return f"{self.equipe} — {self.grupo} ({self.pontos} pts)"
+
+
+# ---------------------------------------------------------------------------
+# Rodada e Jogo
+# ---------------------------------------------------------------------------
+
+class Rodada(models.Model):
+    competicao = models.ForeignKey(Competicao, on_delete=models.DO_NOTHING)
+    fase = models.ForeignKey(
+        Fase, on_delete=models.SET_NULL, null=True, blank=True, related_name='rodadas',
+    )
+    grupo = models.ForeignKey(
+        Grupo, on_delete=models.SET_NULL, null=True, blank=True, related_name='rodadas',
+    )
+    numero = models.PositiveIntegerField()
+
+    def __str__(self):
+        if self.grupo:
+            return f"{self.competicao} — {self.grupo} — Rodada {self.numero}"
+        if self.fase:
+            return f"{self.competicao} — {self.fase.nome} — Rodada {self.numero}"
+        return f"{self.competicao}: {self.numero}ª Rodada"
+
+
+class Jogo(models.Model):
+    rodada = models.ForeignKey(Rodada, on_delete=models.CASCADE, null=True, blank=True)
+    equipe_casa = models.ForeignKey(Equipe, on_delete=models.CASCADE, related_name='jogos_casa')
+    equipe_fora = models.ForeignKey(Equipe, on_delete=models.CASCADE, related_name='jogos_fora')
+    data_hora = models.DateTimeField(null=True, blank=True)
+    gols_casa = models.IntegerField(default=0)
+    gols_fora = models.IntegerField(default=0)
+    finalizado = models.BooleanField(default=False)
+    anulado = models.BooleanField(default=False)
+
+    def __str__(self):
+        status = 'Anulado' if self.anulado else 'Finalizado' if self.finalizado else 'Pendente'
+        return f"{self.equipe_casa} x {self.equipe_fora} ({status})"
+
+
+# ---------------------------------------------------------------------------
+# Mata-Mata
+# ---------------------------------------------------------------------------
+
+class ConfrontoMatamate(models.Model):
+    fase = models.ForeignKey(Fase, on_delete=models.CASCADE, related_name='confrontos')
+    equipe_mandante = models.ForeignKey(
+        Equipe, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='confrontos_mandante',
+    )
+    equipe_visitante = models.ForeignKey(
+        Equipe, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='confrontos_visitante',
+    )
+    jogo_ida = models.OneToOneField(
+        Jogo, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='confronto_ida',
+    )
+    jogo_volta = models.OneToOneField(
+        Jogo, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='confronto_volta',
+    )
+    penaltis_mandante = models.PositiveIntegerField(null=True, blank=True)
+    penaltis_visitante = models.PositiveIntegerField(null=True, blank=True)
+    vencedor = models.ForeignKey(
+        Equipe, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='confrontos_vencidos',
+    )
+    ordem = models.PositiveIntegerField(default=1)
+
+    class Meta:
+        ordering = ['ordem']
+
+    def __str__(self):
+        m = self.equipe_mandante or '?'
+        v = self.equipe_visitante or '?'
+        return f"{m} x {v} ({self.fase.nome})"
+
+    @property
+    def gols_mandante_total(self):
+        total = 0
+        if self.jogo_ida and self.jogo_ida.finalizado:
+            total += self.jogo_ida.gols_casa
+        if self.jogo_volta and self.jogo_volta.finalizado:
+            total += self.jogo_volta.gols_fora
+        return total
+
+    @property
+    def gols_visitante_total(self):
+        total = 0
+        if self.jogo_ida and self.jogo_ida.finalizado:
+            total += self.jogo_ida.gols_fora
+        if self.jogo_volta and self.jogo_volta.finalizado:
+            total += self.jogo_volta.gols_casa
+        return total
+
+    @property
+    def totalmente_jogado(self):
+        if not self.jogo_ida or not self.jogo_ida.finalizado:
+            return False
+        if self.fase.ida_e_volta:
+            return self.jogo_volta and self.jogo_volta.finalizado
+        return True
+
+    def calcular_vencedor(self):
+        if not self.totalmente_jogado:
+            return None
+        gm = self.gols_mandante_total
+        gv = self.gols_visitante_total
+        if gm > gv:
+            return self.equipe_mandante
+        if gv > gm:
+            return self.equipe_visitante
+        # Empate: pênaltis
+        pm = self.penaltis_mandante
+        pv = self.penaltis_visitante
+        if pm is not None and pv is not None:
+            if pm > pv:
+                return self.equipe_mandante
+            if pv > pm:
+                return self.equipe_visitante
+        return None  # Ainda em aberto (aguardando pênaltis)
+
+    def atualizar_vencedor(self):
+        novo = self.calcular_vencedor()
+        if novo != self.vencedor:
+            ConfrontoMatamate.objects.filter(pk=self.pk).update(vencedor=novo)
+            self.vencedor = novo
+
+
+# ---------------------------------------------------------------------------
+# Classificação geral, Cartões, Inscrições, Gols
+# ---------------------------------------------------------------------------
+
+class Classificacao(models.Model):
+    equipe = models.ForeignKey(Equipe, on_delete=models.CASCADE, related_name='classificacoes')
+    competicao = models.ForeignKey(Competicao, on_delete=models.CASCADE, related_name='classificacoes')
+    jogos = models.IntegerField(default=0)
+    vitorias = models.IntegerField(default=0)
+    empates = models.IntegerField(default=0)
+    derrotas = models.IntegerField(default=0)
+    gols_pro = models.IntegerField(default=0)
+    gols_contra = models.IntegerField(default=0)
+    saldo_gols = models.IntegerField(default=0)
+    pontos = models.IntegerField(default=0)
+
+    class Meta:
+        ordering = ['-pontos', '-saldo_gols', '-vitorias']
+
+    def __str__(self):
+        return f"{self.equipe} — {self.competicao} ({self.pontos} pts)"
 
 
 class Cartao(models.Model):
-    jogo = models.ForeignKey(Jogo, on_delete=models.CASCADE, related_name="cartoes")
-    jogador = models.ForeignKey(Atleta, on_delete=models.CASCADE, related_name="cartoes")
-    tipo = models.CharField(
-        max_length=10,
-        choices=[
-            ("Amarelo", "Cartão Amarelo"),
-            ("Vermelho", "Cartão Vermelho"),
-        ],
-    )
-    minuto = models.IntegerField()
+    AMARELO = 'Amarelo'
+    VERMELHO = 'Vermelho'
+    TIPO_CHOICES = [(AMARELO, 'Cartão Amarelo'), (VERMELHO, 'Cartão Vermelho')]
+
+    jogo = models.ForeignKey(Jogo, on_delete=models.CASCADE, related_name='cartoes')
+    jogador = models.ForeignKey(Atleta, on_delete=models.CASCADE, related_name='cartoes')
+    tipo = models.CharField(max_length=10, choices=TIPO_CHOICES)
+    minuto = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+
+    class Meta:
+        ordering = ['minuto']
 
     def __str__(self):
-        return f"{self.jogador.nome} - {self.tipo} ({self.jogo})"
+        return f"{self.jogador.nome} — {self.tipo} ({self.minuto}')"
+
+
+class InscricaoAtleta(models.Model):
+    competicao = models.ForeignKey(Competicao, on_delete=models.CASCADE, related_name='inscricoes')
+    atleta = models.ForeignKey(Atleta, on_delete=models.CASCADE, related_name='inscricoes')
+    numero_camisa = models.PositiveIntegerField(verbose_name='Número', null=True, blank=True)
+
+    class Meta:
+        unique_together = [('competicao', 'atleta')]
+        ordering = ['numero_camisa', 'atleta__nome']
+        verbose_name = 'Inscrição'
+        verbose_name_plural = 'Inscrições'
+
+    def __str__(self):
+        num = f"#{self.numero_camisa} " if self.numero_camisa else ''
+        return f"{num}{self.atleta.nome} — {self.competicao.nome}"
+
+
+class Suspensao(models.Model):
+    AMARELOS = 'amarelos'
+    VERMELHO = 'vermelho'
+    MOTIVO_CHOICES = [
+        (AMARELOS, '3 Cartões Amarelos'),
+        (VERMELHO, 'Cartão Vermelho'),
+    ]
+    atleta = models.ForeignKey(Atleta, on_delete=models.CASCADE, related_name='suspensoes')
+    competicao = models.ForeignKey(Competicao, on_delete=models.CASCADE, related_name='suspensoes')
+    motivo = models.CharField(max_length=20, choices=MOTIVO_CHOICES, default=AMARELOS)
+    cumprida = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-pk']
+
+    def __str__(self):
+        status = 'cumprida' if self.cumprida else 'pendente'
+        return f"{self.atleta.nome} — {self.get_motivo_display()} ({status})"
+
+
+class Gol(models.Model):
+    NORMAL = 'normal'
+    PENALTI = 'penalti'
+    CONTRA = 'contra'
+    TIPO_CHOICES = [(NORMAL, 'Normal'), (PENALTI, 'Pênalti'), (CONTRA, 'Gol Contra')]
+
+    jogo = models.ForeignKey(Jogo, on_delete=models.CASCADE, related_name='gols')
+    atleta = models.ForeignKey(
+        Atleta, on_delete=models.SET_NULL, null=True, blank=True, related_name='gols',
+    )
+    equipe = models.ForeignKey(Equipe, on_delete=models.CASCADE, related_name='gols')
+    minuto = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    tipo = models.CharField(max_length=10, choices=TIPO_CHOICES, default=NORMAL)
+
+    class Meta:
+        ordering = ['minuto']
+
+    def __str__(self):
+        nome = self.atleta.nome if self.atleta else '?'
+        return f"{nome} ({self.minuto}') [{self.get_tipo_display()}]"
+
+    def save(self, *args, **kwargs):
+        if self.atleta_id and not self.equipe_id:
+            jogo = self.jogo
+            atleta_equipe = self.atleta.equipe
+            if self.tipo == self.CONTRA:
+                self.equipe = jogo.equipe_fora if atleta_equipe == jogo.equipe_casa else jogo.equipe_casa
+            else:
+                self.equipe = atleta_equipe
+        super().save(*args, **kwargs)

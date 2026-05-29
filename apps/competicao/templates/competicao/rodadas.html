@@ -1,0 +1,93 @@
+{% extends 'base/indice.html' %}
+{% block titulo %}Rodadas — {{ competicao.nome }}{% endblock %}
+
+{% block conteudo %}
+<div class="container mt-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">{{ competicao.nome }}</h4>
+    <div class="d-flex gap-2">
+      <a href="{% url 'competicao:classificacao' competicao.pk %}" class="btn btn-sm btn-outline-success">
+        <i class="bi bi-trophy"></i> Classificação
+      </a>
+      <a href="{% url 'competicao:fases' competicao.pk %}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-layers"></i> Fases
+      </a>
+      <a href="{% url 'competicao:competicao_lista' %}" class="btn btn-sm btn-outline-dark">
+        <i class="bi bi-arrow-left"></i> Voltar
+      </a>
+    </div>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+      {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+  {% endif %}
+
+  {% if rodadas %}
+    {% for rodada in rodadas %}
+    <div class="card mb-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">
+          {% if rodada.grupo %}
+            Grupo {{ rodada.grupo.nome }} —
+          {% elif rodada.fase %}
+            {{ rodada.fase.nome }} —
+          {% endif %}
+          {{ rodada.numero }}ª Rodada
+        </span>
+        <small class="text-muted">{{ rodada.jogo_set.count }} jogo{{ rodada.jogo_set.count|pluralize }}</small>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-hover align-middle mb-0">
+          <tbody>
+            {% for jogo in rodada.jogo_set.all %}
+            <tr>
+              <td class="text-end pe-2" style="width:38%">
+                <span class="{% if jogo.finalizado and jogo.gols_casa > jogo.gols_fora %}fw-bold{% endif %}">
+                  {{ jogo.equipe_casa.nome_equipe }}
+                </span>
+              </td>
+              <td class="text-center px-2" style="min-width:100px;">
+                {% if jogo.anulado %}
+                  <span class="badge bg-danger">Anulado</span>
+                {% elif jogo.finalizado %}
+                  <a href="{% url 'competicao:jogo_detalhe' jogo.pk %}" class="badge bg-dark fs-6 px-3 text-decoration-none">
+                    {{ jogo.gols_casa }} — {{ jogo.gols_fora }}
+                  </a>
+                {% else %}
+                  <span class="badge bg-light text-dark border">x</span>
+                {% endif %}
+              </td>
+              <td class="text-start ps-2" style="width:38%">
+                <span class="{% if jogo.finalizado and jogo.gols_fora > jogo.gols_casa %}fw-bold{% endif %}">
+                  {{ jogo.equipe_fora.nome_equipe }}
+                </span>
+              </td>
+              <td class="text-muted small text-nowrap" style="width:80px;">
+                {% if jogo.data_hora %}{{ jogo.data_hora|date:"d/m H:i" }}{% endif %}
+              </td>
+              <td style="width:60px;">
+                <a href="{% url 'competicao:jogo_detalhe' jogo.pk %}" class="btn btn-sm btn-outline-secondary py-0 px-2" title="Detalhes">
+                  <i class="bi bi-pencil-square"></i>
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="alert alert-info">
+      Nenhuma rodada gerada ainda.
+      <a href="{% url 'competicao:criar_jogos' competicao.pk %}">Gerar tabela</a>
+      ou acesse as <a href="{% url 'competicao:fases' competicao.pk %}">Fases</a> para configurar grupos e mata-mata.
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

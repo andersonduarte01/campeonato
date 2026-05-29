@@ -1,0 +1,64 @@
+{% load static %}
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Entrar — Champs</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    body { background: #1a1a2e; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .login-card { width: 100%; max-width: 400px; }
+  </style>
+</head>
+<body>
+
+<div class="login-card px-3">
+  <div class="card shadow-lg border-0">
+    <div class="card-body p-4">
+
+      <div class="text-center mb-4">
+        <div class="display-6 fw-bold text-dark">
+          <i class="bi bi-trophy-fill text-warning"></i> Champs
+        </div>
+        <p class="text-muted small mt-1">Sistema de Campeonatos</p>
+      </div>
+
+      {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-danger alert-dismissible fade show py-2 small" role="alert">
+          <i class="bi bi-exclamation-triangle-fill"></i> {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+      {% endif %}
+
+      <form method="post" action="{% url 'core:login' %}{% if request.GET.next %}?next={{ request.GET.next }}{% endif %}">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label for="{{ form.email.id_for_label }}" class="form-label fw-semibold">E-mail</label>
+          {{ form.email }}
+          {% if form.email.errors %}
+            <div class="text-danger small">{{ form.email.errors|join:", " }}</div>
+          {% endif %}
+        </div>
+        <div class="mb-4">
+          <label for="{{ form.password.id_for_label }}" class="form-label fw-semibold">Senha</label>
+          {{ form.password }}
+          {% if form.password.errors %}
+            <div class="text-danger small">{{ form.password.errors|join:", " }}</div>
+          {% endif %}
+        </div>
+        <button type="submit" class="btn btn-primary w-100 fw-semibold">
+          <i class="bi bi-box-arrow-in-right"></i> Entrar
+        </button>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,285 @@
+{% extends 'base/indice.html' %}
+{% load static %}
+{% block titulo %}{{ jogo.equipe_casa }} x {{ jogo.equipe_fora }}{% endblock %}
+
+{% block conteudo %}
+<div class="container mt-4">
+
+  {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+      {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+  {% endif %}
+
+  {% if suspensos %}
+  <div class="alert alert-danger d-flex align-items-start gap-2 mb-3">
+    <i class="bi bi-exclamation-triangle-fill fs-5 mt-1"></i>
+    <div>
+      <strong>Jogadores suspensos nesta competição:</strong>
+      <ul class="mb-0 mt-1">
+        {% for s in suspensos %}
+        <li>
+          <strong>{{ s.atleta.nome }}</strong>
+          <span class="text-muted">({{ s.atleta.equipe.nome_equipe }})</span>
+          — {{ s.get_motivo_display }}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Placar principal -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="d-flex align-items-center justify-content-between py-2">
+
+        <!-- Equipe Casa -->
+        <div class="text-center" style="flex:1">
+          {% if jogo.equipe_casa.escudo %}
+            <img src="{{ jogo.equipe_casa.escudo.thumbnail.url }}" width="64" height="64" class="rounded-circle mb-2">
+          {% else %}
+            <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center mb-2" style="width:64px;height:64px;font-size:1.5rem">
+              {{ jogo.equipe_casa.nome_equipe|first|upper }}
+            </div>
+          {% endif %}
+          <div class="fw-semibold">{{ jogo.equipe_casa.nome_equipe }}</div>
+          <small class="text-muted">Mandante</small>
+        </div>
+
+        <!-- Placar -->
+        <div class="text-center px-4">
+          {% if jogo.anulado %}
+            <span class="badge bg-danger fs-5 px-4 py-2">Anulado</span>
+          {% elif jogo.finalizado %}
+            <span class="display-5 fw-bold">{{ jogo.gols_casa }} — {{ jogo.gols_fora }}</span>
+          {% else %}
+            <span class="fs-3 text-muted fw-bold">x</span>
+          {% endif %}
+          {% if jogo.data_hora %}
+            <div class="text-muted small mt-1">{{ jogo.data_hora|date:"d/m/Y H:i" }}</div>
+          {% endif %}
+          <div class="mt-2">
+            {% if jogo.finalizado %}
+              <span class="badge bg-success">Finalizado</span>
+            {% elif jogo.anulado %}
+              <span class="badge bg-danger">Anulado</span>
+            {% else %}
+              <span class="badge bg-secondary">Pendente</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Equipe Fora -->
+        <div class="text-center" style="flex:1">
+          {% if jogo.equipe_fora.escudo %}
+            <img src="{{ jogo.equipe_fora.escudo.thumbnail.url }}" width="64" height="64" class="rounded-circle mb-2">
+          {% else %}
+            <div class="rounded-circle bg-danger text-white d-inline-flex align-items-center justify-content-center mb-2" style="width:64px;height:64px;font-size:1.5rem">
+              {{ jogo.equipe_fora.nome_equipe|first|upper }}
+            </div>
+          {% endif %}
+          <div class="fw-semibold">{{ jogo.equipe_fora.nome_equipe }}</div>
+          <small class="text-muted">Visitante</small>
+        </div>
+      </div>
+
+      <!-- Gols por equipe -->
+      <div class="row mt-3 border-top pt-3">
+        <div class="col-6 text-center border-end">
+          {% for gol in gols_casa %}
+            <div class="small">
+              ⚽ {{ gol.minuto }}'
+              {% if gol.tipo == 'contra' %}<span class="text-danger">(CG)</span>{% endif %}
+              {% if gol.tipo == 'penalti' %}<span class="text-primary">(P)</span>{% endif %}
+              — {{ gol.atleta.nome|default:"?" }}
+              <form method="post" action="{% url 'competicao:gol_excluir' gol.pk %}" class="d-inline ms-1">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-link btn-sm p-0 text-danger" title="Remover gol">
+                  <i class="bi bi-x"></i>
+                </button>
+              </form>
+            </div>
+          {% empty %}
+            <span class="text-muted small">—</span>
+          {% endfor %}
+        </div>
+        <div class="col-6 text-center">
+          {% for gol in gols_fora %}
+            <div class="small">
+              ⚽ {{ gol.minuto }}'
+              {% if gol.tipo == 'contra' %}<span class="text-danger">(CG)</span>{% endif %}
+              {% if gol.tipo == 'penalti' %}<span class="text-primary">(P)</span>{% endif %}
+              — {{ gol.atleta.nome|default:"?" }}
+              <form method="post" action="{% url 'competicao:gol_excluir' gol.pk %}" class="d-inline ms-1">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-link btn-sm p-0 text-danger" title="Remover gol">
+                  <i class="bi bi-x"></i>
+                </button>
+              </form>
+            </div>
+          {% empty %}
+            <span class="text-muted small">—</span>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Ação: editar resultado -->
+      <div class="text-end mt-3">
+        <a href="{% url 'competicao:jogo_editar' jogo.pk %}" class="btn btn-sm btn-outline-secondary">
+          <i class="bi bi-pencil"></i> Editar Resultado
+        </a>
+        <a href="{% url 'competicao:rodadas' jogo.rodada.competicao.pk %}" class="btn btn-sm btn-outline-dark">
+          <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+
+    <!-- Registrar Gol -->
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-header fw-semibold">
+          <i class="bi bi-bullseye"></i> Registrar Gol
+        </div>
+        <div class="card-body">
+          <form method="post" action="{% url 'competicao:gol_criar' jogo.pk %}" id="form-gol">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Equipe que marcou</label>
+              <div class="btn-group w-100" role="group">
+                <input type="radio" class="btn-check" name="equipe_radio" id="radio_casa" value="{{ jogo.equipe_casa.pk }}" autocomplete="off">
+                <label class="btn btn-outline-primary" for="radio_casa">{{ jogo.equipe_casa.nome_equipe }}</label>
+                <input type="radio" class="btn-check" name="equipe_radio" id="radio_fora" value="{{ jogo.equipe_fora.pk }}" autocomplete="off">
+                <label class="btn btn-outline-danger" for="radio_fora">{{ jogo.equipe_fora.nome_equipe }}</label>
+              </div>
+              <!-- Hidden field real do form -->
+              <select name="equipe" id="id_equipe_gol" class="d-none">
+                <option value="{{ jogo.equipe_casa.pk }}">{{ jogo.equipe_casa.nome_equipe }}</option>
+                <option value="{{ jogo.equipe_fora.pk }}">{{ jogo.equipe_fora.nome_equipe }}</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="id_atleta_gol" class="form-label fw-semibold">Atleta</label>
+              {{ form_gol.atleta }}
+            </div>
+
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label for="{{ form_gol.minuto.id_for_label }}" class="form-label fw-semibold">Minuto</label>
+                {{ form_gol.minuto }}
+              </div>
+              <div class="col-6">
+                <label for="{{ form_gol.tipo.id_for_label }}" class="form-label fw-semibold">Tipo</label>
+                {{ form_gol.tipo }}
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">
+              <i class="bi bi-plus-circle"></i> Adicionar Gol
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cartões -->
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-header fw-semibold">
+          <i class="bi bi-square-fill text-warning"></i> Cartões
+        </div>
+        <div class="card-body">
+
+          <!-- Lista de cartões -->
+          {% if cartoes %}
+          <ul class="list-group list-group-flush mb-3">
+            {% for cartao in cartoes %}
+            <li class="list-group-item d-flex align-items-center gap-2 px-0 py-1">
+              {% if cartao.tipo == 'Amarelo' %}
+                <span class="badge bg-warning text-dark">{{ cartao.minuto }}'</span>
+              {% else %}
+                <span class="badge bg-danger">{{ cartao.minuto }}'</span>
+              {% endif %}
+              <span class="flex-grow-1">{{ cartao.jogador.nome }}</span>
+              <small class="text-muted">{{ cartao.jogador.equipe.nome_equipe }}</small>
+              <form method="post" action="{% url 'competicao:cartao_excluir' cartao.pk %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-link btn-sm p-0 text-danger">
+                  <i class="bi bi-x"></i>
+                </button>
+              </form>
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+            <p class="text-muted small mb-3">Nenhum cartão registrado.</p>
+          {% endif %}
+
+          <!-- Form de cartão -->
+          <form method="post" action="{% url 'competicao:cartao_criar' jogo.pk %}">
+            {% csrf_token %}
+            <div class="mb-2">
+              <label class="form-label fw-semibold small">Atleta</label>
+              {{ form_cartao.jogador }}
+            </div>
+            <div class="row g-2 mb-2">
+              <div class="col-6">
+                <label class="form-label fw-semibold small">Minuto</label>
+                {{ form_cartao.minuto }}
+              </div>
+              <div class="col-6">
+                <label class="form-label fw-semibold small">Tipo</label>
+                {{ form_cartao.tipo }}
+              </div>
+            </div>
+            <button type="submit" class="btn btn-warning btn-sm w-100">
+              <i class="bi bi-plus-circle"></i> Adicionar Cartão
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+// Dados dos atletas por equipe para filtrar o dropdown
+const atletasCasa = {{ atletas_casa|safe }};
+const atletasFora = {{ atletas_fora|safe }};
+const casaPk = "{{ jogo.equipe_casa.pk }}";
+const foraPk = "{{ jogo.equipe_fora.pk }}";
+
+function preencherAtletas(atletas) {
+  const sel = document.getElementById('id_atleta_gol');
+  const valorAtual = sel.value;
+  sel.innerHTML = '<option value="">— Selecione —</option>';
+  atletas.forEach(a => {
+    const opt = document.createElement('option');
+    opt.value = a.id;
+    opt.textContent = a.nome;
+    if (String(a.id) === valorAtual) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+document.querySelectorAll('input[name="equipe_radio"]').forEach(radio => {
+  radio.addEventListener('change', function () {
+    document.getElementById('id_equipe_gol').value = this.value;
+    preencherAtletas(this.value === casaPk ? atletasCasa : atletasFora);
+  });
+});
+
+// Seleciona casa por padrão
+document.getElementById('radio_casa').checked = true;
+document.getElementById('id_equipe_gol').value = casaPk;
+preencherAtletas(atletasCasa);
+</script>
+{% endblock %}

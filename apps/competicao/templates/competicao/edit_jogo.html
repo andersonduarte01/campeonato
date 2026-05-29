@@ -1,21 +1,43 @@
 {% extends 'base/indice.html' %}
 {% load crispy_forms_tags %}
-{% load static %}
-{% block titulo %}Criar Liga{% endblock %}
-{% block conteudo %}
+{% block titulo %}Resultado do Jogo{% endblock %}
 
-<div class="container" style="margin-top:20px;">
+{% block conteudo %}
+<div class="container mt-4" style="max-width: 520px;">
   <div class="card">
-  <div class="card-body">
-    <h4 class="card-title text-center">Resultado Jogo</h4>
-    <hr>
-    <form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form|crispy }}
-    <button type="submit" class="btn btn-outline-primary">Salvar</button>
-    </form>
+    <div class="card-header">
+      <h5 class="mb-0">Lançar Resultado</h5>
+    </div>
+    <div class="card-body">
+
+      <!-- Confronto -->
+      <div class="d-flex align-items-center justify-content-center gap-3 mb-4 p-3 bg-light rounded">
+        <div class="text-center flex-fill">
+          {% if jogo.equipe_casa.escudo %}
+            <img src="{{ jogo.equipe_casa.escudo.thumbnail.url }}" width="48" height="48" class="rounded-circle mb-1">
+          {% endif %}
+          <div class="fw-semibold">{{ jogo.equipe_casa.nome_equipe }}</div>
+          <small class="text-muted">Casa</small>
+        </div>
+        <div class="fw-bold text-muted fs-5">VS</div>
+        <div class="text-center flex-fill">
+          {% if jogo.equipe_fora.escudo %}
+            <img src="{{ jogo.equipe_fora.escudo.thumbnail.url }}" width="48" height="48" class="rounded-circle mb-1">
+          {% endif %}
+          <div class="fw-semibold">{{ jogo.equipe_fora.nome_equipe }}</div>
+          <small class="text-muted">Visitante</small>
+        </div>
+      </div>
+
+      <form method="post">
+        {% csrf_token %}
+        {{ form|crispy }}
+        <div class="d-flex gap-2 mt-3">
+          <button type="submit" class="btn btn-primary">Salvar Resultado</button>
+          <a href="{% url 'competicao:rodadas' jogo.rodada.competicao.pk %}" class="btn btn-outline-secondary">Cancelar</a>
+        </div>
+      </form>
+    </div>
   </div>
 </div>
-</div>
-
 {% endblock %}

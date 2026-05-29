@@ -1,0 +1,223 @@
+{% extends 'base/indice.html' %}
+{% block titulo %}Classificação — {{ competicao.nome }}{% endblock %}
+
+{% block conteudo %}
+<div class="container mt-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">{{ competicao.nome }}</h4>
+    <div class="d-flex gap-2">
+      <a href="{% url 'competicao:fases' competicao.pk %}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-layers"></i> Fases
+      </a>
+      <a href="{% url 'competicao:inscricao' competicao.pk %}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-person-badge"></i> Inscrições
+      </a>
+      <a href="{% url 'competicao:rodadas' competicao.pk %}" class="btn btn-sm btn-outline-primary">
+        <i class="bi bi-calendar3"></i> Rodadas
+      </a>
+      <a href="{% url 'competicao:competicao_lista' %}" class="btn btn-sm btn-outline-dark">
+        <i class="bi bi-arrow-left"></i> Voltar
+      </a>
+    </div>
+  </div>
+
+  <!-- Phases: mata-mata links -->
+  {% if fases_mata_mata %}
+  <div class="mb-3 d-flex flex-wrap gap-2">
+    {% for fase in fases_mata_mata %}
+    <a href="{% url 'competicao:chaveamento' pk=fase.pk %}" class="btn btn-sm btn-warning">
+      <i class="bi bi-diagram-3"></i> {{ fase.nome }}
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Group stages -->
+  {% if fases_grupos_data %}
+    {% for fase_item in fases_grupos_data %}
+    <div class="mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h5 class="mb-0"><i class="bi bi-grid-3x3-gap text-success"></i> {{ fase_item.fase.nome }}</h5>
+        <a href="{% url 'competicao:grupos_fase' pk=fase_item.fase.pk %}" class="btn btn-sm btn-outline-success">
+          <i class="bi bi-pencil-square"></i> Gerenciar
+        </a>
+      </div>
+      <div class="row g-3">
+        {% for gd in fase_item.grupos %}
+        <div class="col-md-6 col-lg-4">
+          <div class="card">
+            <div class="card-header fw-semibold">Grupo {{ gd.grupo.nome }}</div>
+            <div class="card-body p-0">
+              <table class="table table-sm table-hover mb-0">
+                <thead class="table-dark">
+                  <tr>
+                    <th>#</th><th>Equipe</th>
+                    <th class="text-center" title="Pontos">P</th>
+                    <th class="text-center" title="Jogos">J</th>
+                    <th class="text-center" title="Vitórias">V</th>
+                    <th class="text-center" title="Saldo">SG</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for cl in gd.classificacao %}
+                  <tr {% if forloop.counter <= fase_item.fase.qtd_classificados_por_grupo %}class="table-success"{% endif %}>
+                    <td class="fw-bold">{{ forloop.counter }}</td>
+                    <td>{{ cl.equipe.nome_equipe }}</td>
+                    <td class="text-center fw-bold">{{ cl.pontos }}</td>
+                    <td class="text-center">{{ cl.jogos }}</td>
+                    <td class="text-center">{{ cl.vitorias }}</td>
+                    <td class="text-center {% if cl.saldo_gols > 0 %}text-success{% elif cl.saldo_gols < 0 %}text-danger{% endif %}">{{ cl.saldo_gols }}</td>
+                  </tr>
+                  {% empty %}
+                  <tr><td colspan="6" class="text-muted text-center py-2 small">Sem resultados</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <div class="col-12"><p class="text-muted small">Nenhum grupo nesta fase.</p></div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+    <hr>
+  {% endif %}
+
+  <div class="row g-4">
+
+    <!-- Tabela de Classificação Geral -->
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-header fw-semibold">
+          <i class="bi bi-trophy-fill text-warning"></i> Classificação Geral
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-dark">
+                <tr>
+                  <th class="text-center" style="width:36px;">#</th>
+                  <th>Equipe</th>
+                  <th class="text-center" title="Jogos">J</th>
+                  <th class="text-center" title="Vitórias">V</th>
+                  <th class="text-center" title="Empates">E</th>
+                  <th class="text-center" title="Derrotas">D</th>
+                  <th class="text-center" title="Gols Pró">GP</th>
+                  <th class="text-center" title="Gols Contra">GC</th>
+                  <th class="text-center" title="Saldo de Gols">SG</th>
+                  <th class="text-center fw-bold" title="Pontos">PTS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for cls in classificacao %}
+                <tr>
+                  <td class="text-center fw-bold">{{ forloop.counter }}</td>
+                  <td>
+                    <div class="d-flex align-items-center gap-2">
+                      {% if cls.equipe.escudo %}
+                        <img src="{{ cls.equipe.escudo.thumbnail.url }}" width="26" height="26" class="rounded-circle">
+                      {% else %}
+                        <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style="width:26px;height:26px;font-size:.7rem;">
+                          {{ cls.equipe.nome_equipe|first|upper }}
+                        </div>
+                      {% endif %}
+                      {{ cls.equipe.nome_equipe }}
+                    </div>
+                  </td>
+                  <td class="text-center">{{ cls.jogos }}</td>
+                  <td class="text-center">{{ cls.vitorias }}</td>
+                  <td class="text-center">{{ cls.empates }}</td>
+                  <td class="text-center">{{ cls.derrotas }}</td>
+                  <td class="text-center">{{ cls.gols_pro }}</td>
+                  <td class="text-center">{{ cls.gols_contra }}</td>
+                  <td class="text-center {% if cls.saldo_gols > 0 %}text-success{% elif cls.saldo_gols < 0 %}text-danger{% endif %}">
+                    {{ cls.saldo_gols }}
+                  </td>
+                  <td class="text-center fw-bold fs-6">{{ cls.pontos }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="10" class="text-center text-muted py-4">
+                    Nenhum jogo finalizado ainda.
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Artilharia -->
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-header fw-semibold">
+          <i class="bi bi-bullseye"></i> Artilharia
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>#</th>
+                <th>Atleta</th>
+                <th class="text-center">⚽</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for art in artilharia %}
+              <tr>
+                <td class="text-muted">{{ forloop.counter }}</td>
+                <td>
+                  <div>{{ art.atleta__nome }}</div>
+                  <small class="text-muted">{{ art.atleta__equipe__nome_equipe }}</small>
+                </td>
+                <td class="text-center fw-bold">{{ art.total }}</td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="3" class="text-center text-muted py-3">
+                  Nenhum gol registrado.
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Últimos resultados -->
+      {% if rodadas %}
+      <div class="card mt-3">
+        <div class="card-header fw-semibold">
+          <i class="bi bi-calendar3"></i> Últimos Resultados
+        </div>
+        <div class="list-group list-group-flush">
+          {% for rodada in rodadas %}
+            {% for jogo in rodada.jogo_set.all %}
+              {% if jogo.finalizado %}
+              <a href="{% url 'competicao:jogo_detalhe' jogo.pk %}" class="list-group-item list-group-item-action px-3 py-2">
+                <div class="d-flex justify-content-between align-items-center small">
+                  <span class="{% if jogo.gols_casa > jogo.gols_fora %}fw-bold{% endif %}">{{ jogo.equipe_casa.nome_equipe }}</span>
+                  <span class="badge bg-dark mx-2">{{ jogo.gols_casa }}—{{ jogo.gols_fora }}</span>
+                  <span class="{% if jogo.gols_fora > jogo.gols_casa %}fw-bold{% endif %}">{{ jogo.equipe_fora.nome_equipe }}</span>
+                </div>
+                <small class="text-muted">
+                  {% if rodada.grupo %}Grupo {{ rodada.grupo.nome }} — {% endif %}
+                  {{ rodada.numero }}ª Rodada
+                </small>
+              </a>
+              {% endif %}
+            {% endfor %}
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}

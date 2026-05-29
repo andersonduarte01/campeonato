@@ -1,69 +1,130 @@
 {% extends 'base/indice.html' %}
 {% load crispy_forms_tags %}
 {% load static %}
-{% block titulo %}Lista Competições{% endblock %}
-{% block conteudo %}
+{% block titulo %}Competições{% endblock %}
 
-<div class="container" style="margin-top:20px;">
-    <div class="card">
-        <div class="card-body">
-            <h4 class="card-title text-center">Lista de Competições</h4>
-            <hr>
-            {% if messages %}
-            <div>
-                {% for message in messages %}
-                <div {% if message.tags %} class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert" {% endif %}>
-                    {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}Important: {% endif %}
-                    {{message}}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </button>
-                </div>
-                <hr>
-                {% endfor %}
-            </div>
-            {% endif %}
-            <div class="row g-0">
-                {% for comp in competicoes %}
-                <div class="card text-center col-md-3 offset-md-1 mb-1 mt-1">
-                    <div class="card-header">
-                        {{comp}}
-                    </div>
-                    <div class="card-body">
-                        <ul class="list-unstyled text-start">
-                            <li class="">
-                                <a class="text-danger text-decoration-none" href="{% url 'criterios:criterio_add' pk=comp.pk %}">
-                                    <i class="bi bi-x-circle"></i>
-                                    Critérios
-                                </a>
-                            </li>
-                            <li class="">
-                                <a class="text-danger text-decoration-none" href="{% url 'criterios:formato_add' pk=comp.pk %}">
-                                    <i class="bi bi-x-circle"></i>
-                                    Formato
-                                </a>
-                            </li>
-                            <li class="">
-                                <a class="text-danger text-decoration-none" href="{% url 'competicao:buscar_equipes_view' pk=comp.pk %}">
-                                    <i class="bi bi-x-circle"></i>
-                                    Definir Participantes
-                                </a>
-                            </li>
-                            <li>
-                               <a class="text-danger text-decoration-none" href="{% url 'competicao:criar_jogos' competicao_id=comp.pk %}">
-                                    <i class="bi bi-x-circle"></i>
-                                    Gerar Tabela
-                                </a>
-                            </li>
-                        </ul>
-                        <a href="#" class="btn btn-sm btn-outline-primary d-block">Iniciar</a>
-                    </div>
-                </div>
-                {% empty %}
-                <p>Nenhuma competição encontrada.</p>
-                {% endfor %}
-            </div>
-            <hr>
-        </div>
+{% block conteudo %}
+<div class="container mt-4">
+
+  {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">Competições</h4>
+    <a href="{% url 'competicao:competicao_add' %}" class="btn btn-primary btn-sm">
+      <i class="bi bi-plus-lg"></i> Nova Competição
+    </a>
+  </div>
+
+  <div class="row g-3">
+    {% for comp in competicoes %}
+    <div class="col-md-4">
+      <div class="card h-100">
+        <div class="card-header fw-semibold">
+          <i class="bi bi-trophy-fill text-warning"></i> {{ comp.nome }}
+        </div>
+        <div class="card-body">
+          <ul class="list-unstyled mb-3">
+
+            <!-- Configuração -->
+            <li class="mb-1">
+              <i class="bi bi-gear text-secondary"></i>
+              <strong class="text-muted small">Configuração</strong>
+            </li>
+            <li class="ms-3 mb-1">
+              <a href="{% url 'criterios:formato_add' pk=comp.pk %}" class="text-decoration-none small">
+                {% if comp.formato %}
+                  <i class="bi bi-check-circle-fill text-success"></i> Formato
+                {% else %}
+                  <i class="bi bi-x-circle text-danger"></i> Definir Formato
+                {% endif %}
+              </a>
+            </li>
+            <li class="ms-3 mb-1">
+              <a href="{% url 'criterios:criterio_add' pk=comp.pk %}" class="text-decoration-none small">
+                {% if comp.criterio_classificacao %}
+                  <i class="bi bi-check-circle-fill text-success"></i> Critérios de Classificação
+                {% else %}
+                  <i class="bi bi-x-circle text-danger"></i> Definir Critérios
+                {% endif %}
+              </a>
+            </li>
+            <li class="ms-3 mb-1">
+              <a href="{% url 'competicao:buscar_equipes_view' pk=comp.pk %}" class="text-decoration-none small">
+                <i class="bi bi-people"></i>
+                Participantes
+                {% if comp.formato %}({{ comp.equipes.count }}/{{ comp.formato.qtd_times }}){% endif %}
+              </a>
+            </li>
+            <li class="ms-3 mb-2">
+              <a href="{% url 'competicao:inscricao' pk=comp.pk %}" class="text-decoration-none small">
+                <i class="bi bi-person-badge"></i>
+                Inscrições de Atletas
+              </a>
+            </li>
+
+            <!-- Fases -->
+            <li class="mb-1">
+              <i class="bi bi-layers text-secondary"></i>
+              <strong class="text-muted small">Fases</strong>
+            </li>
+            <li class="ms-3 mb-1">
+              <a href="{% url 'competicao:fases' pk=comp.pk %}" class="text-decoration-none small">
+                <i class="bi bi-layers"></i> Gerenciar Fases
+                {% with n=comp.fases.count %}
+                  {% if n %}({{ n }}){% endif %}
+                {% endwith %}
+              </a>
+            </li>
+
+            <!-- Tabela -->
+            <li class="mb-1">
+              <i class="bi bi-table text-secondary"></i>
+              <strong class="text-muted small">Tabela</strong>
+            </li>
+            <li class="ms-3 mb-1">
+              <a href="{% url 'competicao:criar_jogos' competicao_id=comp.pk %}" class="text-decoration-none small">
+                <i class="bi bi-arrow-repeat"></i> Gerar Tabela de Jogos (Liga)
+              </a>
+            </li>
+            <li class="ms-3 mb-1">
+              <a href="{% url 'competicao:rodadas' pk=comp.pk %}" class="text-decoration-none small">
+                <i class="bi bi-calendar3"></i> Ver Rodadas
+              </a>
+            </li>
+            <li class="ms-3">
+              <a href="{% url 'competicao:classificacao' pk=comp.pk %}" class="text-decoration-none small">
+                <i class="bi bi-bar-chart-line"></i> Classificação
+              </a>
+            </li>
+          </ul>
+
+          <div class="mt-auto d-flex gap-2">
+            <a href="{% url 'competicao:classificacao' pk=comp.pk %}" class="btn btn-sm btn-primary flex-fill">
+              <i class="bi bi-trophy"></i> Abrir
+            </a>
+            <a href="{% url 'competicao:fases' pk=comp.pk %}" class="btn btn-sm btn-outline-secondary flex-fill">
+              <i class="bi bi-layers"></i> Fases
+            </a>
+          </div>
+        </div>
+        <div class="card-footer text-muted small">
+          {{ comp.data_inicio|date:"d/m/Y" }}
+          {% if comp.data_fim %} — {{ comp.data_fim|date:"d/m/Y" }}{% endif %}
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+      <p class="text-muted">Nenhuma competição cadastrada.</p>
+    </div>
+    {% endfor %}
+  </div>
 </div>
 {% endblock %}

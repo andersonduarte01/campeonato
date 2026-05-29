@@ -1,0 +1,102 @@
+{% extends 'base/indice.html' %}
+{% load crispy_forms_tags %}
+{% block titulo %}Fases — {{ competicao.nome }}{% endblock %}
+
+{% block conteudo %}
+<div class="container mt-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-layers"></i> {{ competicao.nome }} — Fases</h4>
+    <div class="d-flex gap-2">
+      <a href="{% url 'competicao:classificacao' competicao.pk %}" class="btn btn-sm btn-outline-success">
+        <i class="bi bi-trophy"></i> Classificação
+      </a>
+      <a href="{% url 'competicao:competicao_lista' %}" class="btn btn-sm btn-outline-dark">
+        <i class="bi bi-arrow-left"></i> Voltar
+      </a>
+    </div>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+      {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="row g-3">
+
+    <!-- Nova fase -->
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header fw-semibold"><i class="bi bi-plus-circle"></i> Nova Fase</div>
+        <div class="card-body">
+          <form method="post" action="{% url 'competicao:fase_criar' competicao_pk=competicao.pk %}">
+            {% csrf_token %}
+            {{ form|crispy }}
+            <button type="submit" class="btn btn-primary btn-sm mt-2 w-100">
+              <i class="bi bi-check-lg"></i> Criar Fase
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista de fases -->
+    <div class="col-md-8">
+      {% for fase in fases %}
+      <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span class="fw-semibold">{{ fase.nome }}</span>
+          {% if fase.tipo == 'liga' %}
+            <span class="badge bg-primary">Liga / Pontos Corridos</span>
+          {% elif fase.tipo == 'grupos' %}
+            <span class="badge bg-success">Fase de Grupos</span>
+          {% else %}
+            <span class="badge bg-warning text-dark">Mata-Mata</span>
+          {% endif %}
+        </div>
+        <div class="card-body">
+          <div class="d-flex flex-wrap gap-2 mb-2">
+
+            {% if fase.tipo == 'grupos' %}
+              <a href="{% url 'competicao:grupos_fase' pk=fase.pk %}" class="btn btn-sm btn-outline-success">
+                <i class="bi bi-grid-3x3-gap"></i> Gerenciar Grupos
+              </a>
+            {% elif fase.tipo == 'mata_mata' %}
+              <a href="{% url 'competicao:chaveamento' pk=fase.pk %}" class="btn btn-sm btn-outline-warning">
+                <i class="bi bi-diagram-3"></i> Chaveamento
+              </a>
+            {% endif %}
+
+            <a href="{% url 'competicao:rodadas' pk=competicao.pk %}" class="btn btn-sm btn-outline-secondary">
+              <i class="bi bi-calendar3"></i> Rodadas
+            </a>
+
+            <form method="post" action="{% url 'competicao:fase_excluir' pk=fase.pk %}"
+                  class="d-inline" onsubmit="return confirm('Excluir a fase \'{{ fase.nome }}\'? Todos os dados desta fase serão removidos.')">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-trash"></i> Excluir
+              </button>
+            </form>
+          </div>
+
+          <div class="text-muted small">
+            Ordem: {{ fase.ordem }}
+            {% if fase.ida_e_volta %} &bull; <i class="bi bi-arrow-left-right"></i> Ida e volta{% endif %}
+            {% if fase.tipo == 'grupos' %} &bull; {{ fase.qtd_classificados_por_grupo }} classificado(s) por grupo{% endif %}
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> Nenhuma fase cadastrada. Crie uma fase ao lado para começar.
+      </div>
+      {% endfor %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}

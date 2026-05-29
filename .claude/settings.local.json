@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm --version)",
+      "Bash(pip install *)",
+      "Bash(python manage.py tailwind init theme)",
+      "Bash(python -c \"import tailwind; print\\('ok'\\)\")",
+      "Bash(python manage.py tailwind init)",
+      "Bash(python manage.py tailwind install)",
+      "Bash(where npm *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\usuario\\\\PycharmProjects\\\\champs\\\\campeonato\" -Recurse -Include *.py, *.html)",
+      "Bash(Select-Object FullName)",
+      "Bash(Sort-Object FullName)",
+      "Bash(pip show *)",
+      "Bash(python manage.py makemigrations equipe --name=\"atleta_data_nascimento_datefield\")",
+      "Bash(python manage.py migrate)",
+      "Bash(python manage.py check)",
+      "Bash(python manage.py tailwind build)",
+      "Bash(python manage.py makemigrations competicao --name=\"gol_inscricao_atleta\")",
+      "Bash(python manage.py makemigrations competicao --name=\"fase3_grupos_matamata\")",
+      "Bash(python manage.py migrate --check)",
+      "Bash(python -c ' *)",
+      "Bash(python manage.py shell -c ' *)",
+      "Bash(python manage.py makemigrations competicao --name suspensao)"
+    ]
+  }
+}

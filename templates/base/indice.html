@@ -86,11 +86,9 @@
         </a>
 
         <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
-          <li><a href="#" class="nav-link px-2 text-secondary">Home</a></li>
-          <li><a href="#" class="nav-link px-2 text-white">Features</a></li>
-          <li><a href="#" class="nav-link px-2 text-white">Pricing</a></li>
-          <li><a href="#" class="nav-link px-2 text-white">FAQs</a></li>
-          <li><a href="#" class="nav-link px-2 text-white">About</a></li>
+          <li><a href="{% url 'core:index' %}" class="nav-link px-2 text-secondary">Home</a></li>
+          <li><a href="{% url 'equipe:lista' %}" class="nav-link px-2 text-white">Equipes</a></li>
+          <li><a href="{% url 'competicao:competicao_lista' %}" class="nav-link px-2 text-white">Competições</a></li>
         </ul>
 
         <form class="col-12 col-lg-auto mb-3 mb-lg-0 me-lg-3" role="search">
@@ -98,8 +96,18 @@
         </form>
 
         <div class="text-end">
-          <button type="button" class="btn btn-outline-light me-2">Login</button>
-          <button type="button" class="btn btn-warning">Sign-up</button>
+          {% if user.is_authenticated %}
+            <span class="text-white me-3 small">
+              <i class="bi bi-person-circle"></i> {{ user.nome|default:user.email }}
+            </span>
+            <a href="{% url 'core:logout' %}" class="btn btn-outline-light btn-sm">
+              <i class="bi bi-box-arrow-right"></i> Sair
+            </a>
+          {% else %}
+            <a href="{% url 'core:login' %}" class="btn btn-outline-light btn-sm">
+              <i class="bi bi-box-arrow-in-right"></i> Entrar
+            </a>
+          {% endif %}
         </div>
       </div>
     </div>

@@ -37,7 +37,7 @@ class Atleta(models.Model):
     foto = StdImageField(upload_to='equipe/atleta', variations={'thumbnail': {'width': 200, 'height': 200}},
                          null=True, blank=True, delete_orphans=True)
     equipe = models.ForeignKey(Equipe, on_delete=models.CASCADE, related_name='equipe_jogador')
-    data_nascimento = models.CharField(verbose_name='Data de Nascimento', max_length=10, help_text='dia/mes/ano')
+    data_nascimento = models.DateField(verbose_name='Data de Nascimento', null=True, blank=True)
     posicao = models.CharField(choices=POSICAO, verbose_name='Posição', max_length=30)
 
     def __str__(self):

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-{% load static %}
+{% load static tailwind_tags %}
 <html lang="pt-br">
 
 <head>
@@ -27,6 +27,7 @@
   <link rel="stylesheet" href="{% static 'css/aos.css' %}">
 
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  {% tailwind_css %}
   {% block estatico %}{% endblock %}
 
 
