@@ -10,6 +10,9 @@
       {% if fase.ida_e_volta %}
         <span class="badge bg-secondary align-self-center"><i class="bi bi-arrow-left-right"></i> Ida e Volta</span>
       {% endif %}
+      <a href="{% url 'competicao:bracket' pk=fase.pk %}" class="btn btn-sm btn-warning">
+        <i class="bi bi-diagram-3-fill"></i> Bracket Visual
+      </a>
       <a href="{% url 'competicao:fases' pk=fase.competicao.pk %}" class="btn btn-sm btn-outline-dark">
         <i class="bi bi-arrow-left"></i> Fases
       </a>

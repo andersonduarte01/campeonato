@@ -3,7 +3,8 @@ from django.forms import DateInput
 
 from ..competicao.models import (
     Competicao, Jogo, Cartao, Gol, InscricaoAtleta,
-    Fase, Grupo, ConfrontoMatamate,
+    Fase, Grupo, ConfrontoMatamate, Local, Arbitro,
+    EscalacaoJogo, Substituicao,
 )
 from ..equipe.models import Equipe, Atleta
 
@@ -27,9 +28,11 @@ class AssociarEquipeForm(forms.Form):
 class JogoResultadoForm(forms.ModelForm):
     class Meta:
         model = Jogo
-        fields = ('data_hora', 'gols_casa', 'gols_fora', 'finalizado', 'anulado')
+        fields = ('data_hora', 'local', 'arbitro', 'gols_casa', 'gols_fora', 'finalizado', 'anulado', 'wo')
         widgets = {
             'data_hora': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
+            'local': forms.Select(attrs={'class': 'form-select'}),
+            'arbitro': forms.Select(attrs={'class': 'form-select'}),
             'gols_casa': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
             'gols_fora': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
         }
@@ -61,10 +64,11 @@ def _atletas_do_jogo(jogo):
 class GolForm(forms.ModelForm):
     class Meta:
         model = Gol
-        fields = ('equipe', 'atleta', 'minuto', 'tipo')
+        fields = ('equipe', 'atleta', 'assistencia', 'minuto', 'tipo')
         widgets = {
             'equipe': forms.Select(attrs={'class': 'form-select', 'id': 'id_equipe_gol'}),
             'atleta': forms.Select(attrs={'class': 'form-select', 'id': 'id_atleta_gol'}),
+            'assistencia': forms.Select(attrs={'class': 'form-select', 'id': 'id_assistencia_gol'}),
             'minuto': forms.NumberInput(attrs={'class': 'form-control', 'min': 1, 'max': 120}),
             'tipo': forms.Select(attrs={'class': 'form-select'}),
         }
@@ -75,8 +79,11 @@ class GolForm(forms.ModelForm):
             self.fields['equipe'].queryset = Equipe.objects.filter(
                 pk__in=[jogo.equipe_casa_id, jogo.equipe_fora_id]
             )
-            self.fields['atleta'].queryset = _atletas_do_jogo(jogo)
+            atletas = _atletas_do_jogo(jogo)
+            self.fields['atleta'].queryset = atletas
             self.fields['atleta'].required = False
+            self.fields['assistencia'].queryset = atletas
+            self.fields['assistencia'].required = False
 
 
 class CartaoForm(forms.ModelForm):
@@ -157,3 +164,72 @@ class ConfrontoPenaltisForm(forms.ModelForm):
             'penaltis_mandante': 'Pênaltis (mandante)',
             'penaltis_visitante': 'Pênaltis (visitante)',
         }
+
+
+# ---------------------------------------------------------------------------
+# Local e Árbitro
+# ---------------------------------------------------------------------------
+
+class LocalForm(forms.ModelForm):
+    class Meta:
+        model = Local
+        fields = ('nome', 'endereco', 'cidade', 'capacidade')
+        widgets = {
+            'nome': forms.TextInput(attrs={'class': 'form-control'}),
+            'endereco': forms.TextInput(attrs={'class': 'form-control'}),
+            'cidade': forms.TextInput(attrs={'class': 'form-control'}),
+            'capacidade': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
+        }
+
+
+class ArbitroForm(forms.ModelForm):
+    class Meta:
+        model = Arbitro
+        fields = ('nome', 'categoria')
+        widgets = {
+            'nome': forms.TextInput(attrs={'class': 'form-control'}),
+            'categoria': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+
+# ---------------------------------------------------------------------------
+# Escalação e Substituições
+# ---------------------------------------------------------------------------
+
+class EscalacaoJogoForm(forms.ModelForm):
+    class Meta:
+        model = EscalacaoJogo
+        fields = ('atleta', 'titular', 'numero_camisa', 'capitao')
+        widgets = {
+            'atleta': forms.Select(attrs={'class': 'form-select'}),
+            'numero_camisa': forms.NumberInput(attrs={'class': 'form-control', 'min': 1, 'max': 99}),
+        }
+
+    def __init__(self, *args, jogo=None, equipe=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if jogo and equipe:
+            ja_escalados = EscalacaoJogo.objects.filter(jogo=jogo).values_list('atleta_id', flat=True)
+            self.fields['atleta'].queryset = (
+                _atletas_do_jogo(jogo).filter(equipe=equipe).exclude(pk__in=ja_escalados)
+            )
+
+
+class SubstituicaoForm(forms.ModelForm):
+    class Meta:
+        model = Substituicao
+        fields = ('equipe', 'atleta_entra', 'atleta_sai', 'minuto')
+        widgets = {
+            'equipe': forms.Select(attrs={'class': 'form-select', 'id': 'id_equipe_sub'}),
+            'atleta_entra': forms.Select(attrs={'class': 'form-select', 'id': 'id_entra_sub'}),
+            'atleta_sai': forms.Select(attrs={'class': 'form-select', 'id': 'id_sai_sub'}),
+            'minuto': forms.NumberInput(attrs={'class': 'form-control', 'min': 1, 'max': 120}),
+        }
+
+    def __init__(self, *args, jogo=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if jogo:
+            self.fields['equipe'].queryset = Equipe.objects.filter(
+                pk__in=[jogo.equipe_casa_id, jogo.equipe_fora_id]
+            )
+            self.fields['atleta_entra'].queryset = _atletas_do_jogo(jogo)
+            self.fields['atleta_sai'].queryset = _atletas_do_jogo(jogo)

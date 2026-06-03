@@ -1,0 +1,148 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>Classificação — {{ competicao.nome }}</title>
+<link href="{% static 'assets/dist/css/bootstrap.min.css' %}" rel="stylesheet">
+<style>
+  @media print {
+    .no-print { display: none !important; }
+    body { font-size: 12px; }
+    .page-break { page-break-before: always; }
+  }
+  body { background: #fff; font-family: Arial, sans-serif; }
+  .header-bar { background: #212529; color: #fff; padding: 16px 24px; }
+  .section-title { font-size: 1rem; font-weight: 700; border-bottom: 2px solid #212529; padding-bottom: 4px; margin-bottom: 12px; margin-top: 20px; }
+  table { font-size: .85rem; }
+  th { font-size: .8rem; }
+  .footer { font-size: .75rem; color: #6c757d; text-align: center; margin-top: 32px; border-top: 1px solid #dee2e6; padding-top: 12px; }
+</style>
+</head>
+<body>
+
+<div class="header-bar d-flex justify-content-between align-items-center">
+  <div>
+    <h4 class="mb-0">{{ competicao.nome }}</h4>
+    <div class="small opacity-75">
+      Classificação Oficial &nbsp;|&nbsp;
+      {{ competicao.data_inicio|date:"d/m/Y" }}{% if competicao.data_fim %} até {{ competicao.data_fim|date:"d/m/Y" }}{% endif %}
+    </div>
+  </div>
+  <div class="no-print d-flex gap-2">
+    <button onclick="window.print()" class="btn btn-light btn-sm">
+      <i class="bi bi-printer"></i> Imprimir / PDF
+    </button>
+    <button onclick="window.close()" class="btn btn-outline-light btn-sm">Fechar</button>
+  </div>
+</div>
+
+<div class="container-fluid px-4 py-3">
+
+  <!-- Classificação Geral -->
+  <div class="section-title">Classificação Geral</div>
+  <table class="table table-bordered table-sm">
+    <thead class="table-dark">
+      <tr>
+        <th class="text-center">#</th>
+        <th>Equipe</th>
+        <th class="text-center">J</th>
+        <th class="text-center">V</th>
+        <th class="text-center">E</th>
+        <th class="text-center">D</th>
+        <th class="text-center">GP</th>
+        <th class="text-center">GC</th>
+        <th class="text-center">SG</th>
+        <th class="text-center">PTS</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for cls in classificacao %}
+      <tr>
+        <td class="text-center fw-bold">{{ forloop.counter }}</td>
+        <td>{{ cls.equipe.nome_equipe }}</td>
+        <td class="text-center">{{ cls.jogos }}</td>
+        <td class="text-center">{{ cls.vitorias }}</td>
+        <td class="text-center">{{ cls.empates }}</td>
+        <td class="text-center">{{ cls.derrotas }}</td>
+        <td class="text-center">{{ cls.gols_pro }}</td>
+        <td class="text-center">{{ cls.gols_contra }}</td>
+        <td class="text-center">{{ cls.saldo_gols }}</td>
+        <td class="text-center fw-bold">{{ cls.pontos }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="10" class="text-center text-muted py-2">Nenhum resultado.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Classificação por Grupos -->
+  {% if fases_grupos_data %}
+  {% for fase_item in fases_grupos_data %}
+  <div class="section-title">{{ fase_item.fase.nome }}</div>
+  <div class="row g-3">
+    {% for gd in fase_item.grupos %}
+    <div class="col-md-6">
+      <div class="fw-semibold mb-1 small">Grupo {{ gd.grupo.nome }}</div>
+      <table class="table table-bordered table-sm">
+        <thead class="table-secondary">
+          <tr>
+            <th>#</th><th>Equipe</th>
+            <th class="text-center">PTS</th>
+            <th class="text-center">J</th>
+            <th class="text-center">V</th>
+            <th class="text-center">SG</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for cl in gd.classificacao %}
+          <tr {% if forloop.counter <= fase_item.fase.qtd_classificados_por_grupo %}style="background:#d1e7dd"{% endif %}>
+            <td class="fw-bold">{{ forloop.counter }}</td>
+            <td>{{ cl.equipe.nome_equipe }}</td>
+            <td class="text-center fw-bold">{{ cl.pontos }}</td>
+            <td class="text-center">{{ cl.jogos }}</td>
+            <td class="text-center">{{ cl.vitorias }}</td>
+            <td class="text-center">{{ cl.saldo_gols }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  <!-- Artilharia -->
+  <div class="row">
+    <div class="col-md-5">
+      <div class="section-title">Artilharia</div>
+      <table class="table table-bordered table-sm">
+        <thead class="table-dark">
+          <tr><th>#</th><th>Atleta</th><th>Equipe</th><th class="text-center">Gols</th></tr>
+        </thead>
+        <tbody>
+          {% for a in artilharia %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ a.atleta__nome|default:"?" }}</td>
+            <td class="text-muted">{{ a.atleta__equipe__nome_equipe }}</td>
+            <td class="text-center fw-bold">{{ a.total }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" class="text-muted text-center py-2">Nenhum gol registrado.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer px-4">
+  Gerado em {% now "d/m/Y H:i" %} &nbsp;|&nbsp; Sistema de Gerenciamento de Campeonatos
+</div>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+</body>
+</html>

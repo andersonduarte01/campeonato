@@ -1,0 +1,217 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>Súmula — {{ jogo.equipe_casa }} x {{ jogo.equipe_fora }}</title>
+<link href="{% static 'assets/dist/css/bootstrap.min.css' %}" rel="stylesheet">
+<style>
+  @media print {
+    .no-print { display: none !important; }
+    body { font-size: 11px; }
+  }
+  body { background: #fff; font-family: Arial, sans-serif; }
+  .header-bar { background: #212529; color: #fff; padding: 14px 24px; }
+  .scoreboard { text-align: center; padding: 20px; border-bottom: 2px solid #dee2e6; }
+  .score { font-size: 3rem; font-weight: 900; line-height: 1; }
+  .team-name { font-size: 1.1rem; font-weight: 700; }
+  .team-role { font-size: .75rem; color: #6c757d; }
+  .section-title { font-size: .85rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #6c757d; border-bottom: 1px solid #dee2e6; padding-bottom: 4px; margin-bottom: 10px; margin-top: 18px; }
+  table { font-size: .82rem; }
+  th { font-size: .78rem; background: #f8f9fa; }
+  .gol-icon { font-size: 1rem; }
+  .card-amarelo { background: #ffc107; color: #000; display: inline-block; width: 12px; height: 16px; border-radius: 2px; }
+  .card-vermelho { background: #dc3545; display: inline-block; width: 12px; height: 16px; border-radius: 2px; }
+  .footer { font-size: .72rem; color: #6c757d; text-align: center; margin-top: 24px; border-top: 1px solid #dee2e6; padding-top: 10px; }
+  .assinatura-box { border: 1px solid #dee2e6; height: 50px; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<div class="header-bar d-flex justify-content-between align-items-center">
+  <div>
+    <h5 class="mb-0">SÚMULA OFICIAL</h5>
+    <div class="small opacity-75">
+      {% if jogo.rodada %}{{ jogo.rodada.competicao.nome }} — {% endif %}
+      {% if jogo.rodada and jogo.rodada.fase %}{{ jogo.rodada.fase.nome }} — {% endif %}
+      {% if jogo.rodada %}{{ jogo.rodada.numero }}ª Rodada{% endif %}
+    </div>
+  </div>
+  <div class="no-print d-flex gap-2">
+    <button onclick="window.print()" class="btn btn-light btn-sm">Imprimir / PDF</button>
+    <button onclick="window.close()" class="btn btn-outline-light btn-sm">Fechar</button>
+  </div>
+</div>
+
+<!-- Placar -->
+<div class="scoreboard">
+  <div class="row align-items-center justify-content-center g-2">
+    <div class="col-4 text-end">
+      <div class="team-name">{{ jogo.equipe_casa.nome_equipe }}</div>
+      <div class="team-role">Mandante</div>
+    </div>
+    <div class="col-auto">
+      {% if jogo.finalizado %}
+      <div class="score">{{ jogo.gols_casa }} — {{ jogo.gols_fora }}</div>
+      {% elif jogo.anulado %}
+      <div class="score text-danger">W.O.</div>
+      {% else %}
+      <div class="score text-muted">— vs —</div>
+      {% endif %}
+    </div>
+    <div class="col-4 text-start">
+      <div class="team-name">{{ jogo.equipe_fora.nome_equipe }}</div>
+      <div class="team-role">Visitante</div>
+    </div>
+  </div>
+
+  <div class="small text-muted mt-2">
+    {% if jogo.data_hora %}Data: <strong>{{ jogo.data_hora|date:"d/m/Y H:i" }}</strong>{% endif %}
+    {% if jogo.local %} &nbsp;|&nbsp; Local: <strong>{{ jogo.local.nome }}</strong>{% if jogo.local.cidade %}, {{ jogo.local.cidade }}{% endif %}{% endif %}
+    {% if jogo.arbitro %} &nbsp;|&nbsp; Árbitro: <strong>{{ jogo.arbitro.nome }}</strong>{% endif %}
+  </div>
+</div>
+
+<div class="container-fluid px-4 py-2">
+
+  <!-- Escalações lado a lado -->
+  <div class="section-title">Escalações</div>
+  <div class="row g-2">
+
+    <div class="col-6">
+      <table class="table table-bordered table-sm mb-0">
+        <thead>
+          <tr><th colspan="3" class="text-center">{{ jogo.equipe_casa.nome_equipe }}</th></tr>
+          <tr><th>#</th><th>Atleta</th><th>T</th></tr>
+        </thead>
+        <tbody>
+          {% for esc in escalacao_casa %}
+          <tr {% if not esc.titular %}style="color:#adb5bd"{% endif %}>
+            <td>{{ esc.numero_camisa|default:"—" }}</td>
+            <td>{{ esc.atleta.nome }}{% if esc.capitao %} (C){% endif %}</td>
+            <td>{% if esc.titular %}T{% else %}R{% endif %}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="3" class="text-muted text-center">Não informada.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="col-6">
+      <table class="table table-bordered table-sm mb-0">
+        <thead>
+          <tr><th colspan="3" class="text-center">{{ jogo.equipe_fora.nome_equipe }}</th></tr>
+          <tr><th>#</th><th>Atleta</th><th>T</th></tr>
+        </thead>
+        <tbody>
+          {% for esc in escalacao_fora %}
+          <tr {% if not esc.titular %}style="color:#adb5bd"{% endif %}>
+            <td>{{ esc.numero_camisa|default:"—" }}</td>
+            <td>{{ esc.atleta.nome }}{% if esc.capitao %} (C){% endif %}</td>
+            <td>{% if esc.titular %}T{% else %}R{% endif %}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="3" class="text-muted text-center">Não informada.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Gols -->
+  <div class="section-title">Gols</div>
+  <table class="table table-bordered table-sm">
+    <thead><tr><th>Min.</th><th>Atleta</th><th>Assistência</th><th>Tipo</th><th>Equipe</th></tr></thead>
+    <tbody>
+      {% for gol in gols_casa %}
+      <tr>
+        <td>{{ gol.minuto }}'</td>
+        <td>{{ gol.atleta.nome|default:"?" }}</td>
+        <td>{{ gol.assistencia.nome|default:"—" }}</td>
+        <td>{{ gol.get_tipo_display }}</td>
+        <td>{{ jogo.equipe_casa.nome_equipe }}</td>
+      </tr>
+      {% endfor %}
+      {% for gol in gols_fora %}
+      <tr>
+        <td>{{ gol.minuto }}'</td>
+        <td>{{ gol.atleta.nome|default:"?" }}</td>
+        <td>{{ gol.assistencia.nome|default:"—" }}</td>
+        <td>{{ gol.get_tipo_display }}</td>
+        <td>{{ jogo.equipe_fora.nome_equipe }}</td>
+      </tr>
+      {% endfor %}
+      {% if not gols_casa and not gols_fora %}
+      <tr><td colspan="5" class="text-muted text-center">Nenhum gol registrado.</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+
+  <!-- Cartões -->
+  <div class="section-title">Cartões Disciplinares</div>
+  <table class="table table-bordered table-sm">
+    <thead><tr><th>Min.</th><th>Atleta</th><th>Equipe</th><th>Cartão</th></tr></thead>
+    <tbody>
+      {% for cartao in cartoes %}
+      <tr>
+        <td>{{ cartao.minuto }}'</td>
+        <td>{{ cartao.jogador.nome }}</td>
+        <td>{{ cartao.jogador.equipe.nome_equipe }}</td>
+        <td>
+          {% if cartao.tipo == 'Amarelo' %}
+            <span class="card-amarelo"></span> Amarelo
+          {% else %}
+            <span class="card-vermelho"></span> Vermelho
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="4" class="text-muted text-center">Nenhum cartão registrado.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Substituições -->
+  {% if substituicoes %}
+  <div class="section-title">Substituições</div>
+  <table class="table table-bordered table-sm">
+    <thead><tr><th>Min.</th><th>Entra</th><th>Sai</th><th>Equipe</th></tr></thead>
+    <tbody>
+      {% for sub in substituicoes %}
+      <tr>
+        <td>{{ sub.minuto }}'</td>
+        <td>{{ sub.atleta_entra.nome }}</td>
+        <td>{{ sub.atleta_sai.nome }}</td>
+        <td>{{ sub.equipe.nome_equipe }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  <!-- Assinaturas -->
+  <div class="section-title no-print" style="margin-top:32px">Assinaturas</div>
+  <div class="row g-3 no-print" style="margin-top:24px">
+    <div class="col-4 text-center">
+      <div class="assinatura-box mb-1"></div>
+      <small>Árbitro{% if jogo.arbitro %}: {{ jogo.arbitro.nome }}{% endif %}</small>
+    </div>
+    <div class="col-4 text-center">
+      <div class="assinatura-box mb-1"></div>
+      <small>Delegado — {{ jogo.equipe_casa.nome_equipe }}</small>
+    </div>
+    <div class="col-4 text-center">
+      <div class="assinatura-box mb-1"></div>
+      <small>Delegado — {{ jogo.equipe_fora.nome_equipe }}</small>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer px-4">
+  Gerado em {% now "d/m/Y H:i" %} &nbsp;|&nbsp; Sistema de Gerenciamento de Campeonatos
+</div>
+
+</body>
+</html>

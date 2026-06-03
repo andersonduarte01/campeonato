@@ -95,6 +95,7 @@
               {% if gol.tipo == 'contra' %}<span class="text-danger">(CG)</span>{% endif %}
               {% if gol.tipo == 'penalti' %}<span class="text-primary">(P)</span>{% endif %}
               — {{ gol.atleta.nome|default:"?" }}
+              {% if gol.assistencia %}<span class="text-muted">(Ass: {{ gol.assistencia.nome }})</span>{% endif %}
               <form method="post" action="{% url 'competicao:gol_excluir' gol.pk %}" class="d-inline ms-1">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-link btn-sm p-0 text-danger" title="Remover gol">
@@ -113,6 +114,7 @@
               {% if gol.tipo == 'contra' %}<span class="text-danger">(CG)</span>{% endif %}
               {% if gol.tipo == 'penalti' %}<span class="text-primary">(P)</span>{% endif %}
               — {{ gol.atleta.nome|default:"?" }}
+              {% if gol.assistencia %}<span class="text-muted">(Ass: {{ gol.assistencia.nome }})</span>{% endif %}
               <form method="post" action="{% url 'competicao:gol_excluir' gol.pk %}" class="d-inline ms-1">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-link btn-sm p-0 text-danger" title="Remover gol">
@@ -126,14 +128,34 @@
         </div>
       </div>
 
+      <!-- Info: local e árbitro -->
+      {% if jogo.local or jogo.arbitro %}
+      <div class="d-flex justify-content-center gap-3 mt-2 small text-muted">
+        {% if jogo.local %}
+          <span><i class="bi bi-geo-alt-fill"></i> {{ jogo.local.nome }}{% if jogo.local.cidade %}, {{ jogo.local.cidade }}{% endif %}</span>
+        {% endif %}
+        {% if jogo.arbitro %}
+          <span><i class="bi bi-person-badge"></i> {{ jogo.arbitro.nome }}</span>
+        {% endif %}
+      </div>
+      {% endif %}
+
       <!-- Ação: editar resultado -->
-      <div class="text-end mt-3">
+      <div class="text-end mt-3 d-flex gap-2 justify-content-end flex-wrap">
+        <a href="{% url 'competicao:escalacao' jogo.pk %}" class="btn btn-sm btn-outline-info">
+          <i class="bi bi-people-fill"></i> Escalação
+        </a>
+        <a href="{% url 'competicao:pdf_sumula' jogo.pk %}" target="_blank" class="btn btn-sm btn-outline-dark">
+          <i class="bi bi-printer"></i> Súmula
+        </a>
         <a href="{% url 'competicao:jogo_editar' jogo.pk %}" class="btn btn-sm btn-outline-secondary">
           <i class="bi bi-pencil"></i> Editar Resultado
         </a>
+        {% if jogo.rodada %}
         <a href="{% url 'competicao:rodadas' jogo.rodada.competicao.pk %}" class="btn btn-sm btn-outline-dark">
           <i class="bi bi-arrow-left"></i> Voltar
         </a>
+        {% endif %}
       </div>
     </div>
   </div>
@@ -165,8 +187,13 @@
             </div>
 
             <div class="mb-3">
-              <label for="id_atleta_gol" class="form-label fw-semibold">Atleta</label>
+              <label for="id_atleta_gol" class="form-label fw-semibold">Atleta (gol)</label>
               {{ form_gol.atleta }}
+            </div>
+
+            <div class="mb-3">
+              <label for="id_assistencia_gol" class="form-label fw-semibold">Assistência <small class="text-muted">(opcional)</small></label>
+              {{ form_gol.assistencia }}
             </div>
 
             <div class="row g-2 mb-3">

@@ -1,7 +1,46 @@
 from django.core.validators import MinValueValidator
 from django.db import models
+from stdimage import StdImageField
 from ..equipe.models import Equipe, Atleta
 from ..criterios.models import FormatoCompeticao, CriterioClassificacao
+
+
+# ---------------------------------------------------------------------------
+# Local / Campo
+# ---------------------------------------------------------------------------
+
+class Local(models.Model):
+    nome = models.CharField(max_length=200, verbose_name='Nome do local')
+    endereco = models.CharField(max_length=300, blank=True, null=True, verbose_name='Endereço')
+    cidade = models.CharField(max_length=100, blank=True, null=True, verbose_name='Cidade')
+    capacidade = models.PositiveIntegerField(null=True, blank=True, verbose_name='Capacidade')
+
+    class Meta:
+        ordering = ['nome']
+        verbose_name = 'Local'
+        verbose_name_plural = 'Locais'
+
+    def __str__(self):
+        return self.nome
+
+
+# ---------------------------------------------------------------------------
+# Árbitro
+# ---------------------------------------------------------------------------
+
+class Arbitro(models.Model):
+    nome = models.CharField(max_length=200, verbose_name='Nome')
+    categoria = models.CharField(max_length=100, blank=True, null=True, verbose_name='Categoria')
+    observacao = models.TextField(blank=True, null=True, verbose_name='Observações')
+    ativo = models.BooleanField(default=True, verbose_name='Ativo')
+
+    class Meta:
+        ordering = ['nome']
+        verbose_name = 'Árbitro'
+        verbose_name_plural = 'Árbitros'
+
+    def __str__(self):
+        return self.nome
 
 
 class FaseCompeticao(models.Model):
@@ -144,6 +183,15 @@ class Jogo(models.Model):
     gols_fora = models.IntegerField(default=0)
     finalizado = models.BooleanField(default=False)
     anulado = models.BooleanField(default=False)
+    wo = models.BooleanField(default=False, verbose_name='W.O.')
+    local = models.ForeignKey(
+        'Local', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='jogos', verbose_name='Local',
+    )
+    arbitro = models.ForeignKey(
+        'Arbitro', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='jogos', verbose_name='Árbitro',
+    )
 
     def __str__(self):
         status = 'Anulado' if self.anulado else 'Finalizado' if self.finalizado else 'Pendente'
@@ -326,6 +374,10 @@ class Gol(models.Model):
     atleta = models.ForeignKey(
         Atleta, on_delete=models.SET_NULL, null=True, blank=True, related_name='gols',
     )
+    assistencia = models.ForeignKey(
+        Atleta, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='assistencias', verbose_name='Assistência',
+    )
     equipe = models.ForeignKey(Equipe, on_delete=models.CASCADE, related_name='gols')
     minuto = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     tipo = models.CharField(max_length=10, choices=TIPO_CHOICES, default=NORMAL)
@@ -346,3 +398,48 @@ class Gol(models.Model):
             else:
                 self.equipe = atleta_equipe
         super().save(*args, **kwargs)
+
+
+# ---------------------------------------------------------------------------
+# Escalação e Substituições
+# ---------------------------------------------------------------------------
+
+class EscalacaoJogo(models.Model):
+    jogo = models.ForeignKey(Jogo, on_delete=models.CASCADE, related_name='escalacao')
+    equipe = models.ForeignKey(Equipe, on_delete=models.CASCADE, related_name='escalacoes')
+    atleta = models.ForeignKey(Atleta, on_delete=models.CASCADE, related_name='escalacoes')
+    titular = models.BooleanField(default=True, verbose_name='Titular')
+    numero_camisa = models.PositiveIntegerField(null=True, blank=True, verbose_name='Camisa')
+    capitao = models.BooleanField(default=False, verbose_name='Capitão')
+
+    class Meta:
+        unique_together = [('jogo', 'atleta')]
+        ordering = ['titular', 'numero_camisa', 'atleta__nome']
+        verbose_name = 'Escalação'
+        verbose_name_plural = 'Escalações'
+
+    def __str__(self):
+        papel = 'Titular' if self.titular else 'Reserva'
+        return f"{self.atleta.nome} ({papel}) — {self.jogo}"
+
+
+class Substituicao(models.Model):
+    jogo = models.ForeignKey(Jogo, on_delete=models.CASCADE, related_name='substituicoes')
+    equipe = models.ForeignKey(Equipe, on_delete=models.CASCADE, related_name='substituicoes')
+    atleta_entra = models.ForeignKey(
+        Atleta, on_delete=models.CASCADE, related_name='entradas',
+        verbose_name='Entra',
+    )
+    atleta_sai = models.ForeignKey(
+        Atleta, on_delete=models.CASCADE, related_name='saidas',
+        verbose_name='Sai',
+    )
+    minuto = models.PositiveIntegerField(validators=[MinValueValidator(1)], verbose_name='Minuto')
+
+    class Meta:
+        ordering = ['minuto']
+        verbose_name = 'Substituição'
+        verbose_name_plural = 'Substituições'
+
+    def __str__(self):
+        return f"{self.atleta_entra.nome} ↔ {self.atleta_sai.nome} ({self.minuto}')"

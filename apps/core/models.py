@@ -31,11 +31,27 @@ class UsuarioManager(BaseUserManager):
 
 
 class Usuario(AbstractBaseUser):
+    ADMIN = 'admin'
+    ORGANIZADOR = 'organizador'
+    DELEGADO = 'delegado'
+    ARBITRO = 'arbitro'
+    VISUALIZADOR = 'visualizador'
+    PERFIL_CHOICES = [
+        (ADMIN, 'Administrador'),
+        (ORGANIZADOR, 'Organizador'),
+        (DELEGADO, 'Delegado de Time'),
+        (ARBITRO, 'Árbitro'),
+        (VISUALIZADOR, 'Visitante'),
+    ]
+
     email = models.EmailField(verbose_name='Email', max_length=255, unique=True)
     nome = models.CharField(verbose_name='Nome Usuario', max_length=255)
     is_active = models.BooleanField(default=True)
     is_administrator = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
+    perfil = models.CharField(
+        max_length=20, choices=PERFIL_CHOICES, default=VISUALIZADOR, verbose_name='Perfil',
+    )
     cadastrado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
 

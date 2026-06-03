@@ -15,6 +15,7 @@ urlpatterns = [
     # Classificação e rodadas
     path('<int:pk>/classificacao/', views.ClassificacaoView.as_view(), name='classificacao'),
     path('<int:pk>/rodadas/', views.RodadasView.as_view(), name='rodadas'),
+    path('<int:pk>/estatisticas/', views.EstatisticasView.as_view(), name='estatisticas'),
 
     # Inscrição de atletas
     path('<int:pk>/inscricao/', views.InscricaoView.as_view(), name='inscricao'),
@@ -28,6 +29,15 @@ urlpatterns = [
     path('jogo/gol/<int:pk>/excluir/', views.gol_excluir_view, name='gol_excluir'),
     path('jogo/<int:jogo_pk>/cartao/', views.cartao_criar_view, name='cartao_criar'),
     path('jogo/cartao/<int:pk>/excluir/', views.cartao_excluir_view, name='cartao_excluir'),
+    path('jogo/<int:pk>/escalacao/', views.EscalacaoJogoView.as_view(), name='escalacao'),
+    path('jogo/<int:jogo_pk>/escalacao/<int:equipe_pk>/adicionar/', views.escalacao_criar_view, name='escalacao_criar'),
+    path('jogo/escalacao/<int:pk>/excluir/', views.escalacao_excluir_view, name='escalacao_excluir'),
+    path('jogo/<int:jogo_pk>/substituicao/', views.substituicao_criar_view, name='substituicao_criar'),
+    path('jogo/substituicao/<int:pk>/excluir/', views.substituicao_excluir_view, name='substituicao_excluir'),
+
+    # PDF / Impressão
+    path('<int:pk>/pdf/classificacao/', views.pdf_classificacao_view, name='pdf_classificacao'),
+    path('jogo/<int:pk>/pdf/sumula/', views.pdf_sumula_view, name='pdf_sumula'),
 
     # Suspensões
     path('suspensao/<int:pk>/cumprir/', views.suspensao_cumprir_view, name='suspensao_cumprir'),
@@ -36,6 +46,7 @@ urlpatterns = [
     path('<int:pk>/fases/', views.FasesView.as_view(), name='fases'),
     path('<int:competicao_pk>/fases/criar/', views.fase_criar_view, name='fase_criar'),
     path('fases/<int:pk>/excluir/', views.fase_excluir_view, name='fase_excluir'),
+    path('fases/<int:pk>/bracket/', views.BracketView.as_view(), name='bracket'),
 
     # Grupos (fase de grupos)
     path('fases/<int:pk>/grupos/', views.GruposFaseView.as_view(), name='grupos_fase'),
@@ -49,4 +60,14 @@ urlpatterns = [
     path('fases/<int:pk>/chaveamento/', views.ChaveamentoView.as_view(), name='chaveamento'),
     path('confronto/<int:pk>/penaltis/', views.confronto_penaltis_view, name='confronto_penaltis'),
     path('fases/<int:fase_grupos_pk>/avancar/<int:fase_mata_mata_pk>/', views.avancar_classificados_view, name='avancar_classificados'),
+
+    # Local e Árbitro
+    path('locais/', views.LocalListView.as_view(), name='local_lista'),
+    path('locais/criar/', views.local_criar_view, name='local_criar'),
+    path('locais/<int:pk>/editar/', views.local_editar_view, name='local_editar'),
+    path('locais/<int:pk>/excluir/', views.local_excluir_view, name='local_excluir'),
+    path('arbitros/', views.ArbitroListView.as_view(), name='arbitro_lista'),
+    path('arbitros/criar/', views.arbitro_criar_view, name='arbitro_criar'),
+    path('arbitros/<int:pk>/editar/', views.arbitro_editar_view, name='arbitro_editar'),
+    path('arbitros/<int:pk>/excluir/', views.arbitro_excluir_view, name='arbitro_excluir'),
 ]
