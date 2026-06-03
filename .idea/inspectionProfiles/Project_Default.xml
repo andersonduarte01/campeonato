@@ -1,0 +1,22 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <list>
+          <option value="asgiref" />
+          <option value="Django" />
+          <option value="django-appconf" />
+          <option value="django-imagekit" />
+          <option value="holidays" />
+          <option value="pilkit" />
+          <option value="pillow" />
+          <option value="python-dateutil" />
+          <option value="six" />
+          <option value="sqlparse" />
+          <option value="tzdata" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>
