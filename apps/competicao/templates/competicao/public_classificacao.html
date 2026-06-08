@@ -1,0 +1,152 @@
+<!doctype html>
+{% load static %}
+<html lang="pt-br" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ competicao.nome }} — Classificação</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daisyui@5/dist/full.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-base-100 min-h-screen">
+
+<header class="bg-base-200 border-b border-base-300 py-4 mb-6">
+  <div class="max-w-5xl mx-auto px-4">
+    <h1 class="text-xl font-bold flex items-center gap-2">
+      <i class="bi bi-trophy-fill text-warning"></i> {{ competicao.nome }}
+    </h1>
+    {% if competicao.modalidade %}
+    <p class="text-sm text-base-content/50 mt-0.5">{{ competicao.get_modalidade_display }} · {{ competicao.get_genero_display }}</p>
+    {% endif %}
+  </div>
+</header>
+
+<div class="max-w-5xl mx-auto px-4 pb-10">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+    <!-- Classificação (2/3) -->
+    <div class="lg:col-span-2">
+      <div class="card bg-base-200 border border-base-300 overflow-hidden">
+        <div class="px-4 py-3 border-b border-base-300 flex items-center gap-2">
+          <i class="bi bi-table text-warning text-sm"></i>
+          <span class="font-semibold text-sm">Classificação</span>
+        </div>
+        <div class="overflow-x-auto">
+          {% if classificacao %}
+          <table class="table table-sm">
+            <thead>
+              <tr class="bg-base-300/70 text-xs text-base-content/50 uppercase">
+                <th class="w-8">#</th>
+                <th>Equipe</th>
+                <th class="text-center">J</th>
+                <th class="text-center">V</th>
+                <th class="text-center">E</th>
+                <th class="text-center">D</th>
+                <th class="text-center">GP</th>
+                <th class="text-center">GC</th>
+                <th class="text-center">SG</th>
+                <th class="text-center font-black">Pts</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for cl in classificacao %}
+              <tr class="hover:bg-base-300/30 transition-colors">
+                <td class="text-base-content/40 text-xs">{{ forloop.counter }}</td>
+                <td class="font-semibold text-sm">{{ cl.equipe.nome_equipe }}</td>
+                <td class="text-center text-sm">{{ cl.jogos }}</td>
+                <td class="text-center text-sm text-success font-medium">{{ cl.vitorias }}</td>
+                <td class="text-center text-sm text-base-content/50">{{ cl.empates }}</td>
+                <td class="text-center text-sm text-error/70">{{ cl.derrotas }}</td>
+                <td class="text-center text-sm">{{ cl.gols_pro }}</td>
+                <td class="text-center text-sm">{{ cl.gols_contra }}</td>
+                <td class="text-center text-sm {% if cl.saldo_gols > 0 %}text-success{% elif cl.saldo_gols < 0 %}text-error{% endif %}">{{ cl.saldo_gols }}</td>
+                <td class="text-center font-black text-base">{{ cl.pontos }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <p class="p-4 text-sm text-base-content/40">Nenhum dado de classificação disponível.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar (1/3) -->
+    <div class="space-y-4">
+
+      <!-- Artilheiros -->
+      <div class="card bg-base-200 border border-base-300 overflow-hidden">
+        <div class="px-4 py-3 border-b border-base-300 flex items-center gap-2">
+          <i class="bi bi-bullseye text-warning text-sm"></i>
+          <span class="font-semibold text-sm">Artilheiros</span>
+        </div>
+        <div class="divide-y divide-base-300">
+          {% for a in artilharia %}
+          <div class="flex items-center gap-2 px-4 py-2">
+            <span class="text-xs text-base-content/40 w-5 shrink-0">{{ forloop.counter }}</span>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-semibold truncate">{{ a.atleta__nome }}</div>
+              <div class="text-xs text-base-content/40 truncate">{{ a.atleta__equipe__nome_equipe }}</div>
+            </div>
+            <span class="badge badge-success badge-sm font-bold shrink-0">{{ a.total }}</span>
+          </div>
+          {% empty %}
+          <p class="px-4 py-4 text-sm text-base-content/40">Sem gols registrados.</p>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Próximos Jogos -->
+      {% if proximos_jogos %}
+      <div class="card bg-base-200 border border-base-300 overflow-hidden">
+        <div class="px-4 py-3 border-b border-base-300 flex items-center gap-2">
+          <i class="bi bi-calendar-event text-warning text-sm"></i>
+          <span class="font-semibold text-sm">Próximos Jogos</span>
+        </div>
+        <div class="divide-y divide-base-300">
+          {% for j in proximos_jogos %}
+          <div class="px-4 py-2.5">
+            <div class="text-xs text-base-content/40 mb-0.5">{{ j.data_hora|date:"d/m H:i" }}</div>
+            <div class="text-sm font-semibold">{{ j.equipe_casa.nome_equipe }} × {{ j.equipe_fora.nome_equipe }}</div>
+            {% if j.local %}<div class="text-xs text-base-content/40"><i class="bi bi-geo-alt"></i> {{ j.local.nome }}</div>{% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Últimos Resultados -->
+      {% if jogos_recentes %}
+      <div class="card bg-base-200 border border-base-300 overflow-hidden">
+        <div class="px-4 py-3 border-b border-base-300 flex items-center gap-2">
+          <i class="bi bi-check2-circle text-warning text-sm"></i>
+          <span class="font-semibold text-sm">Últimos Resultados</span>
+        </div>
+        <div class="divide-y divide-base-300">
+          {% for j in jogos_recentes %}
+          <div class="px-4 py-2 text-sm flex items-center gap-2">
+            <span class="flex-1 text-right {% if j.gols_casa > j.gols_fora %}font-bold{% else %}text-base-content/60{% endif %}">
+              {{ j.equipe_casa.nome_equipe }}
+            </span>
+            <span class="badge badge-neutral badge-sm font-bold shrink-0">{{ j.gols_casa }}—{{ j.gols_fora }}</span>
+            <span class="flex-1 {% if j.gols_fora > j.gols_casa %}font-bold{% else %}text-base-content/60{% endif %}">
+              {{ j.equipe_fora.nome_equipe }}
+            </span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+
+<footer class="py-4 text-center text-xs text-base-content/40 border-t border-base-300">
+  Área pública — {{ competicao.nome }}
+</footer>
+
+</body>
+</html>

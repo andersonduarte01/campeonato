@@ -1,108 +1,133 @@
 {% extends 'base/indice.html' %}
-{% load static %}
 {% block titulo %}Inscrições — {{ competicao.nome }}{% endblock %}
 
 {% block conteudo %}
-<div class="container mt-4">
+<div class="p-4 md:p-6">
 
-  {% if messages %}
-    {% for message in messages %}
-    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
-      {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-    {% endfor %}
-  {% endif %}
-
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4 class="mb-0">Inscrições — {{ competicao.nome }}</h4>
-    <a href="{% url 'competicao:competicao_lista' %}" class="btn btn-sm btn-outline-secondary">
+  <div class="flex items-center justify-between mb-5 flex-wrap gap-2">
+    <h1 class="text-lg font-bold flex items-center gap-2">
+      <i class="bi bi-person-badge-fill text-warning"></i> Inscrições
+      <span class="text-base-content/40 font-normal text-sm">{{ competicao.nome }}</span>
+    </h1>
+    <a href="{% url 'competicao:competicao_lista' %}" class="btn btn-ghost btn-sm gap-1">
       <i class="bi bi-arrow-left"></i> Voltar
     </a>
   </div>
 
-  {% for item in equipes_data %}
-  <div class="card mb-3">
-    <div class="card-header d-flex align-items-center justify-content-between">
-      <span class="fw-semibold">
-        {% if item.equipe.escudo %}
-          <img src="{{ item.equipe.escudo.thumbnail.url }}" width="28" height="28" class="rounded-circle me-1">
-        {% endif %}
-        {{ item.equipe.nome_equipe }}
-      </span>
-      <span class="badge bg-secondary">{{ item.inscritos.count }} inscrito{{ item.inscritos.count|pluralize }}</span>
+  {% if messages %}
+  <div class="space-y-2 mb-4">
+    {% for message in messages %}
+    <div class="alert {% if message.tags == 'error' %}alert-error{% elif message.tags == 'success' %}alert-success{% else %}alert-info{% endif %} text-sm">
+      <i class="bi bi-info-circle"></i> {{ message }}
     </div>
-    <div class="card-body">
-      <div class="row g-3">
+    {% endfor %}
+  </div>
+  {% endif %}
 
-        <!-- Lista de inscritos -->
-        <div class="col-md-7">
+  <div class="space-y-5">
+    {% for item in equipes_data %}
+    <div class="card bg-base-200 border border-base-300">
+
+      <!-- Header da equipe -->
+      <div class="px-4 py-3 border-b border-base-300 flex items-center gap-3">
+        {% if item.equipe.escudo %}
+          <img src="{{ item.equipe.escudo.thumbnail.url }}" class="w-7 h-7 rounded-full object-cover border border-base-300 shrink-0">
+        {% else %}
+          <div class="w-7 h-7 rounded-full bg-base-300 flex items-center justify-center text-xs font-bold text-base-content/60 shrink-0">
+            {{ item.equipe.nome_equipe|first|upper }}
+          </div>
+        {% endif %}
+        <span class="font-semibold text-sm flex-1">{{ item.equipe.nome_equipe }}</span>
+        <span class="badge badge-ghost badge-sm">{{ item.inscritos.count }} inscrito{{ item.inscritos.count|pluralize }}</span>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3">
+
+        <!-- Tabela de inscritos (2/3) -->
+        <div class="lg:col-span-2 overflow-x-auto border-b lg:border-b-0 lg:border-r border-base-300">
           {% if item.inscritos %}
-          <table class="table table-sm table-hover align-middle">
-            <thead class="table-light">
-              <tr>
-                <th>#</th>
-                <th>Nome</th>
-                <th>Posição</th>
+          <table class="table table-sm">
+            <thead>
+              <tr class="bg-base-300/50 text-xs text-base-content/50">
+                <th class="w-10">#</th>
+                <th>Atleta</th>
+                <th class="text-center">Posição</th>
                 <th class="text-center" title="Cartões Amarelos">🟨</th>
                 <th class="text-center" title="Cartões Vermelhos">🟥</th>
-                <th></th>
+                <th class="text-center">Taxa</th>
+                <th class="w-20"></th>
               </tr>
             </thead>
             <tbody>
               {% for inscricao in item.inscritos %}
               {% with atleta_id=inscricao.atleta.pk %}
-              <tr {% if atleta_id in suspensos_ids %}class="table-danger"{% endif %}>
+              <tr class="hover:bg-base-300/20 transition-colors {% if atleta_id in suspensos_ids %}bg-error/5{% endif %}">
                 <td>
                   {% if inscricao.numero_camisa %}
-                    <span class="badge bg-dark">{{ inscricao.numero_camisa }}</span>
+                    <span class="badge badge-neutral badge-sm">{{ inscricao.numero_camisa }}</span>
                   {% else %}
-                    <span class="text-muted">—</span>
+                    <span class="text-base-content/30">—</span>
                   {% endif %}
                 </td>
                 <td>
-                  {{ inscricao.atleta.nome }}
-                  {% if atleta_id in suspensos_ids %}
-                    <span class="badge bg-danger ms-1">SUSPENSO</span>
-                  {% endif %}
-                </td>
-                <td><span class="badge bg-secondary">{{ inscricao.atleta.get_posicao_display }}</span></td>
-                <td class="text-center">
-                  {% with n=amarelos_map|default_if_none:atleta_id %}
-                    {% if amarelos_map %}
-                      <span class="{% if amarelos_map|default_if_none:atleta_id %}fw-bold{% endif %}">
-                        {{ amarelos_map|default_if_none:atleta_id|default:0 }}
-                      </span>
-                    {% else %}
-                      0
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm {% if atleta_id in suspensos_ids %}text-error/80{% endif %}">
+                      {{ inscricao.atleta.nome }}
+                    </span>
+                    {% if atleta_id in suspensos_ids %}
+                      <span class="badge badge-error badge-xs">SUSPENSO</span>
                     {% endif %}
-                  {% endwith %}
+                  </div>
+                </td>
+                <td class="text-center">
+                  <span class="text-xs text-base-content/60">{{ inscricao.atleta.get_posicao_display }}</span>
+                </td>
+                <td class="text-center">
+                  {% if amarelos_map %}
+                    <span class="text-sm {% if amarelos_map|default_if_none:atleta_id %}font-bold text-warning{% endif %}">
+                      {{ amarelos_map|default_if_none:atleta_id|default:0 }}
+                    </span>
+                  {% else %}0{% endif %}
                 </td>
                 <td class="text-center">
                   {% if vermelhos_map %}
-                    {{ vermelhos_map|default_if_none:atleta_id|default:0 }}
-                  {% else %}
-                    0
-                  {% endif %}
+                    <span class="text-sm {% if vermelhos_map|default_if_none:atleta_id %}font-bold text-error{% endif %}">
+                      {{ vermelhos_map|default_if_none:atleta_id|default:0 }}
+                    </span>
+                  {% else %}0{% endif %}
                 </td>
-                <td class="text-end">
-                  {% if atleta_id in suspensos_ids %}
-                    {% for susp in competicao.suspensoes.all %}
-                      {% if susp.atleta_id == atleta_id and not susp.cumprida %}
-                      <form method="post" action="{% url 'competicao:suspensao_cumprir' susp.pk %}" class="d-inline">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-sm btn-outline-warning py-0 px-1" title="Marcar suspensão como cumprida">
-                          <i class="bi bi-check2"></i> Cumprida
-                        </button>
-                      </form>
-                      {% endif %}
-                    {% endfor %}
-                  {% endif %}
-                  <form method="post" action="{% url 'competicao:inscricao_excluir' inscricao.pk %}" class="d-inline">
+                <td class="text-center">
+                  <form method="post" action="{% url 'competicao:inscricao_toggle_taxa' inscricao.pk %}" class="inline">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1" title="Remover">
-                      <i class="bi bi-x"></i>
+                    <button type="submit"
+                            class="badge {% if inscricao.taxa_paga %}badge-success{% else %}badge-ghost{% endif %} badge-sm cursor-pointer hover:opacity-80 transition-opacity"
+                            title="{% if inscricao.taxa_paga %}Taxa paga — clique para desmarcar{% else %}Taxa pendente{% endif %}">
+                      {% if inscricao.taxa_paga %}<i class="bi bi-check2-circle"></i> Paga{% else %}<i class="bi bi-clock"></i> Pendente{% endif %}
                     </button>
                   </form>
+                </td>
+                <td>
+                  <div class="flex items-center justify-end gap-1">
+                    {% if atleta_id in suspensos_ids %}
+                      {% for susp in competicao.suspensoes.all %}
+                        {% if susp.atleta_id == atleta_id and not susp.cumprida %}
+                        <form method="post" action="{% url 'competicao:suspensao_cumprir' susp.pk %}" class="inline">
+                          {% csrf_token %}
+                          <button type="submit" class="btn btn-warning btn-xs gap-0.5" title="Suspensão cumprida">
+                            <i class="bi bi-check2 text-xs"></i>
+                          </button>
+                        </form>
+                        {% endif %}
+                      {% endfor %}
+                    {% endif %}
+                    <form method="post" action="{% url 'competicao:inscricao_excluir' inscricao.pk %}"
+                          onsubmit="return confirm('Remover {{ inscricao.atleta.nome }}?')" class="inline">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-ghost btn-xs text-error">
+                        <i class="bi bi-x-lg"></i>
+                      </button>
+                    </form>
+                  </div>
                 </td>
               </tr>
               {% endwith %}
@@ -110,45 +135,47 @@
             </tbody>
           </table>
           {% else %}
-          <p class="text-muted small">Nenhum atleta inscrito.</p>
+          <p class="px-4 py-6 text-sm text-base-content/40">Nenhum atleta inscrito.</p>
           {% endif %}
         </div>
 
-        <!-- Form adicionar -->
-        <div class="col-md-5">
-          <div class="card bg-light">
-            <div class="card-body">
-              <h6 class="card-title">Adicionar Atleta</h6>
-              <form method="post" action="{% url 'competicao:inscricao_criar' competicao.pk item.equipe.pk %}">
-                {% csrf_token %}
-                <div class="mb-2">
-                  <label class="form-label small fw-semibold">Atleta</label>
-                  {{ item.form.atleta }}
-                  {% if not item.form.atleta.field.queryset.exists %}
-                    <div class="text-muted small mt-1">Todos os atletas já estão inscritos.</div>
-                  {% endif %}
-                </div>
-                <div class="mb-2">
-                  <label class="form-label small fw-semibold">Número da camisa</label>
-                  {{ item.form.numero_camisa }}
-                </div>
-                <button type="submit" class="btn btn-primary btn-sm w-100"
-                  {% if not item.form.atleta.field.queryset.exists %}disabled{% endif %}>
-                  <i class="bi bi-person-plus"></i> Inscrever
-                </button>
-              </form>
+        <!-- Form adicionar (1/3) -->
+        <div class="p-4 bg-base-300/10">
+          <p class="text-xs font-semibold text-base-content/50 uppercase tracking-wider mb-3">Adicionar Atleta</p>
+          <form method="post" action="{% url 'competicao:inscricao_criar' competicao.pk item.equipe.pk %}" class="space-y-3">
+            {% csrf_token %}
+            <div>
+              <label class="label py-0 mb-1"><span class="label-text text-xs font-semibold">Atleta</span></label>
+              {{ item.form.atleta }}
+              {% if not item.form.atleta.field.queryset.exists %}
+                <p class="text-xs text-base-content/40 mt-1">Todos os atletas já estão inscritos.</p>
+              {% endif %}
             </div>
-          </div>
+            <div>
+              <label class="label py-0 mb-1"><span class="label-text text-xs font-semibold">Número da camisa</span></label>
+              {{ item.form.numero_camisa }}
+            </div>
+            <button type="submit" class="btn btn-warning btn-sm w-full gap-1"
+                    {% if not item.form.atleta.field.queryset.exists %}disabled{% endif %}>
+              <i class="bi bi-person-plus"></i> Inscrever
+            </button>
+          </form>
         </div>
 
       </div>
     </div>
+    {% empty %}
+    <div class="card bg-base-200 border border-base-300">
+      <div class="card-body text-center py-12 text-base-content/40">
+        <i class="bi bi-person-badge text-4xl block mb-3 opacity-30"></i>
+        <p class="font-semibold">Nenhuma equipe participante.</p>
+        <p class="text-sm mt-1">
+          <a href="{% url 'competicao:buscar_equipes_view' competicao.pk %}" class="link link-warning">Adicionar equipes</a>
+        </p>
+      </div>
+    </div>
+    {% endfor %}
   </div>
-  {% empty %}
-  <div class="alert alert-warning">
-    Nenhuma equipe participante. <a href="{% url 'competicao:buscar_equipes_view' competicao.pk %}">Adicionar equipes</a>
-  </div>
-  {% endfor %}
 
 </div>
 {% endblock %}

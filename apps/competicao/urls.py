@@ -34,6 +34,8 @@ urlpatterns = [
     path('jogo/escalacao/<int:pk>/excluir/', views.escalacao_excluir_view, name='escalacao_excluir'),
     path('jogo/<int:jogo_pk>/substituicao/', views.substituicao_criar_view, name='substituicao_criar'),
     path('jogo/substituicao/<int:pk>/excluir/', views.substituicao_excluir_view, name='substituicao_excluir'),
+    path('jogo/<int:jogo_pk>/arbitros/', views.arbitros_jogo_criar_view, name='arbitros_jogo_criar'),
+    path('jogo/arbitros/<int:pk>/excluir/', views.arbitros_jogo_excluir_view, name='arbitros_jogo_excluir'),
 
     # PDF / Impressão
     path('<int:pk>/pdf/classificacao/', views.pdf_classificacao_view, name='pdf_classificacao'),
@@ -70,4 +72,38 @@ urlpatterns = [
     path('arbitros/criar/', views.arbitro_criar_view, name='arbitro_criar'),
     path('arbitros/<int:pk>/editar/', views.arbitro_editar_view, name='arbitro_editar'),
     path('arbitros/<int:pk>/excluir/', views.arbitro_excluir_view, name='arbitro_excluir'),
+
+    # PDF extras (M)
+    path('<int:competicao_pk>/equipe/<int:equipe_pk>/pdf/elenco/', views.pdf_elenco_view, name='pdf_elenco'),
+    path('<int:pk>/pdf/artilheiros/', views.pdf_artilheiros_view, name='pdf_artilheiros'),
+
+    # Avaliação árbitro (K)
+    path('jogo/<int:jogo_pk>/avaliar-arbitro/', views.avaliacao_arbitro_view, name='avaliacao_arbitro'),
+
+    # Notificações (N)
+    path('notificacoes/', views.notificacoes_view, name='notificacoes'),
+
+    # Taxa de inscrição (P)
+    path('inscricao/<int:pk>/toggle-taxa/', views.inscricao_toggle_taxa_view, name='inscricao_toggle_taxa'),
+
+    # 3º lugar (R)
+    path('fases/<int:fase_pk>/terceiro-lugar/', views.terceiro_lugar_criar_view, name='terceiro_lugar_criar'),
+
+    # Busca global (T)
+    path('busca/', views.busca_global_view, name='busca_global'),
+
+    # Calendário (G)
+    path('calendario/', views.calendario_view, name='calendario'),
+
+    # Dashboard (A)
+    path('dashboard/', views.dashboard_view, name='dashboard'),
+
+    # Área Pública (O)
+    path('public/<int:pk>/classificacao/', views.PublicClassificacaoView.as_view(), name='public_classificacao'),
+
+    # API REST (S)
+    path('api/competicoes/', views.api_competicoes_view, name='api_competicoes'),
+    path('api/<int:pk>/classificacao/', views.api_classificacao_view, name='api_classificacao'),
+    path('api/<int:pk>/jogos/', views.api_jogos_view, name='api_jogos'),
+    path('api/<int:pk>/artilheiros/', views.api_artilheiros_view, name='api_artilheiros'),
 ]

@@ -1,4 +1,5 @@
-from django.core.validators import MinValueValidator
+from django.conf import settings
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from stdimage import StdImageField
 from ..equipe.models import Equipe, Atleta
@@ -62,10 +63,35 @@ class FaseCompeticao(models.Model):
 
 
 class Competicao(models.Model):
+    CATEGORIA_CHOICES = [
+        ('adulto', 'Adulto'), ('master', 'Master'),
+        ('sub20', 'Sub-20'), ('sub17', 'Sub-17'),
+        ('sub15', 'Sub-15'), ('sub13', 'Sub-13'), ('sub11', 'Sub-11'),
+    ]
+    GENERO_CHOICES = [
+        ('masculino', 'Masculino'), ('feminino', 'Feminino'), ('misto', 'Misto'),
+    ]
+    MODALIDADE_CHOICES = [
+        ('campo', 'Futebol de Campo'), ('futsal', 'Futsal'),
+        ('society', 'Society'), ('beach', 'Beach Soccer'),
+    ]
+    STATUS_CHOICES = [
+        ('inscricoes', 'Inscrições Abertas'), ('andamento', 'Em Andamento'),
+        ('finalizado', 'Finalizado'), ('cancelado', 'Cancelado'),
+    ]
+
     nome = models.CharField(max_length=100)
     descricao = models.TextField(blank=True, null=True)
     data_inicio = models.DateField(verbose_name='Início')
     data_fim = models.DateField(verbose_name='Final', blank=True, null=True)
+    categoria = models.CharField(max_length=10, choices=CATEGORIA_CHOICES, default='adulto', verbose_name='Categoria')
+    genero = models.CharField(max_length=15, choices=GENERO_CHOICES, default='masculino', verbose_name='Gênero')
+    modalidade = models.CharField(max_length=10, choices=MODALIDADE_CHOICES, default='campo', verbose_name='Modalidade')
+    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='inscricoes', verbose_name='Status')
+    data_abertura_inscricao = models.DateField(null=True, blank=True, verbose_name='Abertura de inscrições')
+    data_encerramento_inscricao = models.DateField(null=True, blank=True, verbose_name='Encerramento de inscrições')
+    limite_atletas = models.PositiveIntegerField(null=True, blank=True, verbose_name='Limite de atletas por equipe', help_text='Deixe em branco para sem limite')
+    taxa_inscricao = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True, verbose_name='Taxa de inscrição (R$)')
     equipes = models.ManyToManyField(Equipe, related_name='equipes')
     formato = models.OneToOneField(
         FormatoCompeticao, on_delete=models.DO_NOTHING,
@@ -81,6 +107,13 @@ class Competicao(models.Model):
 
     def __str__(self):
         return self.nome
+
+    @property
+    def status_badge_class(self):
+        return {
+            'inscricoes': 'info', 'andamento': 'warning',
+            'finalizado': 'success', 'cancelado': 'danger',
+        }.get(self.status, 'secondary')
 
 
 # ---------------------------------------------------------------------------
@@ -182,6 +215,7 @@ class Jogo(models.Model):
     gols_casa = models.IntegerField(default=0)
     gols_fora = models.IntegerField(default=0)
     finalizado = models.BooleanField(default=False)
+    em_andamento = models.BooleanField(default=False, verbose_name='Em andamento')
     anulado = models.BooleanField(default=False)
     wo = models.BooleanField(default=False, verbose_name='W.O.')
     local = models.ForeignKey(
@@ -190,12 +224,46 @@ class Jogo(models.Model):
     )
     arbitro = models.ForeignKey(
         'Arbitro', on_delete=models.SET_NULL, null=True, blank=True,
-        related_name='jogos', verbose_name='Árbitro',
+        related_name='jogos', verbose_name='Árbitro Principal',
     )
+    publico = models.PositiveIntegerField(null=True, blank=True, verbose_name='Público presente')
+    observacoes = models.TextField(null=True, blank=True, verbose_name='Observações')
 
     def __str__(self):
-        status = 'Anulado' if self.anulado else 'Finalizado' if self.finalizado else 'Pendente'
+        if self.em_andamento:
+            status = 'Ao vivo'
+        elif self.anulado:
+            status = 'Anulado'
+        elif self.finalizado:
+            status = 'Finalizado'
+        else:
+            status = 'Pendente'
         return f"{self.equipe_casa} x {self.equipe_fora} ({status})"
+
+
+class ArbitrosJogo(models.Model):
+    PRINCIPAL = 'principal'
+    ASSISTENTE1 = 'assistente1'
+    ASSISTENTE2 = 'assistente2'
+    QUARTO = 'quarto'
+    TIPO_CHOICES = [
+        (PRINCIPAL, 'Árbitro Principal'),
+        (ASSISTENTE1, 'Assistente 1'),
+        (ASSISTENTE2, 'Assistente 2'),
+        (QUARTO, 'Quarto Árbitro'),
+    ]
+    jogo = models.ForeignKey(Jogo, on_delete=models.CASCADE, related_name='arbitros_jogo')
+    arbitro = models.ForeignKey(Arbitro, on_delete=models.CASCADE, related_name='jogos_arbitrados')
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default=PRINCIPAL)
+
+    class Meta:
+        unique_together = [('jogo', 'tipo')]
+        ordering = ['tipo']
+        verbose_name = 'Árbitro do Jogo'
+        verbose_name_plural = 'Árbitros do Jogo'
+
+    def __str__(self):
+        return f"{self.arbitro.nome} ({self.get_tipo_display()}) — {self.jogo}"
 
 
 # ---------------------------------------------------------------------------
@@ -203,7 +271,12 @@ class Jogo(models.Model):
 # ---------------------------------------------------------------------------
 
 class ConfrontoMatamate(models.Model):
+    NORMAL = 'normal'
+    TERCEIRO_LUGAR = 'terceiro'
+    TIPO_CHOICES = [(NORMAL, 'Normal'), (TERCEIRO_LUGAR, '3º Lugar')]
+
     fase = models.ForeignKey(Fase, on_delete=models.CASCADE, related_name='confrontos')
+    tipo_confronto = models.CharField(max_length=10, choices=TIPO_CHOICES, default=NORMAL, verbose_name='Tipo')
     equipe_mandante = models.ForeignKey(
         Equipe, on_delete=models.SET_NULL, null=True, blank=True,
         related_name='confrontos_mandante',
@@ -332,6 +405,7 @@ class InscricaoAtleta(models.Model):
     competicao = models.ForeignKey(Competicao, on_delete=models.CASCADE, related_name='inscricoes')
     atleta = models.ForeignKey(Atleta, on_delete=models.CASCADE, related_name='inscricoes')
     numero_camisa = models.PositiveIntegerField(verbose_name='Número', null=True, blank=True)
+    taxa_paga = models.BooleanField(default=False, verbose_name='Taxa paga')
 
     class Meta:
         unique_together = [('competicao', 'atleta')]
@@ -443,3 +517,60 @@ class Substituicao(models.Model):
 
     def __str__(self):
         return f"{self.atleta_entra.nome} ↔ {self.atleta_sai.nome} ({self.minuto}')"
+
+
+# ---------------------------------------------------------------------------
+# Avaliação do Árbitro por Jogo  (K)
+# ---------------------------------------------------------------------------
+
+class AvaliacaoArbitro(models.Model):
+    jogo = models.OneToOneField(Jogo, on_delete=models.CASCADE, related_name='avaliacao_arbitro')
+    nota = models.PositiveIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+        verbose_name='Nota (1-10)',
+    )
+    observacoes = models.TextField(blank=True, null=True, verbose_name='Observações')
+    avaliado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True,
+        related_name='avaliacoes_arbitro',
+    )
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Avaliação do Árbitro'
+        verbose_name_plural = 'Avaliações dos Árbitros'
+
+    def __str__(self):
+        return f"Avaliação {self.nota}/10 — {self.jogo}"
+
+
+# ---------------------------------------------------------------------------
+# Notificações in-app  (N)
+# ---------------------------------------------------------------------------
+
+class Notificacao(models.Model):
+    RESULTADO = 'resultado'
+    SUSPENSAO = 'suspensao'
+    SISTEMA = 'sistema'
+    TIPO_CHOICES = [
+        (RESULTADO, 'Resultado registrado'),
+        (SUSPENSAO, 'Suspensão gerada'),
+        (SISTEMA, 'Sistema'),
+    ]
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='notificacoes',
+    )
+    mensagem = models.TextField()
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default=SISTEMA)
+    lida = models.BooleanField(default=False)
+    url = models.CharField(max_length=300, blank=True, null=True)
+    criada_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-criada_em']
+        verbose_name = 'Notificação'
+        verbose_name_plural = 'Notificações'
+
+    def __str__(self):
+        return f"{self.usuario.email} — {self.mensagem[:50]}"

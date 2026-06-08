@@ -1,29 +1,37 @@
 {% extends 'base/indice.html' %}
-{% load crispy_forms_tags %}
 {% block titulo %}{{ titulo }}{% endblock %}
 
 {% block conteudo %}
-<div class="container mt-4" style="max-width: 540px;">
-  <div class="card">
-    <div class="card-header">
-      <h5 class="mb-0">{{ titulo }}</h5>
+<div class="p-4 md:p-6 max-w-lg mx-auto">
+  <div class="card bg-base-200 border border-base-300">
+    <div class="px-5 py-3 border-b border-base-300 flex items-center gap-2">
+      <i class="bi bi-shield text-warning text-sm"></i>
+      <h1 class="font-bold text-sm">{{ titulo }}</h1>
     </div>
-    <div class="card-body">
-      {% if messages %}
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
-          {{ message }}
-          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <div class="card-body p-5">
+      <form method="post" enctype="multipart/form-data" class="space-y-4">
+        {% csrf_token %}
+        {% for field in form %}
+        <div>
+          <label class="label py-0 mb-1" for="{{ field.id_for_label }}">
+            <span class="label-text font-semibold text-sm">{{ field.label }}{% if field.field.required %}<span class="text-error ml-1">*</span>{% endif %}</span>
+          </label>
+          {{ field }}
+          {% if field.help_text %}
+            <p class="text-xs text-base-content/50 mt-1">{{ field.help_text }}</p>
+          {% endif %}
+          {% if field.errors %}
+            {% for error in field.errors %}
+              <p class="text-error text-xs mt-1">{{ error }}</p>
+            {% endfor %}
+          {% endif %}
         </div>
         {% endfor %}
-      {% endif %}
-
-      <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form|crispy }}
-        <div class="d-flex gap-2 mt-3">
-          <button type="submit" class="btn btn-primary">Salvar</button>
-          <a href="{% url 'equipe:lista' %}" class="btn btn-outline-secondary">Cancelar</a>
+        <div class="flex gap-2 pt-2">
+          <button type="submit" class="btn btn-warning flex-1">
+            <i class="bi bi-floppy"></i> Salvar
+          </button>
+          <a href="{% url 'equipe:lista' %}" class="btn btn-ghost">Cancelar</a>
         </div>
       </form>
     </div>

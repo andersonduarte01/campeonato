@@ -28,15 +28,10 @@ INSTALLED_APPS = [
     'apps.equipe',
     'apps.competicao',
     'apps.criterios',
-    'crispy_forms',
-    'crispy_bootstrap5',
 ]
 
 TAILWIND_APP_NAME = 'theme'
 NPM_BIN_PATH = r'C:\Program Files\nodejs\npm.cmd'
-
-CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
-CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -61,6 +56,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'apps.competicao.context_processors.notificacoes_nao_lidas',
             ],
         },
     },

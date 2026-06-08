@@ -21,7 +21,17 @@
       "Bash(python manage.py migrate --check)",
       "Bash(python -c ' *)",
       "Bash(python manage.py shell -c ' *)",
-      "Bash(python manage.py makemigrations competicao --name suspensao)"
+      "Bash(python manage.py makemigrations competicao --name suspensao)",
+      "Bash(python manage.py makemigrations --check)",
+      "Bash(python manage.py makemigrations)",
+      "Bash(python manage.py showmigrations --plan)",
+      "Bash(python manage.py check --deploy)",
+      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\('tailwindcss:', p.devDependencies.tailwindcss, '| daisyui:', p.devDependencies.daisyui\\)\")",
+      "Bash(node -e \"const d=require\\('./node_modules/daisyui/dist/themes.js'\\); const lux=Object.entries\\(d\\).find\\(\\([k]\\)=>k.includes\\('luxury'\\)\\); console.log\\(JSON.stringify\\(lux,null,2\\)\\)\")",
+      "Bash(node -e \"const d=require\\('./node_modules/daisyui'\\); console.log\\(Object.keys\\(d\\)\\)\")",
+      "Bash(Get-ChildItem \"theme\\\\static_src\\\\node_modules\\\\daisyui\" -Recurse -Name)",
+      "Bash(Select-Object -First 20)",
+      "Bash(python *)"
     ]
   }
 }

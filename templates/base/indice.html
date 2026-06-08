@@ -1,140 +1,424 @@
+{% load static tailwind_tags %}
 <!doctype html>
-{% load static %}
-<html lang="pt-br">
+<html lang="pt-br" data-theme="luxury">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="">
-  <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
-  <meta name="generator" content="Hugo 0.104.2">
-  <title>{% block titulo %}Indice{% endblock %}</title>
-
-  <link rel="canonical" href="https://getbootstrap.com/docs/5.2/examples/headers/">
+  <title>{% block titulo %}Campeonato{% endblock %} — Champs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+  {% tailwind_css %}
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-  <link href="{% static 'assets/dist/css/bootstrap.min.css' %}" rel="stylesheet">
   {% block estatico %}{% endblock %}
-  <style>
-    .bd-placeholder-img {
-      font-size: 1.125rem;
-      text-anchor: middle;
-      -webkit-user-select: none;
-      -moz-user-select: none;
-      user-select: none;
+</head>
+
+<body class="min-h-screen bg-base-100 text-base-content antialiased">
+
+  <!-- ── Toasts ────────────────────────────────────────────────────── -->
+  {% if messages %}
+  <div class="toast toast-top toast-end z-[100] mt-3 gap-2">
+    {% for message in messages %}
+    <div role="alert" class="alert shadow-2xl rounded-xl border border-base-content/10 text-sm font-medium
+      {% if 'success' in message.tags %}alert-success
+      {% elif 'error' in message.tags %}alert-error
+      {% elif 'warning' in message.tags %}alert-warning
+      {% else %}alert-info{% endif %}">
+      <i class="bi bi-
+        {% if 'success' in message.tags %}check-circle-fill
+        {% elif 'error' in message.tags %}x-circle-fill
+        {% elif 'warning' in message.tags %}exclamation-triangle-fill
+        {% else %}info-circle-fill{% endif %} text-base shrink-0"></i>
+      <span>{{ message }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- ─────────────────────────────────────────────────────────────────
+       DRAWER — lg:drawer-open torna a sidebar permanente no desktop
+  ────────────────────────────────────────────────────────────────── -->
+  <div class="drawer lg:drawer-open">
+    <input id="nav-drawer" type="checkbox" class="drawer-toggle" />
+
+    <!-- ═══ Área principal (navbar + conteúdo + footer) ════════════ -->
+    <div class="drawer-content flex flex-col min-h-screen">
+
+      <!-- ── Navbar ─────────────────────────────────────────────── -->
+      <nav class="navbar bg-neutral text-neutral-content sticky top-0 z-30 px-3 shadow-lg border-b border-neutral-content/10">
+
+        <!-- Start: hamburguer (mobile) + logo (mobile) -->
+        <div class="navbar-start gap-1">
+
+          <!-- Hamburguer: só mobile -->
+          <label for="nav-drawer" aria-label="Abrir menu"
+                 class="btn btn-ghost btn-sm lg:hidden text-neutral-content hover:bg-neutral-content/10">
+            <i class="bi bi-list text-xl"></i>
+          </label>
+
+          <!-- Logo: só mobile (desktop tem na sidebar) -->
+          <a href="/" class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-neutral-content/10
+                             transition-colors lg:hidden">
+            <i class="bi bi-trophy-fill text-warning text-lg"></i>
+            <span class="font-black text-base tracking-tight">Champs</span>
+          </a>
+
+        </div>
+
+        <!-- End: busca + usuário -->
+        <div class="navbar-end gap-2">
+
+          <!-- Busca global (desktop) -->
+          <form method="get" action="{% url 'competicao:busca_global' %}" class="hidden md:flex" role="search">
+            <label class="input input-sm bg-neutral-content/5 border-neutral-content/15 text-neutral-content
+                          flex items-center gap-2 rounded-lg focus-within:border-neutral-content/40
+                          focus-within:bg-neutral-content/10 transition-all duration-150">
+              <i class="bi bi-search text-neutral-content/30 text-xs shrink-0"></i>
+              <input type="search" name="q" placeholder="Buscar..."
+                     class="grow bg-transparent w-28 text-sm placeholder:text-neutral-content/30 outline-none">
+            </label>
+          </form>
+
+          {% if user.is_authenticated %}
+          <!-- Dropdown usuário -->
+          <div class="dropdown dropdown-end">
+            <div tabindex="0" role="button"
+                 class="btn btn-ghost btn-sm gap-2 text-neutral-content hover:bg-neutral-content/10 transition-colors duration-150 max-w-48">
+              <div class="w-7 h-7 rounded-full bg-warning/10 border border-warning/20
+                          flex items-center justify-center shrink-0">
+                <i class="bi bi-person-fill text-warning/70 text-sm"></i>
+              </div>
+              <span class="hidden sm:inline truncate text-sm font-medium">
+                {{ user.nome|default:user.email }}
+              </span>
+              <i class="bi bi-chevron-down text-[10px] opacity-40"></i>
+            </div>
+            <ul tabindex="0"
+                class="dropdown-content bg-neutral border border-neutral-content/10 rounded-xl shadow-2xl
+                       z-50 w-56 p-1.5 mt-1 flex flex-col gap-0.5">
+              <li class="px-3 py-1.5">
+                <span class="text-xs font-semibold text-neutral-content/40 uppercase tracking-widest">
+                  {{ user.get_perfil_display }}
+                </span>
+              </li>
+              <li><div class="h-px bg-neutral-content/10 my-0.5"></div></li>
+              <li>
+                <a href="{% url 'competicao:notificacoes' %}"
+                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-neutral-content/70
+                          hover:text-neutral-content hover:bg-neutral-content/10 transition-all duration-150">
+                  <i class="bi bi-bell-fill text-warning/70 text-xs"></i>
+                  Notificações
+                  {% if notificacoes_count > 0 %}
+                  <span class="badge badge-error badge-xs ml-auto">{{ notificacoes_count }}</span>
+                  {% endif %}
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'core:alterar_senha' %}"
+                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-neutral-content/70
+                          hover:text-neutral-content hover:bg-neutral-content/10 transition-all duration-150">
+                  <i class="bi bi-lock-fill text-warning/70 text-xs"></i> Alterar Senha
+                </a>
+              </li>
+              <li><div class="h-px bg-neutral-content/10 my-0.5"></div></li>
+              <li>
+                <a href="{% url 'core:logout' %}"
+                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-error/80
+                          hover:text-error hover:bg-error/10 transition-all duration-150">
+                  <i class="bi bi-box-arrow-right text-xs"></i> Sair
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          {% else %}
+          <a href="{% url 'core:login' %}" class="btn btn-warning btn-sm gap-1.5 font-semibold shadow-lg shadow-warning/20">
+            <i class="bi bi-box-arrow-in-right text-sm"></i>
+            <span class="hidden sm:inline">Entrar</span>
+          </a>
+          {% endif %}
+
+        </div>
+      </nav>
+      <!-- Linha dourada -->
+      <div class="h-px bg-gradient-to-r from-transparent via-warning/25 to-transparent shrink-0"></div>
+
+      <!-- Conteúdo da página -->
+      <main class="flex-1">
+        {% block conteudo %}{% endblock %}
+      </main>
+
+      <!-- Footer -->
+      <footer class="bg-neutral border-t border-neutral-content/10 py-4 mt-8">
+        <p class="text-center text-sm text-neutral-content/25">
+          &copy; <script>document.write(new Date().getFullYear())</script>
+          &mdash; Desenvolvido por Anderson Duarte
+        </p>
+      </footer>
+
+    </div>
+    <!-- ═══ /Área principal ════════════════════════════════════════ -->
+
+    <!-- ── Sidebar — overlay no mobile, fixa no desktop ─────────── -->
+    <div class="drawer-side z-40">
+
+      <!-- Overlay: só mobile (no desktop não precisa fechar a sidebar) -->
+      <label for="nav-drawer" aria-label="Fechar menu" class="drawer-overlay lg:hidden"></label>
+
+      <aside class="bg-neutral text-neutral-content min-h-full w-64 flex flex-col
+                    border-r border-neutral-content/10 overflow-y-auto">
+
+        <!-- ── Logo / Marca ───────────────────────────────────────── -->
+        <a href="/" class="flex items-center gap-3 px-5 py-5 border-b border-neutral-content/10
+                           hover:bg-neutral-content/5 transition-colors group">
+          <div class="w-10 h-10 rounded-xl bg-warning/10 border border-warning/20
+                      flex items-center justify-center shrink-0
+                      group-hover:border-warning/40 transition-colors">
+            <i class="bi bi-trophy-fill text-warning text-xl"></i>
+          </div>
+          <div>
+            <div class="section-heading text-xl font-black tracking-widest text-neutral-content leading-none">
+              CHAMPS
+            </div>
+            <div class="text-[11px] text-neutral-content/30 mt-0.5 font-medium tracking-wide">
+              Sistema de Campeonatos
+            </div>
+          </div>
+        </a>
+
+        <!-- ── Navegação principal ────────────────────────────────── -->
+        {% url 'competicao:dashboard'       as url_dash %}
+        {% url 'equipe:lista'               as url_equipes %}
+        {% url 'competicao:competicao_lista' as url_comp %}
+        {% url 'competicao:calendario'       as url_cal %}
+        {% url 'competicao:local_lista'      as url_local %}
+        {% url 'competicao:arbitro_lista'    as url_arb %}
+
+        <nav class="flex-1 px-3 py-4 flex flex-col gap-0.5 overflow-y-auto">
+
+          <a href="{{ url_dash }}"
+             class="sidebar-link {% if request.path == url_dash %}sidebar-link-active{% endif %}">
+            <i class="bi bi-speedometer2 text-base shrink-0"></i>
+            Dashboard
+          </a>
+
+          <a href="{{ url_equipes }}"
+             class="sidebar-link {% if url_equipes in request.path %}sidebar-link-active{% endif %}">
+            <i class="bi bi-shield-fill text-base shrink-0"></i>
+            Equipes
+          </a>
+
+          <a href="{{ url_comp }}"
+             class="sidebar-link {% if url_comp in request.path %}sidebar-link-active{% endif %}">
+            <i class="bi bi-trophy text-base shrink-0"></i>
+            Competições
+          </a>
+
+          <a href="{{ url_cal }}"
+             class="sidebar-link {% if request.path == url_cal %}sidebar-link-active{% endif %}">
+            <i class="bi bi-calendar3 text-base shrink-0"></i>
+            Calendário
+          </a>
+
+          <!-- Seção: Cadastros -->
+          <div class="sidebar-section">
+            <span class="sidebar-section-label">Cadastros</span>
+          </div>
+
+          <a href="{{ url_local }}"
+             class="sidebar-link {% if request.path == url_local %}sidebar-link-active{% endif %}">
+            <i class="bi bi-geo-alt-fill text-base shrink-0 text-warning/50"></i>
+            Locais / Campos
+          </a>
+
+          <a href="{{ url_arb }}"
+             class="sidebar-link {% if request.path == url_arb %}sidebar-link-active{% endif %}">
+            <i class="bi bi-person-badge-fill text-base shrink-0 text-warning/50"></i>
+            Árbitros
+          </a>
+
+          {% if user.is_authenticated and user.is_admin or user.is_authenticated and user.perfil == 'admin' %}
+          <!-- Seção: Administração -->
+          <div class="sidebar-section">
+            <span class="sidebar-section-label">Administração</span>
+          </div>
+
+          {% url 'core:usuarios_lista' as url_usuarios %}
+          <a href="{{ url_usuarios }}"
+             class="sidebar-link {% if request.path == url_usuarios %}sidebar-link-active{% endif %}">
+            <i class="bi bi-people-fill text-base shrink-0 text-warning/50"></i>
+            Gerenciar Usuários
+          </a>
+          {% endif %}
+
+          <!-- Busca mobile -->
+          <div class="mt-6 lg:hidden">
+            <form method="get" action="{% url 'competicao:busca_global' %}">
+              <label class="input input-sm bg-neutral-content/5 border-neutral-content/15
+                            flex items-center gap-2 w-full rounded-xl">
+                <i class="bi bi-search text-neutral-content/30 text-xs shrink-0"></i>
+                <input type="search" name="q" placeholder="Buscar..."
+                       class="grow bg-transparent text-sm text-neutral-content
+                              placeholder:text-neutral-content/30 outline-none">
+              </label>
+            </form>
+          </div>
+
+        </nav>
+        <!-- /nav -->
+
+        <!-- ── Rodapé da sidebar: usuário ─────────────────────────── -->
+        {% if user.is_authenticated %}
+        <div class="border-t border-neutral-content/10 px-3 py-3">
+
+          <!-- Info do usuário -->
+          <div class="flex items-center gap-3 px-2 py-2 mb-1">
+            <div class="w-9 h-9 rounded-full bg-warning/10 border border-warning/20
+                        flex items-center justify-center shrink-0">
+              <i class="bi bi-person-fill text-warning/70 text-sm"></i>
+            </div>
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-semibold text-neutral-content truncate leading-snug">
+                {{ user.nome|default:user.email }}
+              </p>
+              <p class="text-xs text-neutral-content/40">{{ user.get_perfil_display }}</p>
+            </div>
+          </div>
+
+          <!-- Ações rápidas -->
+          <a href="{% url 'competicao:notificacoes' %}"
+             class="sidebar-link py-2">
+            <i class="bi bi-bell-fill text-sm shrink-0"></i>
+            Notificações
+            {% if notificacoes_count > 0 %}
+            <span class="badge badge-error badge-xs ml-auto">{{ notificacoes_count }}</span>
+            {% endif %}
+          </a>
+
+          <a href="{% url 'core:alterar_senha' %}"
+             class="sidebar-link py-2">
+            <i class="bi bi-lock-fill text-sm shrink-0"></i>
+            Alterar Senha
+          </a>
+
+          <a href="{% url 'core:logout' %}"
+             class="sidebar-link py-2 text-error/70 hover:text-error hover:bg-error/10 mt-0.5">
+            <i class="bi bi-box-arrow-right text-sm shrink-0"></i>
+            Sair
+          </a>
+
+        </div>
+        {% else %}
+        <div class="border-t border-neutral-content/10 px-4 py-4">
+          <a href="{% url 'core:login' %}"
+             class="btn btn-warning btn-sm w-full gap-2 shadow-lg shadow-warning/20 font-semibold">
+            <i class="bi bi-box-arrow-in-right"></i> Entrar
+          </a>
+        </div>
+        {% endif %}
+
+      </aside>
+    </div>
+    <!-- ── /Sidebar ───────────────────────────────────────────────── -->
+
+  </div>
+  <!-- /drawer -->
+
+  <!-- ── Micro-interações globais ──────────────────────────────────── -->
+  <script>
+  (function () {
+    'use strict';
+
+    var noMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    /* ── 1. Toast: anima entrada e auto-remove após 4,5 s ─────────── */
+    document.querySelectorAll('.toast > [role="alert"]').forEach(function (el, i) {
+      if (!noMotion) {
+        el.style.animation = 'slide-toast 0.35s cubic-bezier(0.16,1,0.3,1) ' + (i * 100) + 'ms both';
+      }
+      setTimeout(function () {
+        el.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(14px)';
+        setTimeout(function () { el.remove(); }, 360);
+      }, 4500 + i * 150);
+    });
+
+    /* ── 2. Scroll-reveal: cards e tabelas dentro de <main> ────────── */
+    if (!noMotion && 'IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) {
+            e.target.classList.add('visible');
+            io.unobserve(e.target);
+          }
+        });
+      }, { threshold: 0.06, rootMargin: '0px 0px -32px 0px' });
+
+      /* Observa cards e tabelas; escalonamento de até 200 ms por grupo de 4 */
+      var targets = document.querySelectorAll('main .card, main table');
+      targets.forEach(function (el, i) {
+        el.classList.add('reveal');
+        el.style.transitionDelay = (Math.min((i % 4) * 65, 195)) + 'ms';
+        io.observe(el);
+      });
     }
 
-    @media (min-width: 768px) {
-      .bd-placeholder-img-lg {
-        font-size: 3.5rem;
+    /* ── 3. Form submit → botão de envio mostra spinner ───────────── */
+    document.querySelectorAll('form').forEach(function (form) {
+      form.addEventListener('submit', function () {
+        var btn = form.querySelector('[type="submit"]');
+        if (!btn || btn.disabled) return;
+        btn.disabled = true;
+        btn.style.opacity = '0.72';
+        var orig = btn.innerHTML;
+        btn.innerHTML =
+          '<span style="display:inline-block;width:.85em;height:.85em;border:2px solid currentColor;' +
+          'border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;' +
+          'vertical-align:middle;margin-right:.35em"></span>' +
+          btn.textContent.trim();
+        /* Failsafe: restaura após 10 s se a página não recarregar */
+        setTimeout(function () {
+          btn.disabled = false;
+          btn.innerHTML = orig;
+          btn.style.opacity = '';
+        }, 10000);
+      });
+    });
+
+    /* ── 4. Counter: anima de 0 → N em .stat-number com valor inteiro ─ */
+    if (!noMotion && 'IntersectionObserver' in window) {
+      var statEls = Array.prototype.filter.call(
+        document.querySelectorAll('main .stat-number'),
+        function (el) {
+          var t = el.textContent.trim();
+          return /^\d+$/.test(t) && parseInt(t, 10) > 1;
+        }
+      );
+      if (statEls.length) {
+        var cio = new IntersectionObserver(function (entries) {
+          entries.forEach(function (e) {
+            if (!e.isIntersecting) return;
+            var el = e.target;
+            var target = parseInt(el.textContent.trim(), 10);
+            var dur = 750;
+            var t0 = performance.now();
+            (function tick(now) {
+              var p = Math.min((now - t0) / dur, 1);
+              var ease = 1 - Math.pow(1 - p, 3); /* ease-out-cubic */
+              el.textContent = Math.round(ease * target);
+              if (p < 1) requestAnimationFrame(tick);
+            })(t0);
+            cio.unobserve(el);
+          });
+        }, { threshold: 0.6 });
+        statEls.forEach(function (el) { cio.observe(el); });
       }
     }
 
-    .b-example-divider {
-      height: 3rem;
-      background-color: rgba(0, 0, 0, .1);
-      border: solid rgba(0, 0, 0, .15);
-      border-width: 1px 0;
-      box-shadow: inset 0 .5em 1.5em rgba(0, 0, 0, .1), inset 0 .125em .5em rgba(0, 0, 0, .15);
-    }
+  })();
+  </script>
 
-    .b-example-vr {
-      flex-shrink: 0;
-      width: 1.5rem;
-      height: 100vh;
-    }
-
-    .bi {
-      vertical-align: -.125em;
-      fill: currentColor;
-    }
-
-    .nav-scroller {
-      position: relative;
-      z-index: 2;
-      height: 2.75rem;
-      overflow-y: hidden;
-    }
-
-    .nav-scroller .nav {
-      display: flex;
-      flex-wrap: nowrap;
-      padding-bottom: 1rem;
-      margin-top: -1px;
-      overflow-x: auto;
-      text-align: center;
-      white-space: nowrap;
-      -webkit-overflow-scrolling: touch;
-    }
-  </style>
-  <!-- Custom styles for this template -->
-  <link href="{% static 'headers.css' %}" rel="stylesheet">
-</head>
-<body>
-
-<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
-  <symbol id="bootstrap" viewBox="0 0 118 94">
-    <title>Bootstrap</title>
-    <path fill-rule="evenodd" clip-rule="evenodd" d="M24.509 0c-6.733 0-11.715 5.893-11.492 12.284.214 6.14-.064 14.092-2.066 20.577C8.943 39.365 5.547 43.485 0 44.014v5.972c5.547.529 8.943 4.649 10.951 11.153 2.002 6.485 2.28 14.437 2.066 20.577C12.794 88.106 17.776 94 24.51 94H93.5c6.733 0 11.714-5.893 11.491-12.284-.214-6.14.064-14.092 2.066-20.577 2.009-6.504 5.396-10.624 10.943-11.153v-5.972c-5.547-.529-8.934-4.649-10.943-11.153-2.002-6.484-2.28-14.437-2.066-20.577C105.214 5.894 100.233 0 93.5 0H24.508zM80 57.863C80 66.663 73.436 72 62.543 72H44a2 2 0 01-2-2V24a2 2 0 012-2h18.437c9.083 0 15.044 4.92 15.044 12.474 0 5.302-4.01 10.049-9.119 10.88v.277C75.317 46.394 80 51.21 80 57.863zM60.521 28.34H49.948v14.934h8.905c6.884 0 10.68-2.772 10.68-7.727 0-4.643-3.264-7.207-9.012-7.207zM49.948 49.2v16.458H60.91c7.167 0 10.964-2.876 10.964-8.281 0-5.406-3.903-8.178-11.425-8.178H49.948z"></path>
-  </symbol>
-</svg>
-
-<main>
-  <header class="p-3 text-bg-dark">
-    <div class="container">
-      <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
-        <a href="/" class="d-flex align-items-center mb-2 mb-lg-0 text-white text-decoration-none">
-          <svg class="bi me-2" width="40" height="32" role="img" aria-label="Bootstrap"><use xlink:href="#bootstrap"/></svg>
-        </a>
-
-        <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
-          <li><a href="{% url 'core:index' %}" class="nav-link px-2 text-secondary">Home</a></li>
-          <li><a href="{% url 'equipe:lista' %}" class="nav-link px-2 text-white">Equipes</a></li>
-          <li><a href="{% url 'competicao:competicao_lista' %}" class="nav-link px-2 text-white">Competições</a></li>
-          <li class="nav-item dropdown">
-            <a class="nav-link px-2 text-white dropdown-toggle" href="#" data-bs-toggle="dropdown">Cadastros</a>
-            <ul class="dropdown-menu dropdown-menu-dark">
-              <li><a class="dropdown-item" href="{% url 'competicao:local_lista' %}"><i class="bi bi-geo-alt me-1"></i> Locais / Campos</a></li>
-              <li><a class="dropdown-item" href="{% url 'competicao:arbitro_lista' %}"><i class="bi bi-person-badge me-1"></i> Árbitros</a></li>
-            </ul>
-          </li>
-        </ul>
-
-        <form class="col-12 col-lg-auto mb-3 mb-lg-0 me-lg-3" role="search">
-          <input type="search" class="form-control form-control-dark text-bg-dark" placeholder="Search..." aria-label="Search">
-        </form>
-
-        <div class="text-end">
-          {% if user.is_authenticated %}
-            <span class="text-white me-3 small">
-              <i class="bi bi-person-circle"></i> {{ user.nome|default:user.email }}
-            </span>
-            <a href="{% url 'core:logout' %}" class="btn btn-outline-light btn-sm">
-              <i class="bi bi-box-arrow-right"></i> Sair
-            </a>
-          {% else %}
-            <a href="{% url 'core:login' %}" class="btn btn-outline-light btn-sm">
-              <i class="bi bi-box-arrow-in-right"></i> Entrar
-            </a>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-  </header>
-</main>
-<div class="container">
-  {% block conteudo %}
-  Indice
-  {% endblock %}
-</div>
-<div class="container">
-  <footer class="py-3 my-4">
-    <p class="text-center text-muted">&copy;
-      <script>
-        document.write(new Date().getFullYear());
-      </script> |
-      Desenvolvido por Anderson Duarte
-    </p>
-  </footer>
-</div>
-<script src="{% static 'assets/dist/js/bootstrap.bundle.min.js' %}"></script>
+  {% block script %}{% endblock %}
 </body>
 </html>

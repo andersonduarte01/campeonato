@@ -1,41 +1,54 @@
 {% extends 'base/indice.html' %}
-{% load crispy_forms_tags %}
 {% block titulo %}Fases — {{ competicao.nome }}{% endblock %}
 
 {% block conteudo %}
-<div class="container mt-4">
+<div class="p-4 md:p-6">
 
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4 class="mb-0"><i class="bi bi-layers"></i> {{ competicao.nome }} — Fases</h4>
-    <div class="d-flex gap-2">
-      <a href="{% url 'competicao:classificacao' competicao.pk %}" class="btn btn-sm btn-outline-success">
+  <div class="flex items-center justify-between mb-5">
+    <h1 class="text-lg font-bold flex items-center gap-2">
+      <i class="bi bi-layers text-warning"></i> {{ competicao.nome }} — Fases
+    </h1>
+    <div class="flex gap-2">
+      <a href="{% url 'competicao:classificacao' competicao.pk %}" class="btn btn-ghost btn-sm gap-1">
         <i class="bi bi-trophy"></i> Classificação
       </a>
-      <a href="{% url 'competicao:competicao_lista' %}" class="btn btn-sm btn-outline-dark">
+      <a href="{% url 'competicao:competicao_lista' %}" class="btn btn-ghost btn-sm gap-1">
         <i class="bi bi-arrow-left"></i> Voltar
       </a>
     </div>
   </div>
 
-  {% if messages %}
-    {% for message in messages %}
-    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
-      {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-    {% endfor %}
-  {% endif %}
-
-  <div class="row g-3">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
     <!-- Nova fase -->
-    <div class="col-md-4">
-      <div class="card">
-        <div class="card-header fw-semibold"><i class="bi bi-plus-circle"></i> Nova Fase</div>
-        <div class="card-body">
-          <form method="post" action="{% url 'competicao:fase_criar' competicao_pk=competicao.pk %}">
+    <div class="lg:col-span-1">
+      <div class="card bg-base-200 border border-base-300 sticky top-20">
+        <div class="px-4 py-3 border-b border-base-300 flex items-center gap-2">
+          <i class="bi bi-plus-circle text-warning text-sm"></i>
+          <span class="font-semibold text-sm">Nova Fase</span>
+        </div>
+        <div class="card-body p-4">
+          <form method="post" action="{% url 'competicao:fase_criar' competicao_pk=competicao.pk %}" class="space-y-3">
             {% csrf_token %}
-            {{ form|crispy }}
-            <button type="submit" class="btn btn-primary btn-sm mt-2 w-100">
+            {% for field in form %}
+            {% if field.field.widget.input_type == 'checkbox' %}
+            <label class="flex items-center gap-3 cursor-pointer px-2 py-1.5 rounded-lg hover:bg-base-300/40 transition-colors">
+              {{ field }}
+              <span class="text-sm font-medium">{{ field.label }}</span>
+            </label>
+            {% else %}
+            <div>
+              <label class="label py-0 mb-1" for="{{ field.id_for_label }}">
+                <span class="label-text font-semibold text-xs">{{ field.label }}{% if field.field.required %}<span class="text-error ml-1">*</span>{% endif %}</span>
+              </label>
+              {{ field }}
+              {% if field.errors %}
+                {% for error in field.errors %}<p class="text-error text-xs mt-1">{{ error }}</p>{% endfor %}
+              {% endif %}
+            </div>
+            {% endif %}
+            {% endfor %}
+            <button type="submit" class="btn btn-warning btn-sm w-full mt-1">
               <i class="bi bi-check-lg"></i> Criar Fase
             </button>
           </form>
@@ -44,59 +57,64 @@
     </div>
 
     <!-- Lista de fases -->
-    <div class="col-md-8">
+    <div class="lg:col-span-2 space-y-3">
+
       {% for fase in fases %}
-      <div class="card mb-3">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <span class="fw-semibold">{{ fase.nome }}</span>
+      <div class="card bg-base-200 border border-base-300 hover:border-warning/30 transition-colors">
+        <div class="px-4 py-3 border-b border-base-300 flex items-center justify-between">
+          <span class="font-semibold text-sm">{{ fase.nome }}</span>
           {% if fase.tipo == 'liga' %}
-            <span class="badge bg-primary">Liga / Pontos Corridos</span>
+            <span class="badge badge-info badge-sm">Liga / Pontos Corridos</span>
           {% elif fase.tipo == 'grupos' %}
-            <span class="badge bg-success">Fase de Grupos</span>
+            <span class="badge badge-success badge-sm">Fase de Grupos</span>
           {% else %}
-            <span class="badge bg-warning text-dark">Mata-Mata</span>
+            <span class="badge badge-warning badge-sm">Mata-Mata</span>
           {% endif %}
         </div>
-        <div class="card-body">
-          <div class="d-flex flex-wrap gap-2 mb-2">
+        <div class="card-body p-4">
+          <div class="flex flex-wrap gap-2 mb-3">
 
             {% if fase.tipo == 'grupos' %}
-              <a href="{% url 'competicao:grupos_fase' pk=fase.pk %}" class="btn btn-sm btn-outline-success">
+              <a href="{% url 'competicao:grupos_fase' pk=fase.pk %}" class="btn btn-ghost btn-xs gap-1">
                 <i class="bi bi-grid-3x3-gap"></i> Gerenciar Grupos
               </a>
             {% elif fase.tipo == 'mata_mata' %}
-              <a href="{% url 'competicao:chaveamento' pk=fase.pk %}" class="btn btn-sm btn-outline-warning">
+              <a href="{% url 'competicao:chaveamento' pk=fase.pk %}" class="btn btn-ghost btn-xs gap-1 text-warning">
                 <i class="bi bi-diagram-3"></i> Chaveamento
               </a>
             {% endif %}
 
-            <a href="{% url 'competicao:rodadas' pk=competicao.pk %}" class="btn btn-sm btn-outline-secondary">
+            <a href="{% url 'competicao:rodadas' pk=competicao.pk %}" class="btn btn-ghost btn-xs gap-1">
               <i class="bi bi-calendar3"></i> Rodadas
             </a>
 
             <form method="post" action="{% url 'competicao:fase_excluir' pk=fase.pk %}"
-                  class="d-inline" onsubmit="return confirm('Excluir a fase \'{{ fase.nome }}\'? Todos os dados desta fase serão removidos.')">
+                  class="inline" onsubmit="return confirm('Excluir a fase \'{{ fase.nome }}\'? Todos os dados serão removidos.')">
               {% csrf_token %}
-              <button type="submit" class="btn btn-sm btn-outline-danger">
+              <button type="submit" class="btn btn-ghost btn-xs text-error gap-1">
                 <i class="bi bi-trash"></i> Excluir
               </button>
             </form>
-          </div>
 
-          <div class="text-muted small">
-            Ordem: {{ fase.ordem }}
-            {% if fase.ida_e_volta %} &bull; <i class="bi bi-arrow-left-right"></i> Ida e volta{% endif %}
-            {% if fase.tipo == 'grupos' %} &bull; {{ fase.qtd_classificados_por_grupo }} classificado(s) por grupo{% endif %}
+          </div>
+          <div class="text-xs text-base-content/40 flex flex-wrap gap-3">
+            <span>Ordem: {{ fase.ordem }}</span>
+            {% if fase.ida_e_volta %}<span><i class="bi bi-arrow-left-right"></i> Ida e volta</span>{% endif %}
+            {% if fase.tipo == 'grupos' %}<span>{{ fase.qtd_classificados_por_grupo }} classificado(s) por grupo</span>{% endif %}
           </div>
         </div>
       </div>
       {% empty %}
-      <div class="alert alert-info">
-        <i class="bi bi-info-circle"></i> Nenhuma fase cadastrada. Crie uma fase ao lado para começar.
+      <div class="card bg-base-200 border border-base-300">
+        <div class="card-body text-center py-12 text-base-content/40">
+          <i class="bi bi-layers text-4xl block mb-3 opacity-30"></i>
+          <p class="font-semibold">Nenhuma fase cadastrada.</p>
+          <p class="text-sm mt-1">Crie uma fase ao lado para começar.</p>
+        </div>
       </div>
       {% endfor %}
-    </div>
 
+    </div>
   </div>
 </div>
 {% endblock %}

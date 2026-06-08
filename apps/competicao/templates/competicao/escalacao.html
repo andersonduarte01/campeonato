@@ -2,265 +2,290 @@
 {% block titulo %}Escalação — {{ jogo.equipe_casa }} x {{ jogo.equipe_fora }}{% endblock %}
 
 {% block conteudo %}
-<div class="container mt-4">
+<div class="p-4 md:p-6">
 
-  {% if messages %}
-    {% for message in messages %}
-    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
-      {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  {% if suspensos %}
+  <div class="alert alert-error text-sm mb-4">
+    <i class="bi bi-exclamation-triangle-fill text-lg"></i>
+    <div>
+      <strong>Jogadores suspensos — não devem ser escalados:</strong>
+      <ul class="mt-1 space-y-0.5 list-none">
+        {% for s in suspensos %}
+        <li>
+          <strong>{{ s.atleta.nome }}</strong>
+          <span class="opacity-70">({{ s.atleta.equipe.nome_equipe }})</span>
+          — {{ s.get_motivo_display }}
+        </li>
+        {% endfor %}
+      </ul>
     </div>
-    {% endfor %}
+  </div>
   {% endif %}
 
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h5 class="mb-0">
-      <i class="bi bi-people-fill"></i>
-      Escalação: <strong>{{ jogo.equipe_casa.nome_equipe }}</strong> x <strong>{{ jogo.equipe_fora.nome_equipe }}</strong>
-    </h5>
-    <a href="{% url 'competicao:jogo_detalhe' jogo.pk %}" class="btn btn-sm btn-outline-dark">
+  <div class="flex items-center justify-between mb-5 flex-wrap gap-2">
+    <h1 class="font-bold flex items-center gap-2 text-base">
+      <i class="bi bi-people-fill text-warning"></i>
+      Escalação: <span class="text-warning">{{ jogo.equipe_casa.nome_equipe }}</span>
+      <span class="text-base-content/40">×</span>
+      <span class="text-warning">{{ jogo.equipe_fora.nome_equipe }}</span>
+    </h1>
+    <a href="{% url 'competicao:jogo_detalhe' jogo.pk %}" class="btn btn-ghost btn-sm gap-1">
       <i class="bi bi-arrow-left"></i> Voltar ao Jogo
     </a>
   </div>
 
-  <div class="row g-3">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
 
-    <!-- Escalação Mandante -->
-    <div class="col-md-6">
-      <div class="card">
-        <div class="card-header fw-semibold bg-primary text-white">
-          {% if jogo.equipe_casa.escudo %}
-            <img src="{{ jogo.equipe_casa.escudo.thumbnail.url }}" width="24" height="24" class="rounded-circle me-1">
-          {% endif %}
-          {{ jogo.equipe_casa.nome_equipe }} — Mandante
-        </div>
-
+    {% for label, escalacao, form_esc, equipe, cor in equipes_template %}
+    <div class="card bg-base-200 border border-base-300">
+      <div class="px-4 py-3 border-b border-base-300 flex items-center gap-2">
+        {% if equipe.escudo %}
+          <img src="{{ equipe.escudo.thumbnail.url }}" class="w-6 h-6 rounded-full object-cover">
+        {% endif %}
+        <span class="font-semibold text-sm">{{ equipe.nome_equipe }} — {{ label }}</span>
+      </div>
+      <div class="p-0">
         <!-- Titulares -->
-        <div class="card-body p-0">
-          <div class="px-3 pt-3 pb-1 fw-semibold small text-muted">TITULARES</div>
-          <ul class="list-group list-group-flush">
-            {% for esc in escalacao_casa %}
-              {% if esc.titular %}
-              <li class="list-group-item d-flex align-items-center gap-2 py-1">
-                {% if esc.numero_camisa %}
-                  <span class="badge bg-primary" style="min-width:28px">{{ esc.numero_camisa }}</span>
-                {% else %}
-                  <span class="badge bg-secondary" style="min-width:28px">—</span>
-                {% endif %}
-                <span class="flex-grow-1">
-                  {{ esc.atleta.nome }}
-                  {% if esc.capitao %}<i class="bi bi-star-fill text-warning ms-1" title="Capitão"></i>{% endif %}
-                </span>
-                <form method="post" action="{% url 'competicao:escalacao_excluir' esc.pk %}" class="d-inline">
-                  {% csrf_token %}
-                  <button type="submit" class="btn btn-link btn-sm p-0 text-danger"><i class="bi bi-x"></i></button>
-                </form>
-              </li>
-              {% endif %}
-            {% empty %}
-              <li class="list-group-item text-muted small py-2">Nenhum titular adicionado.</li>
-            {% endfor %}
-          </ul>
-
-          <!-- Reservas -->
-          <div class="px-3 pt-3 pb-1 fw-semibold small text-muted">RESERVAS</div>
-          <ul class="list-group list-group-flush">
-            {% for esc in escalacao_casa %}
-              {% if not esc.titular %}
-              <li class="list-group-item d-flex align-items-center gap-2 py-1 bg-light">
-                {% if esc.numero_camisa %}
-                  <span class="badge bg-secondary" style="min-width:28px">{{ esc.numero_camisa }}</span>
-                {% else %}
-                  <span class="badge bg-light text-dark border" style="min-width:28px">—</span>
-                {% endif %}
-                <span class="flex-grow-1 text-muted">{{ esc.atleta.nome }}</span>
-                <form method="post" action="{% url 'competicao:escalacao_excluir' esc.pk %}" class="d-inline">
-                  {% csrf_token %}
-                  <button type="submit" class="btn btn-link btn-sm p-0 text-danger"><i class="bi bi-x"></i></button>
-                </form>
-              </li>
-              {% endif %}
-            {% empty %}
-            {% endfor %}
-          </ul>
-        </div>
-
-        <!-- Form adicionar jogador mandante -->
-        <div class="card-footer">
-          <form method="post" action="{% url 'competicao:escalacao_criar' jogo.pk jogo.equipe_casa.pk %}">
+        <div class="px-4 py-2 text-xs font-bold text-base-content/40 uppercase tracking-wider bg-base-300/30">Titulares</div>
+        {% for esc in escalacao %}{% if esc.titular %}
+        <div class="flex items-center gap-2 px-4 py-2 border-b border-base-300/50 hover:bg-base-300/20">
+          <span class="badge badge-neutral badge-sm w-7 justify-center shrink-0">
+            {% if esc.numero_camisa %}{{ esc.numero_camisa }}{% else %}—{% endif %}
+          </span>
+          <span class="text-sm flex-1 font-medium">
+            {{ esc.atleta.nome }}
+            {% if esc.capitao %}<i class="bi bi-star-fill text-warning text-xs ml-1" title="Capitão"></i>{% endif %}
+          </span>
+          <form method="post" action="{% url 'competicao:escalacao_excluir' esc.pk %}" class="inline">
             {% csrf_token %}
-            <div class="row g-1 align-items-end">
-              <div class="col">
-                {{ form_escalacao_casa.atleta }}
-              </div>
-              <div class="col-auto">
-                <input type="number" name="numero_camisa" class="form-control form-control-sm" placeholder="#" min="1" max="99" style="width:60px">
-              </div>
-              <div class="col-auto d-flex align-items-center gap-2">
-                <div class="form-check mb-0">
-                  <input class="form-check-input" type="checkbox" name="titular" id="titular_casa" checked>
-                  <label class="form-check-label small" for="titular_casa">Titular</label>
-                </div>
-                <div class="form-check mb-0">
-                  <input class="form-check-input" type="checkbox" name="capitao" id="capitao_casa">
-                  <label class="form-check-label small" for="capitao_casa"><i class="bi bi-star text-warning"></i></label>
-                </div>
-              </div>
-              <div class="col-auto">
-                <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-plus"></i></button>
-              </div>
-            </div>
+            <button type="submit" class="btn btn-ghost btn-xs text-error"><i class="bi bi-x"></i></button>
           </form>
         </div>
+        {% endif %}{% empty %}
+        <p class="px-4 py-2 text-xs text-base-content/40">Nenhum titular.</p>
+        {% endfor %}
+
+        <!-- Reservas -->
+        <div class="px-4 py-2 text-xs font-bold text-base-content/40 uppercase tracking-wider bg-base-300/20">Reservas</div>
+        {% for esc in escalacao %}{% if not esc.titular %}
+        <div class="flex items-center gap-2 px-4 py-2 border-b border-base-300/50 hover:bg-base-300/20 opacity-70">
+          <span class="badge badge-ghost badge-sm w-7 justify-center shrink-0">
+            {% if esc.numero_camisa %}{{ esc.numero_camisa }}{% else %}—{% endif %}
+          </span>
+          <span class="text-sm flex-1">{{ esc.atleta.nome }}</span>
+          <form method="post" action="{% url 'competicao:escalacao_excluir' esc.pk %}" class="inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-ghost btn-xs text-error"><i class="bi bi-x"></i></button>
+          </form>
+        </div>
+        {% endif %}{% endfor %}
+      </div>
+
+      <!-- Form adicionar -->
+      <div class="p-3 border-t border-base-300 bg-base-300/20">
+        <form method="post" action="{% url 'competicao:escalacao_criar' jogo.pk equipe.pk %}">
+          {% csrf_token %}
+          <div class="flex gap-2 items-end flex-wrap">
+            <div class="flex-1 min-w-32">{{ form_esc.atleta }}</div>
+            <input type="number" name="numero_camisa" class="input input-bordered input-sm w-14" placeholder="#" min="1" max="99">
+            <label class="flex items-center gap-1 text-xs cursor-pointer">
+              <input type="checkbox" name="titular" class="checkbox checkbox-xs" checked> Titular
+            </label>
+            <label class="flex items-center gap-1 text-xs cursor-pointer">
+              <input type="checkbox" name="capitao" class="checkbox checkbox-xs">
+              <i class="bi bi-star text-warning text-xs"></i>
+            </label>
+            <button type="submit" class="btn btn-warning btn-xs"><i class="bi bi-plus"></i></button>
+          </div>
+        </form>
+      </div>
+    </div>
+    {% empty %}
+    <!-- Fallback: render casa/fora diretamente -->
+    {% endfor %}
+
+    {% if not equipes_template %}
+    <!-- Casa -->
+    <div class="card bg-base-200 border border-base-300">
+      <div class="px-4 py-3 border-b border-base-300 flex items-center gap-2">
+        {% if jogo.equipe_casa.escudo %}
+          <img src="{{ jogo.equipe_casa.escudo.thumbnail.url }}" class="w-6 h-6 rounded-full object-cover">
+        {% endif %}
+        <span class="font-semibold text-sm">{{ jogo.equipe_casa.nome_equipe }} — Mandante</span>
+      </div>
+      <div class="p-0">
+        <div class="px-4 py-2 text-xs font-bold text-base-content/40 uppercase tracking-wider bg-base-300/30">Titulares</div>
+        {% for esc in escalacao_casa %}{% if esc.titular %}
+        <div class="flex items-center gap-2 px-4 py-2 border-b border-base-300/50">
+          <span class="badge badge-neutral badge-sm w-7 justify-center">{% if esc.numero_camisa %}{{ esc.numero_camisa }}{% else %}—{% endif %}</span>
+          <span class="text-sm flex-1">{{ esc.atleta.nome }}{% if esc.capitao %}<i class="bi bi-star-fill text-warning text-xs ml-1"></i>{% endif %}</span>
+          <form method="post" action="{% url 'competicao:escalacao_excluir' esc.pk %}" class="inline">{% csrf_token %}<button class="btn btn-ghost btn-xs text-error"><i class="bi bi-x"></i></button></form>
+        </div>
+        {% endif %}{% empty %}<p class="px-4 py-2 text-xs text-base-content/40">Nenhum titular.</p>{% endfor %}
+        <div class="px-4 py-2 text-xs font-bold text-base-content/40 uppercase tracking-wider bg-base-300/20">Reservas</div>
+        {% for esc in escalacao_casa %}{% if not esc.titular %}
+        <div class="flex items-center gap-2 px-4 py-2 border-b border-base-300/50 opacity-70">
+          <span class="badge badge-ghost badge-sm w-7 justify-center">{% if esc.numero_camisa %}{{ esc.numero_camisa }}{% else %}—{% endif %}</span>
+          <span class="text-sm flex-1">{{ esc.atleta.nome }}</span>
+          <form method="post" action="{% url 'competicao:escalacao_excluir' esc.pk %}" class="inline">{% csrf_token %}<button class="btn btn-ghost btn-xs text-error"><i class="bi bi-x"></i></button></form>
+        </div>
+        {% endif %}{% endfor %}
+      </div>
+      <div class="p-3 border-t border-base-300 bg-base-300/20">
+        <form method="post" action="{% url 'competicao:escalacao_criar' jogo.pk jogo.equipe_casa.pk %}">
+          {% csrf_token %}
+          <div class="flex gap-2 items-end flex-wrap">
+            <div class="flex-1 min-w-32">{{ form_escalacao_casa.atleta }}</div>
+            <input type="number" name="numero_camisa" class="input input-bordered input-sm w-14" placeholder="#" min="1" max="99">
+            <label class="flex items-center gap-1 text-xs cursor-pointer"><input type="checkbox" name="titular" class="checkbox checkbox-xs" checked> Titular</label>
+            <label class="flex items-center gap-1 text-xs cursor-pointer"><input type="checkbox" name="capitao" class="checkbox checkbox-xs"><i class="bi bi-star text-warning text-xs"></i></label>
+            <button type="submit" class="btn btn-warning btn-xs"><i class="bi bi-plus"></i></button>
+          </div>
+        </form>
       </div>
     </div>
 
-    <!-- Escalação Visitante -->
-    <div class="col-md-6">
-      <div class="card">
-        <div class="card-header fw-semibold bg-danger text-white">
-          {% if jogo.equipe_fora.escudo %}
-            <img src="{{ jogo.equipe_fora.escudo.thumbnail.url }}" width="24" height="24" class="rounded-circle me-1">
-          {% endif %}
-          {{ jogo.equipe_fora.nome_equipe }} — Visitante
+    <!-- Fora -->
+    <div class="card bg-base-200 border border-base-300">
+      <div class="px-4 py-3 border-b border-base-300 flex items-center gap-2">
+        {% if jogo.equipe_fora.escudo %}
+          <img src="{{ jogo.equipe_fora.escudo.thumbnail.url }}" class="w-6 h-6 rounded-full object-cover">
+        {% endif %}
+        <span class="font-semibold text-sm">{{ jogo.equipe_fora.nome_equipe }} — Visitante</span>
+      </div>
+      <div class="p-0">
+        <div class="px-4 py-2 text-xs font-bold text-base-content/40 uppercase tracking-wider bg-base-300/30">Titulares</div>
+        {% for esc in escalacao_fora %}{% if esc.titular %}
+        <div class="flex items-center gap-2 px-4 py-2 border-b border-base-300/50">
+          <span class="badge badge-neutral badge-sm w-7 justify-center">{% if esc.numero_camisa %}{{ esc.numero_camisa }}{% else %}—{% endif %}</span>
+          <span class="text-sm flex-1">{{ esc.atleta.nome }}{% if esc.capitao %}<i class="bi bi-star-fill text-warning text-xs ml-1"></i>{% endif %}</span>
+          <form method="post" action="{% url 'competicao:escalacao_excluir' esc.pk %}" class="inline">{% csrf_token %}<button class="btn btn-ghost btn-xs text-error"><i class="bi bi-x"></i></button></form>
         </div>
-
-        <div class="card-body p-0">
-          <div class="px-3 pt-3 pb-1 fw-semibold small text-muted">TITULARES</div>
-          <ul class="list-group list-group-flush">
-            {% for esc in escalacao_fora %}
-              {% if esc.titular %}
-              <li class="list-group-item d-flex align-items-center gap-2 py-1">
-                {% if esc.numero_camisa %}
-                  <span class="badge bg-danger" style="min-width:28px">{{ esc.numero_camisa }}</span>
-                {% else %}
-                  <span class="badge bg-secondary" style="min-width:28px">—</span>
-                {% endif %}
-                <span class="flex-grow-1">
-                  {{ esc.atleta.nome }}
-                  {% if esc.capitao %}<i class="bi bi-star-fill text-warning ms-1" title="Capitão"></i>{% endif %}
-                </span>
-                <form method="post" action="{% url 'competicao:escalacao_excluir' esc.pk %}" class="d-inline">
-                  {% csrf_token %}
-                  <button type="submit" class="btn btn-link btn-sm p-0 text-danger"><i class="bi bi-x"></i></button>
-                </form>
-              </li>
-              {% endif %}
-            {% empty %}
-              <li class="list-group-item text-muted small py-2">Nenhum titular adicionado.</li>
-            {% endfor %}
-          </ul>
-
-          <div class="px-3 pt-3 pb-1 fw-semibold small text-muted">RESERVAS</div>
-          <ul class="list-group list-group-flush">
-            {% for esc in escalacao_fora %}
-              {% if not esc.titular %}
-              <li class="list-group-item d-flex align-items-center gap-2 py-1 bg-light">
-                {% if esc.numero_camisa %}
-                  <span class="badge bg-secondary" style="min-width:28px">{{ esc.numero_camisa }}</span>
-                {% else %}
-                  <span class="badge bg-light text-dark border" style="min-width:28px">—</span>
-                {% endif %}
-                <span class="flex-grow-1 text-muted">{{ esc.atleta.nome }}</span>
-                <form method="post" action="{% url 'competicao:escalacao_excluir' esc.pk %}" class="d-inline">
-                  {% csrf_token %}
-                  <button type="submit" class="btn btn-link btn-sm p-0 text-danger"><i class="bi bi-x"></i></button>
-                </form>
-              </li>
-              {% endif %}
-            {% empty %}
-            {% endfor %}
-          </ul>
+        {% endif %}{% empty %}<p class="px-4 py-2 text-xs text-base-content/40">Nenhum titular.</p>{% endfor %}
+        <div class="px-4 py-2 text-xs font-bold text-base-content/40 uppercase tracking-wider bg-base-300/20">Reservas</div>
+        {% for esc in escalacao_fora %}{% if not esc.titular %}
+        <div class="flex items-center gap-2 px-4 py-2 border-b border-base-300/50 opacity-70">
+          <span class="badge badge-ghost badge-sm w-7 justify-center">{% if esc.numero_camisa %}{{ esc.numero_camisa }}{% else %}—{% endif %}</span>
+          <span class="text-sm flex-1">{{ esc.atleta.nome }}</span>
+          <form method="post" action="{% url 'competicao:escalacao_excluir' esc.pk %}" class="inline">{% csrf_token %}<button class="btn btn-ghost btn-xs text-error"><i class="bi bi-x"></i></button></form>
         </div>
-
-        <div class="card-footer">
-          <form method="post" action="{% url 'competicao:escalacao_criar' jogo.pk jogo.equipe_fora.pk %}">
-            {% csrf_token %}
-            <div class="row g-1 align-items-end">
-              <div class="col">
-                {{ form_escalacao_fora.atleta }}
-              </div>
-              <div class="col-auto">
-                <input type="number" name="numero_camisa" class="form-control form-control-sm" placeholder="#" min="1" max="99" style="width:60px">
-              </div>
-              <div class="col-auto d-flex align-items-center gap-2">
-                <div class="form-check mb-0">
-                  <input class="form-check-input" type="checkbox" name="titular" id="titular_fora" checked>
-                  <label class="form-check-label small" for="titular_fora">Titular</label>
-                </div>
-                <div class="form-check mb-0">
-                  <input class="form-check-input" type="checkbox" name="capitao" id="capitao_fora">
-                  <label class="form-check-label small" for="capitao_fora"><i class="bi bi-star text-warning"></i></label>
-                </div>
-              </div>
-              <div class="col-auto">
-                <button type="submit" class="btn btn-sm btn-danger"><i class="bi bi-plus"></i></button>
-              </div>
-            </div>
-          </form>
-        </div>
+        {% endif %}{% endfor %}
+      </div>
+      <div class="p-3 border-t border-base-300 bg-base-300/20">
+        <form method="post" action="{% url 'competicao:escalacao_criar' jogo.pk jogo.equipe_fora.pk %}">
+          {% csrf_token %}
+          <div class="flex gap-2 items-end flex-wrap">
+            <div class="flex-1 min-w-32">{{ form_escalacao_fora.atleta }}</div>
+            <input type="number" name="numero_camisa" class="input input-bordered input-sm w-14" placeholder="#" min="1" max="99">
+            <label class="flex items-center gap-1 text-xs cursor-pointer"><input type="checkbox" name="titular" class="checkbox checkbox-xs" checked> Titular</label>
+            <label class="flex items-center gap-1 text-xs cursor-pointer"><input type="checkbox" name="capitao" class="checkbox checkbox-xs"><i class="bi bi-star text-warning text-xs"></i></label>
+            <button type="submit" class="btn btn-warning btn-xs"><i class="bi bi-plus"></i></button>
+          </div>
+        </form>
       </div>
     </div>
-
-    <!-- Substituições -->
-    <div class="col-12">
-      <div class="card">
-        <div class="card-header fw-semibold">
-          <i class="bi bi-arrow-left-right"></i> Substituições
-        </div>
-        <div class="card-body">
-          {% if substituicoes %}
-          <ul class="list-group list-group-flush mb-3">
-            {% for sub in substituicoes %}
-            <li class="list-group-item d-flex align-items-center gap-2 px-0 py-1">
-              <span class="badge bg-dark" style="min-width:38px">{{ sub.minuto }}'</span>
-              <i class="bi bi-arrow-up-circle-fill text-success"></i>
-              <span class="fw-semibold">{{ sub.atleta_entra.nome }}</span>
-              <i class="bi bi-arrow-down-circle-fill text-danger ms-1"></i>
-              <span class="text-muted">{{ sub.atleta_sai.nome }}</span>
-              <span class="ms-auto badge bg-light text-dark border">{{ sub.equipe.nome_equipe }}</span>
-              <form method="post" action="{% url 'competicao:substituicao_excluir' sub.pk %}" class="d-inline ms-1">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-link btn-sm p-0 text-danger"><i class="bi bi-x"></i></button>
-              </form>
-            </li>
-            {% endfor %}
-          </ul>
-          {% else %}
-          <p class="text-muted small mb-3">Nenhuma substituição registrada.</p>
-          {% endif %}
-
-          <!-- Form substituição -->
-          <form method="post" action="{% url 'competicao:substituicao_criar' jogo.pk %}" id="form-sub">
-            {% csrf_token %}
-            <div class="row g-2 align-items-end">
-              <div class="col-md-3">
-                <label class="form-label small fw-semibold">Equipe</label>
-                {{ form_sub.equipe }}
-              </div>
-              <div class="col-md-3">
-                <label class="form-label small fw-semibold">Entra <i class="bi bi-arrow-up-circle text-success"></i></label>
-                {{ form_sub.atleta_entra }}
-              </div>
-              <div class="col-md-3">
-                <label class="form-label small fw-semibold">Sai <i class="bi bi-arrow-down-circle text-danger"></i></label>
-                {{ form_sub.atleta_sai }}
-              </div>
-              <div class="col-md-1">
-                <label class="form-label small fw-semibold">Min.</label>
-                {{ form_sub.minuto }}
-              </div>
-              <div class="col-md-2">
-                <button type="submit" class="btn btn-secondary w-100 btn-sm">
-                  <i class="bi bi-plus-circle"></i> Registrar
-                </button>
-              </div>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+    {% endif %}
 
   </div>
+
+  <!-- Substituições -->
+  <div class="card bg-base-200 border border-base-300 mb-4">
+    <div class="px-4 py-3 border-b border-base-300 flex items-center gap-2">
+      <i class="bi bi-arrow-left-right text-warning text-sm"></i>
+      <span class="font-semibold text-sm">Substituições</span>
+    </div>
+    <div class="p-4">
+      {% if substituicoes %}
+      <div class="space-y-2 mb-4">
+        {% for sub in substituicoes %}
+        <div class="flex items-center gap-2 text-sm">
+          <span class="badge badge-neutral badge-sm w-10 justify-center shrink-0">{{ sub.minuto }}'</span>
+          <i class="bi bi-arrow-up-circle-fill text-success shrink-0"></i>
+          <span class="font-semibold">{{ sub.atleta_entra.nome }}</span>
+          <i class="bi bi-arrow-down-circle-fill text-error shrink-0"></i>
+          <span class="text-base-content/60">{{ sub.atleta_sai.nome }}</span>
+          <span class="badge badge-ghost badge-sm ml-auto shrink-0">{{ sub.equipe.nome_equipe }}</span>
+          <form method="post" action="{% url 'competicao:substituicao_excluir' sub.pk %}" class="inline shrink-0">
+            {% csrf_token %}
+            <button class="btn btn-ghost btn-xs text-error"><i class="bi bi-x"></i></button>
+          </form>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="text-sm text-base-content/40 mb-4">Nenhuma substituição registrada.</p>
+      {% endif %}
+
+      <form method="post" action="{% url 'competicao:substituicao_criar' jogo.pk %}" id="form-sub">
+        {% csrf_token %}
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div>
+            <label class="label py-0 mb-1"><span class="label-text text-xs font-semibold">Equipe</span></label>
+            {{ form_sub.equipe }}
+          </div>
+          <div>
+            <label class="label py-0 mb-1"><span class="label-text text-xs font-semibold">Entra <i class="bi bi-arrow-up-circle text-success"></i></span></label>
+            {{ form_sub.atleta_entra }}
+          </div>
+          <div>
+            <label class="label py-0 mb-1"><span class="label-text text-xs font-semibold">Sai <i class="bi bi-arrow-down-circle text-error"></i></span></label>
+            {{ form_sub.atleta_sai }}
+          </div>
+          <div>
+            <label class="label py-0 mb-1"><span class="label-text text-xs font-semibold">Minuto</span></label>
+            {{ form_sub.minuto }}
+          </div>
+        </div>
+        <button type="submit" class="btn btn-ghost btn-sm gap-1 mt-3">
+          <i class="bi bi-plus-circle"></i> Registrar Substituição
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Árbitros do Jogo -->
+  <div class="card bg-base-200 border border-base-300">
+    <div class="px-4 py-3 border-b border-base-300 flex items-center gap-2">
+      <i class="bi bi-person-badge text-warning text-sm"></i>
+      <span class="font-semibold text-sm">Árbitros do Jogo</span>
+    </div>
+    <div class="p-4">
+      {% if arbitros_jogo %}
+      <div class="space-y-2 mb-4">
+        {% for arb in arbitros_jogo %}
+        <div class="flex items-center gap-2 text-sm">
+          <span class="badge badge-ghost badge-sm shrink-0">{{ arb.get_tipo_display }}</span>
+          <span class="flex-1 font-medium">{{ arb.arbitro.nome }}</span>
+          <form method="post" action="{% url 'competicao:arbitros_jogo_excluir' arb.pk %}" class="inline">
+            {% csrf_token %}
+            <button class="btn btn-ghost btn-xs text-error"><i class="bi bi-x"></i></button>
+          </form>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="text-sm text-base-content/40 mb-4">Nenhum árbitro registrado.</p>
+      {% endif %}
+
+      <form method="post" action="{% url 'competicao:arbitros_jogo_criar' jogo.pk %}" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {% csrf_token %}
+        <div>
+          <label class="label py-0 mb-1"><span class="label-text text-xs font-semibold">Árbitro</span></label>
+          {{ form_arbitro_jogo.arbitro }}
+        </div>
+        <div>
+          <label class="label py-0 mb-1"><span class="label-text text-xs font-semibold">Função</span></label>
+          {{ form_arbitro_jogo.tipo }}
+        </div>
+        <div class="flex items-end">
+          <button type="submit" class="btn btn-ghost btn-sm gap-1 w-full">
+            <i class="bi bi-plus-circle"></i> Adicionar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
 </div>
 
 {% block script %}
@@ -287,9 +312,7 @@ function filtrarAtletas(equipe_id) {
 }
 
 const equipeSelect = document.getElementById('id_equipe_sub');
-if (equipeSelect) {
-  equipeSelect.addEventListener('change', () => filtrarAtletas(equipeSelect.value));
-}
+if (equipeSelect) equipeSelect.addEventListener('change', () => filtrarAtletas(equipeSelect.value));
 </script>
 {% endblock %}
 {% endblock %}

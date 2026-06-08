@@ -3,39 +3,34 @@
 {% block titulo %}{{ equipe.nome_equipe }}{% endblock %}
 
 {% block conteudo %}
-<div class="container mt-4">
-
-  {% if messages %}
-    {% for message in messages %}
-    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
-      {{ message }}
-      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-    {% endfor %}
-  {% endif %}
+<div class="p-4 md:p-6 space-y-4">
 
   <!-- Cabeçalho da equipe -->
-  <div class="card mb-4">
-    <div class="card-body d-flex align-items-center gap-4">
+  <div class="card bg-base-200 border border-base-300">
+    <div class="card-body p-4 flex flex-col sm:flex-row items-center sm:items-start gap-4">
       {% if equipe.escudo %}
-        <img src="{{ equipe.escudo.thumbnail.url }}" alt="{{ equipe.nome_equipe }}" width="80" height="80" class="rounded-circle border">
+        <img src="{{ equipe.escudo.thumbnail.url }}" alt="{{ equipe.nome_equipe }}"
+             class="w-20 h-20 rounded-full object-cover border-2 border-base-300 shrink-0">
       {% else %}
-        <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white fw-bold" style="width:80px;height:80px;font-size:2rem;">
-          {{ equipe.nome_equipe|first|upper }}
+        <div class="w-20 h-20 rounded-full bg-neutral-content/10 border-2 border-base-300 flex items-center justify-center shrink-0">
+          <span class="text-3xl font-black text-base-content/50">{{ equipe.nome_equipe|first|upper }}</span>
         </div>
       {% endif %}
-      <div class="flex-grow-1">
-        <h4 class="mb-0">{{ equipe.nome_equipe }}</h4>
-        <small class="text-muted">{{ atletas.count }} atleta{{ atletas.count|pluralize }} cadastrado{{ atletas.count|pluralize }}</small>
+      <div class="flex-1 text-center sm:text-left">
+        <h1 class="text-2xl font-black">{{ equipe.nome_equipe }}</h1>
+        <p class="text-sm text-base-content/50 mt-0.5">
+          <i class="bi bi-people"></i>
+          {{ atletas.count }} atleta{{ atletas.count|pluralize }} cadastrado{{ atletas.count|pluralize }}
+        </p>
       </div>
-      <div class="d-flex gap-2">
-        <a href="{% url 'equipe:atleta_criar' equipe.pk %}" class="btn btn-sm btn-primary">
+      <div class="flex gap-2 flex-wrap justify-center sm:justify-end">
+        <a href="{% url 'equipe:atleta_criar' equipe.pk %}" class="btn btn-warning btn-sm gap-1.5">
           <i class="bi bi-person-plus"></i> Adicionar Atleta
         </a>
-        <a href="{% url 'equipe:editar' equipe.pk %}" class="btn btn-sm btn-outline-secondary">
+        <a href="{% url 'equipe:editar' equipe.pk %}" class="btn btn-ghost btn-sm gap-1">
           <i class="bi bi-pencil"></i> Editar
         </a>
-        <a href="{% url 'equipe:lista' %}" class="btn btn-sm btn-outline-dark">
+        <a href="{% url 'equipe:lista' %}" class="btn btn-ghost btn-sm gap-1">
           <i class="bi bi-arrow-left"></i> Voltar
         </a>
       </div>
@@ -43,14 +38,15 @@
   </div>
 
   <!-- Elenco -->
-  <div class="card">
-    <div class="card-header">
-      <h5 class="mb-0">Elenco</h5>
+  <div class="card bg-base-200 border border-base-300">
+    <div class="px-4 py-3 border-b border-base-300 flex items-center gap-2">
+      <i class="bi bi-people-fill text-warning text-sm"></i>
+      <span class="font-semibold text-sm">Elenco</span>
     </div>
-    <div class="card-body p-0">
-      <table class="table table-hover mb-0">
-        <thead class="table-light">
-          <tr>
+    <div class="overflow-x-auto">
+      <table class="table table-sm">
+        <thead>
+          <tr class="bg-base-300/50 text-xs text-base-content/60 uppercase tracking-wider">
             <th>Atleta</th>
             <th>Posição</th>
             <th>Nascimento</th>
@@ -59,42 +55,53 @@
         </thead>
         <tbody>
           {% for atleta in atletas %}
-          <tr>
-            <td class="d-flex align-items-center gap-2">
-              {% if atleta.foto %}
-                <img src="{{ atleta.foto.thumbnail.url }}" width="36" height="36" class="rounded-circle">
-              {% else %}
-                <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style="width:36px;height:36px;font-size:.85rem;">
-                  {{ atleta.nome|first|upper }}
-                </div>
-              {% endif %}
-              {{ atleta.nome }}
-            </td>
-            <td><span class="badge bg-secondary">{{ atleta.get_posicao_display }}</span></td>
+          <tr class="hover:bg-base-300/30 transition-colors">
             <td>
+              <div class="flex items-center gap-2">
+                {% if atleta.foto %}
+                  <img src="{{ atleta.foto.thumbnail.url }}" class="w-9 h-9 rounded-full object-cover border border-base-300">
+                {% else %}
+                  <div class="w-9 h-9 rounded-full bg-neutral-content/10 border border-base-300 flex items-center justify-center text-xs font-bold text-base-content/50">
+                    {{ atleta.nome|first|upper }}
+                  </div>
+                {% endif %}
+                <span class="font-medium text-sm">{{ atleta.nome }}</span>
+              </div>
+            </td>
+            <td>
+              <span class="badge badge-ghost badge-sm">{{ atleta.get_posicao_display }}</span>
+            </td>
+            <td class="text-sm text-base-content/60">
               {% if atleta.data_nascimento %}
                 {{ atleta.data_nascimento|date:"d/m/Y" }}
               {% else %}
-                <span class="text-muted">—</span>
+                <span class="text-base-content/30">—</span>
               {% endif %}
             </td>
             <td class="text-center">
-              <a href="{% url 'equipe:atleta_editar' atleta.pk %}" class="btn btn-sm btn-outline-secondary">
+              <a href="{% url 'equipe:atleta_editar' atleta.pk %}" class="btn btn-ghost btn-xs">
                 <i class="bi bi-pencil"></i>
               </a>
-              <a href="{% url 'equipe:atleta_excluir' atleta.pk %}" class="btn btn-sm btn-outline-danger">
+              <a href="{% url 'equipe:atleta_excluir' atleta.pk %}" class="btn btn-ghost btn-xs text-error">
                 <i class="bi bi-trash"></i>
               </a>
             </td>
           </tr>
           {% empty %}
           <tr>
-            <td colspan="4" class="text-center text-muted py-4">Nenhum atleta cadastrado.</td>
+            <td colspan="4" class="text-center py-10 text-base-content/40">
+              <i class="bi bi-person-x text-3xl block mb-2 opacity-30"></i>
+              <p class="text-sm">Nenhum atleta cadastrado.</p>
+              <a href="{% url 'equipe:atleta_criar' equipe.pk %}" class="btn btn-warning btn-xs mt-3 gap-1">
+                <i class="bi bi-person-plus"></i> Adicionar
+              </a>
+            </td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
   </div>
+
 </div>
 {% endblock %}

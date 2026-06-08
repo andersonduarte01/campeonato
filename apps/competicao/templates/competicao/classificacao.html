@@ -2,191 +2,268 @@
 {% block titulo %}Classificação — {{ competicao.nome }}{% endblock %}
 
 {% block conteudo %}
-<div class="container mt-4">
+<div class="p-4 md:p-6 max-w-[1400px] mx-auto space-y-6">
 
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4 class="mb-0">{{ competicao.nome }}</h4>
-    <div class="d-flex gap-2 flex-wrap">
-      <a href="{% url 'competicao:fases' competicao.pk %}" class="btn btn-sm btn-outline-secondary">
-        <i class="bi bi-layers"></i> Fases
-      </a>
-      <a href="{% url 'competicao:inscricao' competicao.pk %}" class="btn btn-sm btn-outline-secondary">
-        <i class="bi bi-person-badge"></i> Inscrições
-      </a>
-      <a href="{% url 'competicao:estatisticas' competicao.pk %}" class="btn btn-sm btn-outline-primary">
-        <i class="bi bi-bar-chart-fill"></i> Estatísticas
-      </a>
-      <a href="{% url 'competicao:rodadas' competicao.pk %}" class="btn btn-sm btn-outline-primary">
+  <!-- ── Cabeçalho ──────────────────────────────────────────────────── -->
+  <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2 mb-1">
+        <i class="bi bi-trophy-fill text-warning text-base"></i>
+        <span class="text-xs font-bold uppercase tracking-widest text-base-content/40">Competição</span>
+      </div>
+      <h1 class="section-heading text-4xl text-base-content leading-none">
+        {{ competicao.nome|upper }}
+      </h1>
+      {% if competicao.data_inicio %}
+      <p class="text-xs text-base-content/35 mt-1.5 flex items-center gap-1.5">
+        <i class="bi bi-calendar3"></i>
+        {{ competicao.data_inicio|date:"d/m/Y" }}
+        {% if competicao.data_fim %}
+          <span class="text-base-content/20">—</span>
+          {{ competicao.data_fim|date:"d/m/Y" }}
+        {% endif %}
+      </p>
+      {% endif %}
+    </div>
+
+    <!-- Ações -->
+    <div class="flex flex-wrap gap-2 shrink-0">
+      {% if fases_mata_mata %}
+        {% for fase in fases_mata_mata %}
+        <a href="{% url 'competicao:chaveamento' pk=fase.pk %}"
+           class="btn btn-warning btn-sm gap-1 font-semibold shadow-sm shadow-warning/20">
+          <i class="bi bi-diagram-3"></i> {{ fase.nome }}
+        </a>
+        {% endfor %}
+      {% endif %}
+      <a href="{% url 'competicao:rodadas' competicao.pk %}"
+         class="btn btn-ghost btn-sm gap-1 border border-base-content/10">
         <i class="bi bi-calendar3"></i> Rodadas
       </a>
-      <a href="{% url 'competicao:pdf_classificacao' competicao.pk %}" target="_blank" class="btn btn-sm btn-outline-dark">
-        <i class="bi bi-printer"></i> PDF
+      <a href="{% url 'competicao:estatisticas' competicao.pk %}"
+         class="btn btn-ghost btn-sm gap-1 border border-base-content/10">
+        <i class="bi bi-bar-chart-fill"></i> Estatísticas
       </a>
-      <a href="{% url 'competicao:competicao_lista' %}" class="btn btn-sm btn-outline-dark">
-        <i class="bi bi-arrow-left"></i> Voltar
-      </a>
+      <div class="dropdown dropdown-end">
+        <button tabindex="0"
+                class="btn btn-ghost btn-sm btn-square border border-base-content/10 text-base-content/50">
+          <i class="bi bi-three-dots-vertical"></i>
+        </button>
+        <ul tabindex="0"
+            class="dropdown-content bg-base-200 border border-base-300 rounded-xl shadow-2xl
+                   z-20 w-48 p-1.5 mt-1 flex flex-col gap-0.5">
+          <li>
+            <a href="{% url 'competicao:fases' competicao.pk %}"
+               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-base-content/70
+                      hover:text-base-content hover:bg-base-300 transition-all">
+              <i class="bi bi-layers text-warning/60 text-xs"></i> Fases
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'competicao:inscricao' competicao.pk %}"
+               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-base-content/70
+                      hover:text-base-content hover:bg-base-300 transition-all">
+              <i class="bi bi-person-badge text-warning/60 text-xs"></i> Inscrições
+            </a>
+          </li>
+          <li><div class="h-px bg-base-300 my-0.5"></div></li>
+          <li>
+            <a href="{% url 'competicao:pdf_classificacao' competicao.pk %}" target="_blank"
+               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-base-content/70
+                      hover:text-base-content hover:bg-base-300 transition-all">
+              <i class="bi bi-printer text-warning/60 text-xs"></i> Exportar PDF
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'competicao:competicao_lista' %}"
+               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-base-content/70
+                      hover:text-base-content hover:bg-base-300 transition-all">
+              <i class="bi bi-arrow-left text-warning/60 text-xs"></i> Competições
+            </a>
+          </li>
+        </ul>
+      </div>
     </div>
   </div>
 
-  <!-- Phases: mata-mata links -->
-  {% if fases_mata_mata %}
-  <div class="mb-3 d-flex flex-wrap gap-2">
-    {% for fase in fases_mata_mata %}
-    <a href="{% url 'competicao:chaveamento' pk=fase.pk %}" class="btn btn-sm btn-warning">
-      <i class="bi bi-diagram-3"></i> {{ fase.nome }}
-    </a>
-    {% endfor %}
-  </div>
-  {% endif %}
-
-  <!-- Group stages -->
+  <!-- ── Fases de Grupos ─────────────────────────────────────────── -->
   {% if fases_grupos_data %}
-    {% for fase_item in fases_grupos_data %}
-    <div class="mb-4">
-      <div class="d-flex justify-content-between align-items-center mb-2">
-        <h5 class="mb-0"><i class="bi bi-grid-3x3-gap text-success"></i> {{ fase_item.fase.nome }}</h5>
-        <a href="{% url 'competicao:grupos_fase' pk=fase_item.fase.pk %}" class="btn btn-sm btn-outline-success">
-          <i class="bi bi-pencil-square"></i> Gerenciar
-        </a>
-      </div>
-      <div class="row g-3">
-        {% for gd in fase_item.grupos %}
-        <div class="col-md-6 col-lg-4">
-          <div class="card">
-            <div class="card-header fw-semibold">Grupo {{ gd.grupo.nome }}</div>
-            <div class="card-body p-0">
-              <table class="table table-sm table-hover mb-0">
-                <thead class="table-dark">
-                  <tr>
-                    <th>#</th><th>Equipe</th>
-                    <th class="text-center" title="Pontos">P</th>
-                    <th class="text-center" title="Jogos">J</th>
-                    <th class="text-center" title="Vitórias">V</th>
-                    <th class="text-center" title="Saldo">SG</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for cl in gd.classificacao %}
-                  <tr {% if forloop.counter <= fase_item.fase.qtd_classificados_por_grupo %}class="table-success"{% endif %}>
-                    <td class="fw-bold">{{ forloop.counter }}</td>
-                    <td>{{ cl.equipe.nome_equipe }}</td>
-                    <td class="text-center fw-bold">{{ cl.pontos }}</td>
-                    <td class="text-center">{{ cl.jogos }}</td>
-                    <td class="text-center">{{ cl.vitorias }}</td>
-                    <td class="text-center {% if cl.saldo_gols > 0 %}text-success{% elif cl.saldo_gols < 0 %}text-danger{% endif %}">{{ cl.saldo_gols }}</td>
-                  </tr>
-                  {% empty %}
-                  <tr><td colspan="6" class="text-muted text-center py-2 small">Sem resultados</td></tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-        {% empty %}
-        <div class="col-12"><p class="text-muted small">Nenhum grupo nesta fase.</p></div>
-        {% endfor %}
-      </div>
-    </div>
-    {% endfor %}
-    <hr>
-  {% endif %}
-
-  <div class="row g-4">
-
-    <!-- Tabela de Classificação Geral -->
-    <div class="col-lg-8">
-      <div class="card">
-        <div class="card-header fw-semibold">
-          <i class="bi bi-trophy-fill text-warning"></i> Classificação Geral
-        </div>
-        <div class="card-body p-0">
-          <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-              <thead class="table-dark">
-                <tr>
-                  <th class="text-center" style="width:36px;">#</th>
-                  <th>Equipe</th>
-                  <th class="text-center" title="Jogos">J</th>
-                  <th class="text-center" title="Vitórias">V</th>
-                  <th class="text-center" title="Empates">E</th>
-                  <th class="text-center" title="Derrotas">D</th>
-                  <th class="text-center" title="Gols Pró">GP</th>
-                  <th class="text-center" title="Gols Contra">GC</th>
-                  <th class="text-center" title="Saldo de Gols">SG</th>
-                  <th class="text-center fw-bold" title="Pontos">PTS</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for cls in classificacao %}
-                <tr>
-                  <td class="text-center fw-bold">{{ forloop.counter }}</td>
-                  <td>
-                    <div class="d-flex align-items-center gap-2">
-                      {% if cls.equipe.escudo %}
-                        <img src="{{ cls.equipe.escudo.thumbnail.url }}" width="26" height="26" class="rounded-circle">
-                      {% else %}
-                        <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style="width:26px;height:26px;font-size:.7rem;">
-                          {{ cls.equipe.nome_equipe|first|upper }}
-                        </div>
-                      {% endif %}
-                      {{ cls.equipe.nome_equipe }}
-                    </div>
-                  </td>
-                  <td class="text-center">{{ cls.jogos }}</td>
-                  <td class="text-center">{{ cls.vitorias }}</td>
-                  <td class="text-center">{{ cls.empates }}</td>
-                  <td class="text-center">{{ cls.derrotas }}</td>
-                  <td class="text-center">{{ cls.gols_pro }}</td>
-                  <td class="text-center">{{ cls.gols_contra }}</td>
-                  <td class="text-center {% if cls.saldo_gols > 0 %}text-success{% elif cls.saldo_gols < 0 %}text-danger{% endif %}">
-                    {{ cls.saldo_gols }}
-                  </td>
-                  <td class="text-center fw-bold fs-6">{{ cls.pontos }}</td>
-                </tr>
-                {% empty %}
-                <tr>
-                  <td colspan="10" class="text-center text-muted py-4">
-                    Nenhum jogo finalizado ainda.
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+  {% for fase_item in fases_grupos_data %}
+  <div>
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="section-heading text-2xl text-base-content/70 tracking-widest flex items-center gap-2">
+        <i class="bi bi-grid-3x3-gap text-success/60 text-base"></i>
+        {{ fase_item.fase.nome|upper }}
+      </h2>
+      <a href="{% url 'competicao:grupos_fase' pk=fase_item.fase.pk %}"
+         class="btn btn-ghost btn-xs gap-1 border border-base-content/10 text-base-content/50">
+        <i class="bi bi-pencil-square text-xs"></i> Gerenciar
+      </a>
     </div>
 
-    <!-- Artilharia -->
-    <div class="col-lg-4">
-      <div class="card">
-        <div class="card-header fw-semibold">
-          <i class="bi bi-bullseye"></i> Artilharia
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+      {% for gd in fase_item.grupos %}
+      <div class="card bg-base-200 border border-base-300 overflow-hidden">
+        <!-- Header do grupo -->
+        <div class="flex items-center gap-2 px-4 py-2.5 border-b border-base-300 bg-base-300/40">
+          <span class="section-heading text-sm text-base-content/60 tracking-widest">
+            GRUPO {{ gd.grupo.nome }}
+          </span>
+          <span class="text-xs text-base-content/30 ml-auto">
+            {{ fase_item.fase.qtd_classificados_por_grupo }} classificado{{ fase_item.fase.qtd_classificados_por_grupo|pluralize:"s" }}
+          </span>
         </div>
-        <div class="card-body p-0">
-          <table class="table table-sm table-hover mb-0">
-            <thead class="table-light">
-              <tr>
-                <th>#</th>
-                <th>Atleta</th>
-                <th class="text-center">⚽</th>
+        <div class="overflow-x-auto">
+          <table class="table table-xs">
+            <thead>
+              <tr class="text-[10px] text-base-content/40 uppercase tracking-wider">
+                <th class="w-6">#</th>
+                <th>Equipe</th>
+                <th class="text-center w-8" title="Pontos">P</th>
+                <th class="text-center w-8" title="Jogos">J</th>
+                <th class="text-center w-8" title="Vitórias">V</th>
+                <th class="text-center w-10" title="Saldo de Gols">SG</th>
               </tr>
             </thead>
             <tbody>
-              {% for art in artilharia %}
-              <tr>
-                <td class="text-muted">{{ forloop.counter }}</td>
+              {% for cl in gd.classificacao %}
+              <tr class="hover:bg-base-300/30 transition-colors
+                {% if forloop.counter <= fase_item.fase.qtd_classificados_por_grupo %}zone-champions{% endif %}">
                 <td>
-                  <div>{{ art.atleta__nome }}</div>
-                  <small class="text-muted">{{ art.atleta__equipe__nome_equipe }}</small>
+                  <span class="position-number text-xs
+                    {% if forloop.counter <= fase_item.fase.qtd_classificados_por_grupo %}text-zone-champions
+                    {% else %}text-base-content/30{% endif %}">
+                    {{ forloop.counter }}
+                  </span>
                 </td>
-                <td class="text-center fw-bold">{{ art.total }}</td>
+                <td class="text-sm font-medium text-base-content">{{ cl.equipe.nome_equipe }}</td>
+                <td class="text-center">
+                  <span class="stat-number text-sm font-bold text-base-content">{{ cl.pontos }}</span>
+                </td>
+                <td class="text-center text-xs text-base-content/50">{{ cl.jogos }}</td>
+                <td class="text-center text-xs text-base-content/50">{{ cl.vitorias }}</td>
+                <td class="text-center text-xs font-semibold
+                  {% if cl.saldo_gols > 0 %}text-win{% elif cl.saldo_gols < 0 %}text-loss{% else %}text-base-content/40{% endif %}">
+                  {% if cl.saldo_gols > 0 %}+{% endif %}{{ cl.saldo_gols }}
+                </td>
               </tr>
               {% empty %}
               <tr>
-                <td colspan="3" class="text-center text-muted py-3">
-                  Nenhum gol registrado.
+                <td colspan="6" class="text-center py-4 text-base-content/30 text-xs">Sem dados</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% empty %}
+      <p class="text-base-content/40 text-sm col-span-full">Nenhum grupo nesta fase.</p>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+
+  <div class="h-px bg-gradient-to-r from-transparent via-base-content/10 to-transparent"></div>
+  {% endif %}
+
+  <!-- ── Grid principal: tabela + sidebar ───────────────────────── -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+    <!-- Tabela Geral (2/3) -->
+    <div class="lg:col-span-2 space-y-3">
+
+      <div class="card bg-base-200 border border-base-300 overflow-hidden">
+
+        <!-- Header da tabela -->
+        <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
+          <i class="bi bi-trophy-fill text-warning text-sm"></i>
+          <span class="section-heading text-base text-base-content/70 tracking-widest">
+            CLASSIFICAÇÃO GERAL
+          </span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="table table-sm">
+            <thead>
+              <tr class="bg-base-300/50 text-[10px] text-base-content/40 uppercase tracking-wider">
+                <th class="text-center w-8">#</th>
+                <th>Equipe</th>
+                <th class="text-center w-9" title="Jogos">J</th>
+                <th class="text-center w-9" title="Vitórias">V</th>
+                <th class="text-center w-9" title="Empates">E</th>
+                <th class="text-center w-9" title="Derrotas">D</th>
+                <th class="text-center w-9" title="Gols Pró">GP</th>
+                <th class="text-center w-9" title="Gols Contra">GC</th>
+                <th class="text-center w-10" title="Saldo de Gols">SG</th>
+                <th class="text-center w-12" title="Pontos">PTS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for cls in classificacao %}
+              <tr class="hover:bg-base-300/30 transition-colors
+                {% if forloop.counter == 1 %}zone-champions
+                {% elif forloop.counter <= 4 %}zone-champions
+                {% elif forloop.revcounter <= 2 %}zone-relegation
+                {% elif forloop.revcounter <= 4 %}zone-promotion
+                {% endif %}">
+
+                <!-- Posição -->
+                <td class="text-center py-2.5">
+                  {% if forloop.counter == 1 %}
+                    <i class="bi bi-trophy-fill text-warning text-sm"></i>
+                  {% else %}
+                    <span class="position-number
+                      {% if forloop.counter <= 4 %}text-zone-champions
+                      {% elif forloop.revcounter <= 2 %}text-zone-relegation
+                      {% elif forloop.revcounter <= 4 %}text-base-content/40
+                      {% else %}text-base-content/30{% endif %}">
+                      {{ forloop.counter }}
+                    </span>
+                  {% endif %}
+                </td>
+
+                <!-- Equipe -->
+                <td class="py-2.5">
+                  <div class="flex items-center gap-2.5">
+                    {% if cls.equipe.escudo %}
+                    <img src="{{ cls.equipe.escudo.thumbnail.url }}"
+                         class="w-7 h-7 rounded-full object-cover border border-base-300 shrink-0">
+                    {% else %}
+                    <div class="w-7 h-7 rounded-full bg-base-300 border border-base-content/15
+                                flex items-center justify-center text-[11px] font-black
+                                text-base-content/40 shrink-0">
+                      {{ cls.equipe.nome_equipe|first|upper }}
+                    </div>
+                    {% endif %}
+                    <span class="text-sm font-semibold text-base-content">
+                      {{ cls.equipe.nome_equipe }}
+                    </span>
+                  </div>
+                </td>
+
+                <!-- Stats -->
+                <td class="text-center text-xs text-base-content/55">{{ cls.jogos }}</td>
+                <td class="text-center text-xs text-base-content/55">{{ cls.vitorias }}</td>
+                <td class="text-center text-xs text-base-content/55">{{ cls.empates }}</td>
+                <td class="text-center text-xs text-base-content/55">{{ cls.derrotas }}</td>
+                <td class="text-center text-xs text-base-content/55">{{ cls.gols_pro }}</td>
+                <td class="text-center text-xs text-base-content/55">{{ cls.gols_contra }}</td>
+                <td class="text-center text-xs font-semibold
+                  {% if cls.saldo_gols > 0 %}text-win{% elif cls.saldo_gols < 0 %}text-loss{% else %}text-base-content/40{% endif %}">
+                  {% if cls.saldo_gols > 0 %}+{% endif %}{{ cls.saldo_gols }}
+                </td>
+
+                <!-- Pontos -->
+                <td class="text-center py-2.5">
+                  <span class="stat-number text-lg text-base-content">{{ cls.pontos }}</span>
+                </td>
+
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="10" class="text-center py-14 text-base-content/30">
+                  <i class="bi bi-trophy text-3xl block mb-3 opacity-30"></i>
+                  <p class="text-sm font-medium">Nenhum jogo finalizado ainda</p>
                 </td>
               </tr>
               {% endfor %}
@@ -195,26 +272,118 @@
         </div>
       </div>
 
-      <!-- Últimos resultados -->
-      {% if rodadas %}
-      <div class="card mt-3">
-        <div class="card-header fw-semibold">
-          <i class="bi bi-calendar3"></i> Últimos Resultados
+      <!-- Legenda das zonas -->
+      {% if classificacao %}
+      <div class="flex flex-wrap gap-3 px-1">
+        <div class="flex items-center gap-2">
+          <div class="w-3 h-4 rounded-sm border-l-2 border-zone-champions bg-transparent"></div>
+          <span class="text-xs text-base-content/45">Classificação / Champions</span>
         </div>
-        <div class="list-group list-group-flush">
+        <div class="flex items-center gap-2">
+          <div class="w-3 h-4 rounded-sm border-l-2 border-zone-promotion bg-transparent"></div>
+          <span class="text-xs text-base-content/45">Acesso / Promoção</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="w-3 h-4 rounded-sm border-l-2 border-zone-relegation bg-transparent"></div>
+          <span class="text-xs text-base-content/45">Rebaixamento</span>
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+
+    <!-- ── Sidebar (1/3) ──────────────────────────────────────── -->
+    <div class="space-y-4">
+
+      <!-- Artilharia -->
+      <div class="card bg-base-200 border border-base-300 overflow-hidden">
+        <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
+          <i class="bi bi-bullseye text-warning text-sm"></i>
+          <span class="section-heading text-base text-base-content/70 tracking-widest">ARTILHARIA</span>
+        </div>
+
+        {% if artilharia %}
+        {% with max_gols=artilharia.0.total %}
+        <div class="divide-y divide-base-300">
+          {% for art in artilharia %}
+          <div class="flex items-center gap-3 px-4 py-2.5 hover:bg-base-300/40 transition-colors group">
+            <!-- Posição -->
+            <div class="position-number w-5 text-center shrink-0
+              {% if forloop.counter == 1 %}text-warning
+              {% elif forloop.counter == 2 %}text-base-content/40
+              {% elif forloop.counter == 3 %}text-base-content/35
+              {% else %}text-base-content/20{% endif %}">
+              {% if forloop.counter == 1 %}<i class="bi bi-trophy-fill text-xs"></i>
+              {% else %}{{ forloop.counter }}{% endif %}
+            </div>
+            <!-- Nome / equipe -->
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-semibold text-base-content truncate
+                         group-hover:text-warning transition-colors">
+                {{ art.atleta__nome }}
+              </p>
+              <p class="text-xs text-base-content/35 truncate">{{ art.atleta__equipe__nome_equipe }}</p>
+            </div>
+            <!-- Barra relativa -->
+            <div class="hidden sm:flex items-center gap-2 w-16">
+              <div class="flex-1 h-1 bg-base-300 rounded-full overflow-hidden">
+                <div class="h-full bg-warning rounded-full"
+                     style="width: {% widthratio art.total max_gols 100 %}%"></div>
+              </div>
+            </div>
+            <!-- Gols -->
+            <div class="stat-number text-lg text-warning shrink-0 w-6 text-right">{{ art.total }}</div>
+          </div>
+          {% endfor %}
+        </div>
+        {% endwith %}
+        {% else %}
+        <div class="flex flex-col items-center justify-center py-10 gap-2 text-base-content/25">
+          <i class="bi bi-dribbble text-3xl"></i>
+          <p class="text-sm">Nenhum gol registrado</p>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Últimos Resultados -->
+      {% if rodadas %}
+      <div class="card bg-base-200 border border-base-300 overflow-hidden">
+        <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
+          <i class="bi bi-check2-circle text-success text-sm"></i>
+          <span class="section-heading text-base text-base-content/70 tracking-widest">RESULTADOS</span>
+        </div>
+        <div class="divide-y divide-base-300 max-h-80 overflow-y-auto">
           {% for rodada in rodadas %}
             {% for jogo in rodada.jogo_set.all %}
               {% if jogo.finalizado %}
-              <a href="{% url 'competicao:jogo_detalhe' jogo.pk %}" class="list-group-item list-group-item-action px-3 py-2">
-                <div class="d-flex justify-content-between align-items-center small">
-                  <span class="{% if jogo.gols_casa > jogo.gols_fora %}fw-bold{% endif %}">{{ jogo.equipe_casa.nome_equipe }}</span>
-                  <span class="badge bg-dark mx-2">{{ jogo.gols_casa }}—{{ jogo.gols_fora }}</span>
-                  <span class="{% if jogo.gols_fora > jogo.gols_casa %}fw-bold{% endif %}">{{ jogo.equipe_fora.nome_equipe }}</span>
+              <a href="{% url 'competicao:jogo_detalhe' jogo.pk %}"
+                 class="flex items-center gap-2 px-4 py-2.5 hover:bg-base-300/40 transition-colors group">
+                <span class="flex-1 text-right text-xs font-semibold truncate
+                  {% if jogo.gols_casa > jogo.gols_fora %}text-base-content
+                  {% else %}text-base-content/40{% endif %}">
+                  {{ jogo.equipe_casa.nome_equipe }}
+                </span>
+                <!-- Placar -->
+                <div class="shrink-0 flex items-center gap-1 px-2 py-0.5 bg-base-300 rounded-md">
+                  <span class="stat-number text-sm
+                    {% if jogo.gols_casa > jogo.gols_fora %}text-win
+                    {% elif jogo.gols_casa == jogo.gols_fora %}text-draw
+                    {% else %}text-base-content/40{% endif %}">
+                    {{ jogo.gols_casa }}
+                  </span>
+                  <span class="text-base-content/20 text-[10px]">—</span>
+                  <span class="stat-number text-sm
+                    {% if jogo.gols_fora > jogo.gols_casa %}text-win
+                    {% elif jogo.gols_casa == jogo.gols_fora %}text-draw
+                    {% else %}text-base-content/40{% endif %}">
+                    {{ jogo.gols_fora }}
+                  </span>
                 </div>
-                <small class="text-muted">
-                  {% if rodada.grupo %}Grupo {{ rodada.grupo.nome }} — {% endif %}
-                  {{ rodada.numero }}ª Rodada
-                </small>
+                <span class="flex-1 text-xs font-semibold truncate
+                  {% if jogo.gols_fora > jogo.gols_casa %}text-base-content
+                  {% else %}text-base-content/40{% endif %}">
+                  {{ jogo.equipe_fora.nome_equipe }}
+                </span>
               </a>
               {% endif %}
             {% endfor %}
@@ -222,8 +391,10 @@
         </div>
       </div>
       {% endif %}
+
     </div>
 
   </div>
+
 </div>
 {% endblock %}

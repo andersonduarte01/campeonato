@@ -1,26 +1,33 @@
 {% extends 'base/indice.html' %}
-{% block titulo %}Editar Árbitro — {{ arbitro.nome }}{% endblock %}
+{% block titulo %}Editar Árbitro{% endblock %}
 
 {% block conteudo %}
-<div class="container mt-4" style="max-width:500px">
-  <div class="card">
-    <div class="card-header fw-semibold">
-      <i class="bi bi-person-badge"></i> Editar Árbitro
+<div class="p-4 md:p-6 max-w-md mx-auto">
+  <div class="card bg-base-200 border border-base-300">
+    <div class="px-5 py-3 border-b border-base-300 flex items-center gap-2">
+      <i class="bi bi-person-badge text-warning text-sm"></i>
+      <h1 class="font-bold text-sm">Editar Árbitro</h1>
     </div>
-    <div class="card-body">
-      <form method="post">
+    <div class="card-body p-5">
+      <form method="post" class="space-y-4">
         {% csrf_token %}
-        <div class="mb-3">
-          <label class="form-label fw-semibold">Nome *</label>
+        <div>
+          <label class="label py-0 mb-1">
+            <span class="label-text font-semibold text-sm">Nome *</span>
+          </label>
           {{ form.nome }}
         </div>
-        <div class="mb-3">
-          <label class="form-label fw-semibold">Categoria</label>
+        <div>
+          <label class="label py-0 mb-1">
+            <span class="label-text font-semibold text-sm">Categoria</span>
+          </label>
           {{ form.categoria }}
         </div>
-        <div class="d-flex gap-2">
-          <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Salvar</button>
-          <a href="{% url 'competicao:arbitro_lista' %}" class="btn btn-outline-secondary">Cancelar</a>
+        <div class="flex gap-2 pt-2">
+          <button type="submit" class="btn btn-warning flex-1">
+            <i class="bi bi-save"></i> Salvar
+          </button>
+          <a href="{% url 'competicao:arbitro_lista' %}" class="btn btn-ghost">Cancelar</a>
         </div>
       </form>
     </div>

@@ -1,42 +1,141 @@
 {% extends 'base/indice.html' %}
-{% load crispy_forms_tags %}
-{% block titulo %}Resultado do Jogo{% endblock %}
+{% block titulo %}Lançar Resultado{% endblock %}
 
 {% block conteudo %}
-<div class="container mt-4" style="max-width: 520px;">
-  <div class="card">
-    <div class="card-header">
-      <h5 class="mb-0">Lançar Resultado</h5>
+<div class="p-4 md:p-6 max-w-xl mx-auto">
+
+  <div class="card bg-base-200 border border-base-300">
+    <div class="px-5 py-3 border-b border-base-300 flex items-center gap-2">
+      <i class="bi bi-pencil-square text-warning text-sm"></i>
+      <h1 class="font-bold text-sm">Lançar Resultado</h1>
     </div>
-    <div class="card-body">
+    <div class="card-body p-5 space-y-5">
 
       <!-- Confronto -->
-      <div class="d-flex align-items-center justify-content-center gap-3 mb-4 p-3 bg-light rounded">
-        <div class="text-center flex-fill">
+      <div class="flex items-center justify-center gap-4 p-4 bg-base-300/50 rounded-xl">
+        <div class="text-center flex-1">
           {% if jogo.equipe_casa.escudo %}
-            <img src="{{ jogo.equipe_casa.escudo.thumbnail.url }}" width="48" height="48" class="rounded-circle mb-1">
+            <img src="{{ jogo.equipe_casa.escudo.thumbnail.url }}" class="w-12 h-12 rounded-full mx-auto mb-1 border-2 border-base-300">
+          {% else %}
+            <div class="w-12 h-12 rounded-full bg-neutral-content/10 border-2 border-base-300 flex items-center justify-center mx-auto mb-1">
+              <span class="font-black text-base-content/50">{{ jogo.equipe_casa.nome_equipe|first|upper }}</span>
+            </div>
           {% endif %}
-          <div class="fw-semibold">{{ jogo.equipe_casa.nome_equipe }}</div>
-          <small class="text-muted">Casa</small>
+          <div class="font-semibold text-sm">{{ jogo.equipe_casa.nome_equipe }}</div>
+          <div class="text-xs text-base-content/40">Casa</div>
         </div>
-        <div class="fw-bold text-muted fs-5">VS</div>
-        <div class="text-center flex-fill">
+        <div class="font-black text-base-content/30 text-lg">VS</div>
+        <div class="text-center flex-1">
           {% if jogo.equipe_fora.escudo %}
-            <img src="{{ jogo.equipe_fora.escudo.thumbnail.url }}" width="48" height="48" class="rounded-circle mb-1">
+            <img src="{{ jogo.equipe_fora.escudo.thumbnail.url }}" class="w-12 h-12 rounded-full mx-auto mb-1 border-2 border-base-300">
+          {% else %}
+            <div class="w-12 h-12 rounded-full bg-neutral-content/10 border-2 border-base-300 flex items-center justify-center mx-auto mb-1">
+              <span class="font-black text-base-content/50">{{ jogo.equipe_fora.nome_equipe|first|upper }}</span>
+            </div>
           {% endif %}
-          <div class="fw-semibold">{{ jogo.equipe_fora.nome_equipe }}</div>
-          <small class="text-muted">Visitante</small>
+          <div class="font-semibold text-sm">{{ jogo.equipe_fora.nome_equipe }}</div>
+          <div class="text-xs text-base-content/40">Visitante</div>
         </div>
       </div>
 
-      <form method="post">
+      <form method="post" class="space-y-4">
         {% csrf_token %}
-        {{ form|crispy }}
-        <div class="d-flex gap-2 mt-3">
-          <button type="submit" class="btn btn-primary">Salvar Resultado</button>
-          <a href="{% url 'competicao:rodadas' jogo.rodada.competicao.pk %}" class="btn btn-outline-secondary">Cancelar</a>
+
+        <!-- Data/hora e Local -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="label py-0 mb-1">
+              <span class="label-text font-semibold text-xs">Data e Hora</span>
+            </label>
+            {{ form.data_hora }}
+          </div>
+          <div>
+            <label class="label py-0 mb-1">
+              <span class="label-text font-semibold text-xs">Local / Campo</span>
+            </label>
+            {{ form.local }}
+          </div>
+        </div>
+
+        <!-- Árbitro -->
+        <div>
+          <label class="label py-0 mb-1">
+            <span class="label-text font-semibold text-xs">Árbitro Principal</span>
+          </label>
+          {{ form.arbitro }}
+        </div>
+
+        <!-- Placar -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="label py-0 mb-1">
+              <span class="label-text font-semibold text-xs">{{ form.gols_casa.label }}</span>
+            </label>
+            {{ form.gols_casa }}
+          </div>
+          <div>
+            <label class="label py-0 mb-1">
+              <span class="label-text font-semibold text-xs">{{ form.gols_fora.label }}</span>
+            </label>
+            {{ form.gols_fora }}
+          </div>
+        </div>
+
+        <!-- Público -->
+        <div>
+          <label class="label py-0 mb-1">
+            <span class="label-text font-semibold text-xs"><i class="bi bi-people"></i> Público presente</span>
+          </label>
+          {{ form.publico }}
+        </div>
+
+        <!-- Status -->
+        <div>
+          <label class="label py-0 mb-2">
+            <span class="label-text font-semibold text-xs">Status do jogo</span>
+          </label>
+          <div class="flex flex-wrap gap-3">
+            <label class="flex items-center gap-2 cursor-pointer">
+              {{ form.em_andamento }}
+              <span class="badge badge-warning badge-sm">Ao vivo</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              {{ form.finalizado }}
+              <span class="badge badge-success badge-sm">Finalizado</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              {{ form.anulado }}
+              <span class="badge badge-error badge-sm">Anulado</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              {{ form.wo }}
+              <span class="badge badge-ghost badge-sm">W.O.</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Observações -->
+        <div>
+          <label class="label py-0 mb-1">
+            <span class="label-text font-semibold text-xs"><i class="bi bi-chat-left-text"></i> Observações</span>
+          </label>
+          {{ form.observacoes }}
+        </div>
+
+        {% if form.non_field_errors %}
+          <div class="alert alert-error text-sm py-2">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <div class="flex gap-2 pt-2">
+          <button type="submit" class="btn btn-warning flex-1">
+            <i class="bi bi-check-lg"></i> Salvar
+          </button>
+          {% if jogo.rodada %}
+          <a href="{% url 'competicao:jogo_detalhe' jogo.pk %}" class="btn btn-ghost">Cancelar</a>
+          {% endif %}
         </div>
       </form>
+
     </div>
   </div>
 </div>

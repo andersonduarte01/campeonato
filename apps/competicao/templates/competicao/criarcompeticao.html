@@ -1,23 +1,84 @@
 {% extends 'base/indice.html' %}
-{% load crispy_forms_tags %}
 {% load static %}
-{% block titulo %}Criar Competição{% endblock %}
-{% block conteudo %}
+{% block titulo %}Nova Competição{% endblock %}
 
-<div class="container" style="margin-top:20px;">
-  <div class="card">
-  <div class="card-body">
-    <h4 class="card-title text-center">Criar Competição</h4>
-    <hr>
-    <form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form|crispy }}
-    <hr>
-    <div class="d-grid gap-2">
-      <button type="submit" class="btn btn-outline-primary">Criar</button>
+{% block conteudo %}
+<div class="p-4 md:p-6 max-w-2xl mx-auto">
+
+  <!-- Cabeçalho -->
+  <div class="flex items-center gap-3 mb-6">
+    <a href="{% url 'competicao:competicao_lista' %}"
+       class="btn btn-ghost btn-sm btn-square border border-base-content/10 text-base-content/50 hover:text-base-content">
+      <i class="bi bi-arrow-left text-sm"></i>
+    </a>
+    <div>
+      <h1 class="section-heading text-3xl text-base-content leading-none">NOVA COMPETIÇÃO</h1>
+      <p class="text-xs text-base-content/40 mt-1">Preencha os dados para criar uma competição</p>
     </div>
-    </form>
   </div>
-</div>
+
+  <div class="card bg-base-200 border border-base-300 overflow-hidden">
+    <!-- Barra decorativa warning no topo -->
+    <div class="h-1 bg-warning w-full"></div>
+
+    <div class="card-body p-5 md:p-6">
+      <form method="post" enctype="multipart/form-data" class="space-y-5">
+        {% csrf_token %}
+
+        {% for field in form %}
+        {% if field.field.widget.input_type == 'checkbox' %}
+        <!-- Checkbox inline -->
+        <label class="flex items-center gap-3 cursor-pointer px-3 py-2.5 rounded-xl
+                       hover:bg-base-300/50 transition-colors border border-base-content/8">
+          {{ field }}
+          <div>
+            <span class="text-sm font-semibold text-base-content">{{ field.label }}</span>
+            {% if field.help_text %}
+            <p class="text-xs text-base-content/40 mt-0.5">{{ field.help_text }}</p>
+            {% endif %}
+          </div>
+        </label>
+
+        {% else %}
+        <!-- Campo padrão -->
+        <div>
+          <label class="label py-0 mb-1.5" for="{{ field.id_for_label }}">
+            <span class="label-text font-semibold text-sm text-base-content/80">
+              {{ field.label }}
+              {% if field.field.required %}
+              <span class="text-error ml-0.5">*</span>
+              {% endif %}
+            </span>
+          </label>
+          {{ field }}
+          {% if field.help_text %}
+          <p class="text-xs text-base-content/40 mt-1.5">{{ field.help_text }}</p>
+          {% endif %}
+          {% if field.errors %}
+          {% for error in field.errors %}
+          <p class="text-error text-xs mt-1 flex items-center gap-1">
+            <i class="bi bi-exclamation-circle shrink-0"></i> {{ error }}
+          </p>
+          {% endfor %}
+          {% endif %}
+        </div>
+        {% endif %}
+        {% endfor %}
+
+        <div class="pt-2 flex gap-3">
+          <button type="submit"
+                  class="btn btn-warning flex-1 gap-2 font-semibold shadow-lg shadow-warning/20">
+            <i class="bi bi-plus-circle text-sm"></i> Criar Competição
+          </button>
+          <a href="{% url 'competicao:competicao_lista' %}"
+             class="btn btn-ghost border border-base-content/10 text-base-content/50 hover:text-base-content">
+            Cancelar
+          </a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
 </div>
 {% endblock %}

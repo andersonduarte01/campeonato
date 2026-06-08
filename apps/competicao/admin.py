@@ -2,6 +2,7 @@ from django.contrib import admin
 from .models import (
     Competicao, Jogo, Rodada, Gol, Cartao, InscricaoAtleta, Classificacao,
     Fase, Grupo, ClassificacaoGrupo, ConfrontoMatamate, Suspensao,
+    Local, Arbitro, EscalacaoJogo, Substituicao, ArbitrosJogo,
 )
 
 
@@ -96,3 +97,32 @@ class ConfrontoMatamateAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'fase', 'ordem', 'vencedor')
     list_filter = ('fase__competicao', 'fase')
     raw_id_fields = ('jogo_ida', 'jogo_volta')
+
+
+@admin.register(Local)
+class LocalAdmin(admin.ModelAdmin):
+    list_display = ('nome', 'cidade', 'capacidade')
+    search_fields = ('nome', 'cidade')
+
+
+@admin.register(Arbitro)
+class ArbitroAdmin(admin.ModelAdmin):
+    list_display = ('nome', 'categoria', 'ativo')
+    list_filter = ('ativo',)
+    search_fields = ('nome',)
+
+
+@admin.register(ArbitrosJogo)
+class ArbitrosJogoAdmin(admin.ModelAdmin):
+    list_display = ('arbitro', 'tipo', 'jogo')
+    list_filter = ('tipo',)
+
+
+class EscalacaoInline(admin.TabularInline):
+    model = EscalacaoJogo
+    extra = 0
+
+
+class SubstituicaoInline(admin.TabularInline):
+    model = Substituicao
+    extra = 0

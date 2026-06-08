@@ -2,40 +2,46 @@
 {% block titulo %}Editar Local — {{ local.nome }}{% endblock %}
 
 {% block conteudo %}
-<div class="container mt-4" style="max-width:600px">
-  <div class="card">
-    <div class="card-header fw-semibold">
-      <i class="bi bi-geo-alt"></i> Editar Local
+<div class="p-4 md:p-6 max-w-xl mx-auto">
+  <div class="card bg-base-200 border border-base-300">
+    <div class="px-5 py-3 border-b border-base-300 flex items-center gap-2">
+      <i class="bi bi-geo-alt-fill text-warning text-sm"></i>
+      <h1 class="font-bold text-sm">Editar Local</h1>
     </div>
-    <div class="card-body">
-      {% if messages %}
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-        {% endfor %}
-      {% endif %}
-      <form method="post">
+    <div class="card-body p-5">
+      <form method="post" class="space-y-4">
         {% csrf_token %}
-        <div class="mb-3">
-          <label class="form-label fw-semibold">Nome *</label>
+        <div>
+          <label class="label py-0 mb-1">
+            <span class="label-text font-semibold text-sm">Nome *</span>
+          </label>
           {{ form.nome }}
         </div>
-        <div class="row g-2 mb-3">
-          <div class="col-6">
-            <label class="form-label fw-semibold">Cidade</label>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="label py-0 mb-1">
+              <span class="label-text font-semibold text-sm">Cidade</span>
+            </label>
             {{ form.cidade }}
           </div>
-          <div class="col-6">
-            <label class="form-label fw-semibold">Capacidade</label>
+          <div>
+            <label class="label py-0 mb-1">
+              <span class="label-text font-semibold text-sm">Capacidade</span>
+            </label>
             {{ form.capacidade }}
           </div>
         </div>
-        <div class="mb-3">
-          <label class="form-label fw-semibold">Endereço</label>
+        <div>
+          <label class="label py-0 mb-1">
+            <span class="label-text font-semibold text-sm">Endereço</span>
+          </label>
           {{ form.endereco }}
         </div>
-        <div class="d-flex gap-2">
-          <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Salvar</button>
-          <a href="{% url 'competicao:local_lista' %}" class="btn btn-outline-secondary">Cancelar</a>
+        <div class="flex gap-2 pt-2">
+          <button type="submit" class="btn btn-warning flex-1">
+            <i class="bi bi-save"></i> Salvar
+          </button>
+          <a href="{% url 'competicao:local_lista' %}" class="btn btn-ghost">Cancelar</a>
         </div>
       </form>
     </div>

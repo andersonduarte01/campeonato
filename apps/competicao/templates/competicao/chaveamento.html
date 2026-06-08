@@ -2,45 +2,39 @@
 {% block titulo %}Chaveamento — {{ fase.nome }}{% endblock %}
 
 {% block conteudo %}
-<div class="container mt-4">
+<div class="p-4 md:p-6">
 
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4 class="mb-0"><i class="bi bi-diagram-3"></i> {{ fase.nome }} — Chaveamento</h4>
-    <div class="d-flex gap-2">
+  <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+    <h1 class="text-lg font-bold flex items-center gap-2">
+      <i class="bi bi-diagram-3 text-warning"></i> {{ fase.nome }} — Chaveamento
+    </h1>
+    <div class="flex gap-2 flex-wrap">
       {% if fase.ida_e_volta %}
-        <span class="badge bg-secondary align-self-center"><i class="bi bi-arrow-left-right"></i> Ida e Volta</span>
+        <span class="badge badge-ghost gap-1"><i class="bi bi-arrow-left-right"></i> Ida e Volta</span>
       {% endif %}
-      <a href="{% url 'competicao:bracket' pk=fase.pk %}" class="btn btn-sm btn-warning">
+      <a href="{% url 'competicao:bracket' pk=fase.pk %}" class="btn btn-warning btn-sm gap-1">
         <i class="bi bi-diagram-3-fill"></i> Bracket Visual
       </a>
-      <a href="{% url 'competicao:fases' pk=fase.competicao.pk %}" class="btn btn-sm btn-outline-dark">
+      <a href="{% url 'competicao:fases' pk=fase.competicao.pk %}" class="btn btn-ghost btn-sm gap-1">
         <i class="bi bi-arrow-left"></i> Fases
       </a>
     </div>
   </div>
 
-  {% if messages %}
-    {% for message in messages %}
-    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
-      {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-    {% endfor %}
-  {% endif %}
-
-  <!-- Gerar chaveamento via classificados de grupos -->
+  <!-- Gerar chaveamento via classificados -->
   {% if not tem_confrontos and fases_grupos %}
-  <div class="card mb-3">
-    <div class="card-header fw-semibold">Gerar Chaveamento</div>
-    <div class="card-body">
-      <p class="text-muted small mb-2">Avançar classificados de uma fase de grupos para este chaveamento:</p>
-      <div class="d-flex flex-wrap gap-2">
+  <div class="card bg-base-200 border border-base-300 mb-4">
+    <div class="px-4 py-3 border-b border-base-300 font-semibold text-sm">Gerar Chaveamento</div>
+    <div class="card-body p-4">
+      <p class="text-sm text-base-content/60 mb-3">Avançar classificados de uma fase de grupos para este chaveamento:</p>
+      <div class="flex flex-wrap gap-2">
         {% for fg in fases_grupos %}
         <form method="post"
               action="{% url 'competicao:avancar_classificados' fase_grupos_pk=fg.pk fase_mata_mata_pk=fase.pk %}"
               onsubmit="return confirm('Gerar chaveamento com os classificados de {{ fg.nome }}?')">
           {% csrf_token %}
-          <button type="submit" class="btn btn-warning btn-sm">
-            <i class="bi bi-arrow-up-right-circle"></i> Usar classificados de: {{ fg.nome }}
+          <button type="submit" class="btn btn-warning btn-sm gap-1">
+            <i class="bi bi-arrow-up-right-circle"></i> Usar: {{ fg.nome }}
           </button>
         </form>
         {% endfor %}
@@ -49,120 +43,165 @@
   </div>
   {% endif %}
 
+  <!-- Disputa de 3º Lugar -->
+  {% if tem_confrontos %}
+  <div class="card bg-base-200 border border-warning/40 mb-4">
+    <div class="px-4 py-3 border-b border-warning/30 flex items-center gap-2 text-warning">
+      <i class="bi bi-award text-sm"></i>
+      <span class="font-semibold text-sm">Disputa de 3º Lugar</span>
+    </div>
+    <div class="card-body p-4">
+      {% if terceiro_lugar %}
+        <div class="flex items-center justify-center gap-4">
+          <span class="font-semibold text-sm">{{ terceiro_lugar.equipe_mandante.nome_equipe }}</span>
+          {% if terceiro_lugar.jogo_ida and terceiro_lugar.jogo_ida.finalizado %}
+            <a href="{% url 'competicao:jogo_detalhe' terceiro_lugar.jogo_ida.pk %}"
+               class="badge badge-neutral font-bold text-base px-4 hover:badge-warning transition-colors">
+              {{ terceiro_lugar.jogo_ida.gols_casa }} — {{ terceiro_lugar.jogo_ida.gols_fora }}
+            </a>
+          {% elif terceiro_lugar.jogo_ida %}
+            <a href="{% url 'competicao:jogo_detalhe' terceiro_lugar.jogo_ida.pk %}" class="btn btn-ghost btn-xs">
+              <i class="bi bi-pencil-square"></i>
+            </a>
+          {% endif %}
+          <span class="font-semibold text-sm">{{ terceiro_lugar.equipe_visitante.nome_equipe }}</span>
+        </div>
+      {% else %}
+        <form method="post" action="{% url 'competicao:terceiro_lugar_criar' fase.pk %}" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {% csrf_token %}
+          <div>
+            <label class="label py-0 mb-1"><span class="label-text font-semibold text-xs">Equipe Mandante</span></label>
+            <select name="equipe_mandante" class="select select-bordered select-sm w-full" required>
+              <option value="">— Selecione —</option>
+              {% for eq in fase.competicao.equipes.all %}
+              <option value="{{ eq.pk }}">{{ eq.nome_equipe }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label class="label py-0 mb-1"><span class="label-text font-semibold text-xs">Equipe Visitante</span></label>
+            <select name="equipe_visitante" class="select select-bordered select-sm w-full" required>
+              <option value="">— Selecione —</option>
+              {% for eq in fase.competicao.equipes.all %}
+              <option value="{{ eq.pk }}">{{ eq.nome_equipe }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="flex items-end">
+            <button type="submit" class="btn btn-warning btn-sm gap-1 w-full">
+              <i class="bi bi-plus-circle"></i> Criar
+            </button>
+          </div>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Confrontos -->
   {% if confrontos %}
+  <div class="space-y-4">
   {% for confronto in confrontos %}
-  <div class="card mb-3 {% if confronto.vencedor %}border-success{% endif %}">
-    <div class="card-header d-flex justify-content-between align-items-center">
-      <span class="fw-semibold">Confronto {{ confronto.ordem }}</span>
+  <div class="card bg-base-200 border {% if confronto.vencedor %}border-success/40{% else %}border-base-300{% endif %}">
+    <div class="px-4 py-3 border-b {% if confronto.vencedor %}border-success/30{% else %}border-base-300{% endif %} flex items-center justify-between">
+      <span class="font-semibold text-sm">Confronto {{ confronto.ordem }}</span>
       {% if confronto.vencedor %}
-        <span class="badge bg-success">
+        <span class="badge badge-success gap-1 text-xs">
           <i class="bi bi-trophy-fill"></i> {{ confronto.vencedor.nome_equipe }}
         </span>
       {% elif confronto.totalmente_jogado %}
-        <span class="badge bg-secondary">Aguardando pênaltis</span>
+        <span class="badge badge-ghost badge-sm">Aguardando pênaltis</span>
       {% else %}
-        <span class="badge bg-light text-dark border">Em andamento</span>
+        <span class="badge badge-ghost badge-sm">Em andamento</span>
       {% endif %}
     </div>
-    <div class="card-body">
+    <div class="card-body p-4">
 
       <!-- Placar total -->
-      <div class="d-flex align-items-center justify-content-center gap-3 mb-3">
-        <span class="fs-5 {% if confronto.vencedor == confronto.equipe_mandante %}fw-bold text-success{% endif %}">
+      <div class="flex items-center justify-center gap-4 mb-4">
+        <span class="font-semibold text-sm {% if confronto.vencedor == confronto.equipe_mandante %}text-success{% endif %}">
           {{ confronto.equipe_mandante.nome_equipe|default:"?" }}
         </span>
-        <span class="badge bg-dark fs-6 px-3">
+        <span class="badge badge-neutral font-bold text-base px-4">
           {{ confronto.gols_mandante_total }} — {{ confronto.gols_visitante_total }}
         </span>
-        <span class="fs-5 {% if confronto.vencedor == confronto.equipe_visitante %}fw-bold text-success{% endif %}">
+        <span class="font-semibold text-sm {% if confronto.vencedor == confronto.equipe_visitante %}text-success{% endif %}">
           {{ confronto.equipe_visitante.nome_equipe|default:"?" }}
         </span>
       </div>
 
-      <!-- Detalhes dos jogos -->
-      <div class="row g-2">
+      <!-- Jogos -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {% if confronto.jogo_ida %}
-        <div class="col-md-6">
-          <div class="p-2 bg-light rounded small">
-            <div class="text-muted mb-1">Jogo de Ida</div>
-            <div class="d-flex justify-content-between align-items-center">
-              <span>{{ confronto.jogo_ida.equipe_casa.nome_equipe }}</span>
-              {% if confronto.jogo_ida.finalizado %}
-                <a href="{% url 'competicao:jogo_detalhe' confronto.jogo_ida.pk %}"
-                   class="badge bg-dark text-decoration-none px-3">
-                  {{ confronto.jogo_ida.gols_casa }} — {{ confronto.jogo_ida.gols_fora }}
-                </a>
-              {% elif confronto.jogo_ida.anulado %}
-                <span class="badge bg-danger">Anulado</span>
-              {% else %}
-                <a href="{% url 'competicao:jogo_detalhe' confronto.jogo_ida.pk %}"
-                   class="btn btn-sm btn-outline-secondary py-0 px-2">
-                  <i class="bi bi-pencil-square"></i>
-                </a>
-              {% endif %}
-              <span>{{ confronto.jogo_ida.equipe_fora.nome_equipe }}</span>
-            </div>
+        <div class="bg-base-300/40 rounded-xl p-3">
+          <p class="text-xs text-base-content/50 mb-2 font-semibold uppercase tracking-wider">Jogo de Ida</p>
+          <div class="flex items-center justify-between gap-2 text-sm">
+            <span>{{ confronto.jogo_ida.equipe_casa.nome_equipe }}</span>
+            {% if confronto.jogo_ida.finalizado %}
+              <a href="{% url 'competicao:jogo_detalhe' confronto.jogo_ida.pk %}"
+                 class="badge badge-neutral font-bold px-3 hover:badge-warning transition-colors shrink-0">
+                {{ confronto.jogo_ida.gols_casa }} — {{ confronto.jogo_ida.gols_fora }}
+              </a>
+            {% elif confronto.jogo_ida.anulado %}
+              <span class="badge badge-error badge-sm shrink-0">Anulado</span>
+            {% else %}
+              <a href="{% url 'competicao:jogo_detalhe' confronto.jogo_ida.pk %}" class="btn btn-ghost btn-xs shrink-0">
+                <i class="bi bi-pencil-square"></i>
+              </a>
+            {% endif %}
+            <span>{{ confronto.jogo_ida.equipe_fora.nome_equipe }}</span>
           </div>
         </div>
         {% endif %}
 
         {% if confronto.jogo_volta %}
-        <div class="col-md-6">
-          <div class="p-2 bg-light rounded small">
-            <div class="text-muted mb-1">Jogo de Volta</div>
-            <div class="d-flex justify-content-between align-items-center">
-              <span>{{ confronto.jogo_volta.equipe_casa.nome_equipe }}</span>
-              {% if confronto.jogo_volta.finalizado %}
-                <a href="{% url 'competicao:jogo_detalhe' confronto.jogo_volta.pk %}"
-                   class="badge bg-dark text-decoration-none px-3">
-                  {{ confronto.jogo_volta.gols_casa }} — {{ confronto.jogo_volta.gols_fora }}
-                </a>
-              {% elif confronto.jogo_volta.anulado %}
-                <span class="badge bg-danger">Anulado</span>
-              {% else %}
-                <a href="{% url 'competicao:jogo_detalhe' confronto.jogo_volta.pk %}"
-                   class="btn btn-sm btn-outline-secondary py-0 px-2">
-                  <i class="bi bi-pencil-square"></i>
-                </a>
-              {% endif %}
-              <span>{{ confronto.jogo_volta.equipe_fora.nome_equipe }}</span>
-            </div>
+        <div class="bg-base-300/40 rounded-xl p-3">
+          <p class="text-xs text-base-content/50 mb-2 font-semibold uppercase tracking-wider">Jogo de Volta</p>
+          <div class="flex items-center justify-between gap-2 text-sm">
+            <span>{{ confronto.jogo_volta.equipe_casa.nome_equipe }}</span>
+            {% if confronto.jogo_volta.finalizado %}
+              <a href="{% url 'competicao:jogo_detalhe' confronto.jogo_volta.pk %}"
+                 class="badge badge-neutral font-bold px-3 hover:badge-warning transition-colors shrink-0">
+                {{ confronto.jogo_volta.gols_casa }} — {{ confronto.jogo_volta.gols_fora }}
+              </a>
+            {% elif confronto.jogo_volta.anulado %}
+              <span class="badge badge-error badge-sm shrink-0">Anulado</span>
+            {% else %}
+              <a href="{% url 'competicao:jogo_detalhe' confronto.jogo_volta.pk %}" class="btn btn-ghost btn-xs shrink-0">
+                <i class="bi bi-pencil-square"></i>
+              </a>
+            {% endif %}
+            <span>{{ confronto.jogo_volta.equipe_fora.nome_equipe }}</span>
           </div>
         </div>
         {% endif %}
       </div>
 
-      <!-- Pênaltis -->
       {% if confronto.penaltis_mandante is not None %}
-      <div class="mt-2 text-center small text-muted">
+      <p class="text-center text-xs text-base-content/50 mt-3">
         Pênaltis: {{ confronto.equipe_mandante.nome_equipe }} {{ confronto.penaltis_mandante }}
         × {{ confronto.penaltis_visitante }} {{ confronto.equipe_visitante.nome_equipe }}
-      </div>
+      </p>
       {% endif %}
 
-      <!-- Form pênaltis (apenas quando empate e sem vencedor definido) -->
       {% if penaltis_forms and confronto.pk in penaltis_forms %}
-      <div class="mt-3 p-3 bg-light rounded">
-        <div class="fw-semibold small mb-2">
-          <i class="bi bi-bullseye"></i> Registrar Pênaltis
-        </div>
-        <form method="post" action="{% url 'competicao:confronto_penaltis' pk=confronto.pk %}">
+      <div class="mt-3 p-3 bg-base-300/50 rounded-xl">
+        <p class="font-semibold text-xs mb-3 flex items-center gap-1">
+          <i class="bi bi-bullseye text-warning"></i> Registrar Pênaltis
+        </p>
+        <form method="post" action="{% url 'competicao:confronto_penaltis' pk=confronto.pk %}" class="flex gap-3 items-end">
           {% csrf_token %}
-          <div class="row g-2">
-            <div class="col">
-              <label class="form-label small">Pênaltis Mandante</label>
-              <input type="number" name="penaltis_mandante" class="form-control form-control-sm" min="0"
-                     value="{{ confronto.penaltis_mandante|default:'' }}">
-            </div>
-            <div class="col">
-              <label class="form-label small">Pênaltis Visitante</label>
-              <input type="number" name="penaltis_visitante" class="form-control form-control-sm" min="0"
-                     value="{{ confronto.penaltis_visitante|default:'' }}">
-            </div>
-            <div class="col-auto d-flex align-items-end">
-              <button type="submit" class="btn btn-sm btn-primary">Salvar</button>
-            </div>
+          <div class="flex-1">
+            <label class="label py-0 mb-1"><span class="label-text text-xs">Pênaltis Mandante</span></label>
+            <input type="number" name="penaltis_mandante" class="input input-bordered input-sm w-full" min="0"
+                   value="{{ confronto.penaltis_mandante|default:'' }}">
           </div>
+          <div class="flex-1">
+            <label class="label py-0 mb-1"><span class="label-text text-xs">Pênaltis Visitante</span></label>
+            <input type="number" name="penaltis_visitante" class="input input-bordered input-sm w-full" min="0"
+                   value="{{ confronto.penaltis_visitante|default:'' }}">
+          </div>
+          <button type="submit" class="btn btn-warning btn-sm">Salvar</button>
         </form>
       </div>
       {% endif %}
@@ -170,15 +209,16 @@
     </div>
   </div>
   {% endfor %}
+  </div>
   {% else %}
-  <div class="alert alert-info">
-    <i class="bi bi-info-circle"></i>
-    Nenhum confronto gerado ainda.
-    {% if fases_grupos %}
-      Use o botão acima para avançar os classificados de uma fase de grupos.
-    {% else %}
-      Crie uma fase de grupos primeiro ou gere os confrontos manualmente pelo admin.
-    {% endif %}
+  <div class="card bg-base-200 border border-base-300">
+    <div class="card-body text-center py-12 text-base-content/40">
+      <i class="bi bi-diagram-3 text-4xl block mb-3 opacity-30"></i>
+      <p class="font-semibold">Nenhum confronto gerado ainda.</p>
+      <p class="text-sm mt-1">
+        {% if fases_grupos %}Use o botão acima para avançar os classificados.{% else %}Crie uma fase de grupos primeiro.{% endif %}
+      </p>
+    </div>
   </div>
   {% endif %}
 

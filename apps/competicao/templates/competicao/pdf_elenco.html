@@ -1,0 +1,107 @@
+<!doctype html>
+{% load static %}
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <title>Elenco — {{ equipe.nome_equipe }}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; font-size: 13px; background: #fff; margin: 0; padding: 1.5rem; }
+
+    /* Typography */
+    .text-center { text-align: center; }
+    .text-muted { color: #6c757d; }
+    .fw-bold { font-weight: 700; }
+    .fw-semibold { font-weight: 600; }
+    .mb-0 { margin-bottom: 0; }
+    .mb-3 { margin-bottom: 1rem; }
+    .mt-3 { margin-top: 1rem; }
+    .mt-4 { margin-top: 1.5rem; }
+    .pt-3 { padding-top: 1rem; }
+    .ms-2 { margin-left: 0.5rem; }
+    .border-top { border-top: 1px solid #dee2e6; }
+
+    /* Buttons */
+    .btn { display: inline-block; padding: 3px 10px; border-radius: 4px; border: 1px solid transparent; cursor: pointer; font-size: 0.8rem; }
+    .btn-sm { padding: 2px 8px; font-size: 0.75rem; }
+    .btn-dark { background: #212529; color: #fff; border-color: #212529; }
+    .btn-outline-secondary { background: transparent; color: #6c757d; border-color: #6c757d; }
+
+    /* Tables */
+    .table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+    .table th, .table td { padding: 5px 7px; vertical-align: top; }
+    .table-bordered th, .table-bordered td { border: 1px solid #dee2e6; }
+    .table-sm th, .table-sm td { padding: 3px 5px; }
+    .table-dark thead tr th { background: #212529; color: #fff; border-color: #373b3e; }
+
+    /* Badges */
+    .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 700; }
+    .bg-secondary { background: #6c757d; color: #fff; }
+    .bg-success { background: #198754; color: #fff; }
+    .bg-warning { background: #ffc107; }
+    .text-dark { color: #212529; }
+
+    @media print {
+      .no-print { display: none !important; }
+      body { margin: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="no-print mb-3">
+    <button onclick="window.print()" class="btn btn-dark btn-sm">
+      <i class="bi bi-printer"></i> Imprimir / Salvar PDF
+    </button>
+    <button onclick="window.history.back()" class="btn btn-outline-secondary btn-sm ms-2">Voltar</button>
+  </div>
+
+  <div class="text-center mb-3">
+    <h4 class="fw-bold mb-0">{{ equipe.nome_equipe }}</h4>
+    <div class="text-muted">{{ competicao.nome }}</div>
+    <small class="text-muted">Elenco inscrito</small>
+  </div>
+  <hr>
+
+  {% if inscricoes %}
+  <table class="table table-sm table-bordered">
+    <thead class="table-dark">
+      <tr>
+        <th style="width:50px">#</th>
+        <th>Nome do Atleta</th>
+        <th>Posição</th>
+        <th>Taxa</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for i in inscricoes %}
+      <tr>
+        <td class="text-center fw-bold">{{ i.numero_camisa|default:"—" }}</td>
+        <td>{{ i.atleta.nome }}</td>
+        <td><span class="badge bg-secondary">{{ i.atleta.get_posicao_display }}</span></td>
+        <td>
+          {% if i.taxa_paga %}
+            <span class="badge bg-success">Paga</span>
+          {% else %}
+            <span class="badge bg-warning text-dark">Pendente</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="mt-3">
+    <small class="text-muted">Total de atletas: {{ inscricoes|length }}</small>
+  </div>
+  {% else %}
+  <p class="text-muted">Nenhum atleta inscrito.</p>
+  {% endif %}
+
+  <div class="mt-4 pt-3 border-top text-center">
+    <small class="text-muted">Documento gerado em {% now "d/m/Y H:i" %}</small>
+  </div>
+
+</body>
+</html>

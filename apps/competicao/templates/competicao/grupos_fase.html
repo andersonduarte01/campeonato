@@ -2,87 +2,79 @@
 {% block titulo %}Grupos — {{ fase.nome }}{% endblock %}
 
 {% block conteudo %}
-<div class="container mt-4">
+<div class="p-4 md:p-6">
 
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4 class="mb-0"><i class="bi bi-grid-3x3-gap"></i> {{ fase.nome }} — Grupos</h4>
-    <div class="d-flex gap-2">
-      <a href="{% url 'competicao:fases' pk=fase.competicao.pk %}" class="btn btn-sm btn-outline-dark">
-        <i class="bi bi-arrow-left"></i> Fases
-      </a>
-    </div>
+  <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+    <h1 class="text-lg font-bold flex items-center gap-2">
+      <i class="bi bi-grid-3x3-gap text-warning"></i> {{ fase.nome }} — Grupos
+    </h1>
+    <a href="{% url 'competicao:fases' pk=fase.competicao.pk %}" class="btn btn-ghost btn-sm gap-1">
+      <i class="bi bi-arrow-left"></i> Fases
+    </a>
   </div>
 
-  {% if messages %}
-    {% for message in messages %}
-    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
-      {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-    {% endfor %}
-  {% endif %}
-
   <!-- Ações da fase -->
-  <div class="d-flex flex-wrap gap-2 mb-3">
+  <div class="flex flex-wrap gap-2 mb-5">
     {% if not tem_rodadas %}
       <form method="post" action="{% url 'competicao:gerar_jogos_grupos' pk=fase.pk %}">
         {% csrf_token %}
-        <button type="submit" class="btn btn-success btn-sm"
+        <button type="submit" class="btn btn-success btn-sm gap-1"
                 onclick="return confirm('Gerar rodadas para todos os grupos?')">
           <i class="bi bi-arrow-repeat"></i> Gerar Rodadas dos Grupos
         </button>
       </form>
     {% else %}
-      <span class="badge bg-success fs-6"><i class="bi bi-check-circle"></i> Rodadas já geradas</span>
-      <a href="{% url 'competicao:rodadas' pk=fase.competicao.pk %}" class="btn btn-sm btn-outline-success">
+      <span class="badge badge-success gap-1 py-2"><i class="bi bi-check-circle"></i> Rodadas já geradas</span>
+      <a href="{% url 'competicao:rodadas' pk=fase.competicao.pk %}" class="btn btn-ghost btn-sm gap-1">
         <i class="bi bi-calendar3"></i> Ver Rodadas
       </a>
     {% endif %}
 
     {% if fases_mata_mata %}
-      <div class="dropdown">
-        <button class="btn btn-sm btn-warning dropdown-toggle" data-bs-toggle="dropdown">
-          <i class="bi bi-arrow-up-right-circle"></i> Avançar Classificados para…
+      {% for fase_mm in fases_mata_mata %}
+      <form method="post"
+            action="{% url 'competicao:avancar_classificados' fase_grupos_pk=fase.pk fase_mata_mata_pk=fase_mm.pk %}"
+            onsubmit="return confirm('Gerar chaveamento de {{ fase_mm.nome }} com os classificados?')">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-warning btn-sm gap-1">
+          <i class="bi bi-arrow-up-right-circle"></i> Avançar para: {{ fase_mm.nome }}
         </button>
-        <ul class="dropdown-menu">
-          {% for fase_mm in fases_mata_mata %}
-          <li>
-            <form method="post"
-                  action="{% url 'competicao:avancar_classificados' fase_grupos_pk=fase.pk fase_mata_mata_pk=fase_mm.pk %}"
-                  onsubmit="return confirm('Gerar chaveamento de {{ fase_mm.nome }} com os classificados de cada grupo?')">
-              {% csrf_token %}
-              <button type="submit" class="dropdown-item">{{ fase_mm.nome }}</button>
-            </form>
-          </li>
-          {% endfor %}
-        </ul>
-      </div>
+      </form>
+      {% endfor %}
     {% endif %}
   </div>
 
-  <div class="row g-3">
+  <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
 
-    <!-- Adicionar grupo -->
-    <div class="col-md-3">
-      <div class="card">
-        <div class="card-header fw-semibold"><i class="bi bi-plus"></i> Novo Grupo</div>
-        <div class="card-body">
-          <form method="post" action="{% url 'competicao:grupo_criar' fase_pk=fase.pk %}">
+    <!-- Novo grupo + equipes sem grupo -->
+    <div class="lg:col-span-1 space-y-4">
+      <div class="card bg-base-200 border border-base-300">
+        <div class="px-4 py-3 border-b border-base-300 flex items-center gap-2">
+          <i class="bi bi-plus text-warning text-sm"></i>
+          <span class="font-semibold text-sm">Novo Grupo</span>
+        </div>
+        <div class="card-body p-4">
+          <form method="post" action="{% url 'competicao:grupo_criar' fase_pk=fase.pk %}" class="space-y-3">
             {% csrf_token %}
-            <div class="mb-2">
-              <label class="form-label small">Nome</label>
+            <div>
+              <label class="label py-0 mb-1">
+                <span class="label-text font-semibold text-xs">Nome</span>
+              </label>
               {{ form_grupo.nome }}
             </div>
-            <button type="submit" class="btn btn-primary btn-sm w-100">Criar</button>
+            <button type="submit" class="btn btn-warning btn-sm w-full">Criar</button>
           </form>
         </div>
       </div>
 
       {% if equipes_disponiveis %}
-      <div class="card mt-3">
-        <div class="card-header fw-semibold small text-muted">Equipes sem grupo</div>
-        <ul class="list-group list-group-flush">
+      <div class="card bg-base-200 border border-base-300 overflow-hidden">
+        <div class="px-4 py-2.5 border-b border-base-300 text-xs font-semibold text-base-content/50">
+          Equipes sem grupo
+        </div>
+        <ul class="divide-y divide-base-300">
           {% for eq in equipes_disponiveis %}
-          <li class="list-group-item small py-1">{{ eq.nome_equipe }}</li>
+          <li class="px-4 py-2 text-sm text-base-content/70">{{ eq.nome_equipe }}</li>
           {% endfor %}
         </ul>
       </div>
@@ -90,77 +82,76 @@
     </div>
 
     <!-- Grupos -->
-    <div class="col-md-9">
+    <div class="lg:col-span-3 space-y-4">
       {% for gd in grupos_data %}{% with grupo=gd.grupo %}
-      <div class="card mb-3">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <span class="fw-semibold">Grupo {{ grupo.nome }}</span>
+      <div class="card bg-base-200 border border-base-300">
+        <div class="px-4 py-3 border-b border-base-300 flex items-center justify-between">
+          <span class="font-semibold text-sm">Grupo {{ grupo.nome }}</span>
           <form method="post" action="{% url 'competicao:grupo_excluir' pk=grupo.pk %}"
                 onsubmit="return confirm('Excluir Grupo {{ grupo.nome }}?')">
             {% csrf_token %}
-            <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2">
+            <button type="submit" class="btn btn-ghost btn-xs text-error">
               <i class="bi bi-trash"></i>
             </button>
           </form>
         </div>
-        <div class="card-body p-0">
-          <table class="table table-sm mb-0">
+        <div class="overflow-x-auto">
+          <table class="table table-sm">
             <tbody>
               {% for equipe in grupo.equipes.all %}
-              <tr>
-                <td>{{ equipe.nome_equipe }}</td>
-                <td class="text-end" style="width:60px;">
-                  <form method="post"
-                        action="{% url 'competicao:grupo_remover_equipe' pk=grupo.pk equipe_pk=equipe.pk %}">
+              <tr class="hover:bg-base-300/30 transition-colors">
+                <td class="font-medium text-sm">{{ equipe.nome_equipe }}</td>
+                <td class="text-right w-12">
+                  <form method="post" action="{% url 'competicao:grupo_remover_equipe' pk=grupo.pk equipe_pk=equipe.pk %}">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-sm btn-link text-danger p-0" title="Remover">
+                    <button type="submit" class="btn btn-ghost btn-xs text-error" title="Remover">
                       <i class="bi bi-x-lg"></i>
                     </button>
                   </form>
                 </td>
               </tr>
               {% empty %}
-              <tr><td class="text-muted small">Nenhuma equipe</td></tr>
+              <tr><td class="text-base-content/40 text-sm py-2">Nenhuma equipe</td></tr>
               {% endfor %}
             </tbody>
           </table>
-          <!-- Adicionar equipe -->
-          {% if equipes_disponiveis %}
-          <div class="p-2 border-top">
-            <form method="post" action="{% url 'competicao:grupo_atribuir_equipe' pk=grupo.pk %}"
-                  class="d-flex gap-2">
-              {% csrf_token %}
-              <select name="equipe_id" class="form-select form-select-sm">
-                {% for eq in equipes_disponiveis %}
-                <option value="{{ eq.pk }}">{{ eq.nome_equipe }}</option>
-                {% endfor %}
-              </select>
-              <button type="submit" class="btn btn-sm btn-outline-primary text-nowrap">
-                <i class="bi bi-plus-lg"></i> Adicionar
-              </button>
-            </form>
-          </div>
-          {% endif %}
         </div>
 
-        <!-- Classificação do grupo (se houver jogos) -->
+        <!-- Adicionar equipe -->
+        {% if equipes_disponiveis %}
+        <div class="p-3 border-t border-base-300">
+          <form method="post" action="{% url 'competicao:grupo_atribuir_equipe' pk=grupo.pk %}" class="flex gap-2">
+            {% csrf_token %}
+            <select name="equipe_id" class="select select-bordered select-sm flex-1">
+              {% for eq in equipes_disponiveis %}
+              <option value="{{ eq.pk }}">{{ eq.nome_equipe }}</option>
+              {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-ghost btn-sm gap-1 whitespace-nowrap">
+              <i class="bi bi-plus-lg"></i> Adicionar
+            </button>
+          </form>
+        </div>
+        {% endif %}
+
+        <!-- Classificação do grupo -->
         {% if gd.classificacao %}
-        <div class="card-footer p-0">
-          <table class="table table-sm table-hover mb-0">
-            <thead class="table-light">
-              <tr>
+        <div class="border-t border-base-300 overflow-x-auto">
+          <table class="table table-xs">
+            <thead>
+              <tr class="bg-base-300/50 text-xs text-base-content/50">
                 <th>#</th><th>Equipe</th>
                 <th class="text-center">J</th><th class="text-center">V</th>
                 <th class="text-center">E</th><th class="text-center">D</th>
                 <th class="text-center">GP</th><th class="text-center">GC</th>
-                <th class="text-center">SG</th><th class="text-center">Pts</th>
+                <th class="text-center">SG</th><th class="text-center font-bold">Pts</th>
               </tr>
             </thead>
             <tbody>
               {% for cl in gd.classificacao %}
-              <tr {% if forloop.counter <= fase.qtd_classificados_por_grupo %}class="table-success"{% endif %}>
+              <tr class="{% if forloop.counter <= fase.qtd_classificados_por_grupo %}border-l-2 border-success{% endif %}">
                 <td>{{ forloop.counter }}</td>
-                <td>{{ cl.equipe.nome_equipe }}</td>
+                <td class="font-medium">{{ cl.equipe.nome_equipe }}</td>
                 <td class="text-center">{{ cl.jogos }}</td>
                 <td class="text-center">{{ cl.vitorias }}</td>
                 <td class="text-center">{{ cl.empates }}</td>
@@ -168,7 +159,7 @@
                 <td class="text-center">{{ cl.gols_pro }}</td>
                 <td class="text-center">{{ cl.gols_contra }}</td>
                 <td class="text-center">{{ cl.saldo_gols }}</td>
-                <td class="text-center fw-bold">{{ cl.pontos }}</td>
+                <td class="text-center font-bold">{{ cl.pontos }}</td>
               </tr>
               {% endfor %}
             </tbody>
@@ -178,7 +169,12 @@
 
       </div>
       {% endwith %}{% empty %}
-      <div class="alert alert-info">Nenhum grupo criado ainda.</div>
+      <div class="card bg-base-200 border border-base-300">
+        <div class="card-body text-center py-10 text-base-content/40">
+          <i class="bi bi-grid-3x3-gap text-4xl block mb-3 opacity-30"></i>
+          <p class="font-semibold">Nenhum grupo criado ainda.</p>
+        </div>
+      </div>
       {% endfor %}
     </div>
 

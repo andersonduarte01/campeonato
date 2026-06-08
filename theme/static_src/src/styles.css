@@ -1,11 +1,204 @@
 @import "tailwindcss";
-@plugin "daisyui";
+@plugin "daisyui" {
+  themes: luxury --default, corporate;
+}
 
-/**
-  * A catch-all path to Django template files, JavaScript, and Python files
-  * that contain Tailwind CSS classes and will be scanned by Tailwind to generate the final CSS file.
-  *
-  * If your final CSS file is not being updated after code changes, you may want to broaden or narrow
-  * the scope of this path.
-  */
+/* Scan all Django template and Python files for Tailwind classes */
 @source "../../../**/*.{html,py,js}";
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   DESIGN TOKENS ESPORTIVOS — Tailwind v4 @theme
+   Geram automaticamente utilitários: bg-gold-500, text-zone-champions, etc.
+───────────────────────────────────────────────────────────────────────────── */
+@theme {
+  /* Dourado premium */
+  --color-gold-300: #e8c76a;
+  --color-gold-400: #d4a843;
+  --color-gold-500: #c9972e;
+  --color-gold-600: #b8851a;
+
+  /* Campo / pitch */
+  --color-pitch:       #1a472a;
+  --color-pitch-light: #2d6a4f;
+
+  /* Resultados */
+  --color-win:  #22c55e;
+  --color-draw: #a3a3a3;
+  --color-loss: #ef4444;
+  --color-live: #ef4444;
+
+  /* Zonas de classificação */
+  --color-zone-champions: #1d4ed8;
+  --color-zone-promotion: #14532d;
+  --color-zone-relegation: #7f1d1d;
+
+  /* Fontes esportivas */
+  --font-oswald: 'Oswald', sans-serif;
+  --font-bebas:  'Bebas Neue', sans-serif;
+
+  /* Sombras */
+  --shadow-gold:      0 0 20px rgba(201, 151, 46, 0.30);
+  --shadow-live:      0 0 15px rgba(239, 68,  68,  0.50);
+  --shadow-card:      0 4px  6px  -1px rgba(0, 0, 0, 0.40), 0 2px 4px -2px rgba(0, 0, 0, 0.40);
+  --shadow-card-hover:0 20px 25px -5px  rgba(0, 0, 0, 0.50), 0 8px 10px rgba(201, 151, 46, 0.10);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   COMPONENTES DE LAYOUT — sidebar, nav
+───────────────────────────────────────────────────────────────────────────── */
+@layer components {
+
+  .sidebar-link {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+           text-neutral-content/55 hover:text-neutral-content hover:bg-neutral-content/10
+           transition-all duration-150 cursor-pointer;
+  }
+
+  .sidebar-link-active {
+    @apply text-warning bg-warning/10 hover:text-warning hover:bg-warning/15;
+  }
+
+  .sidebar-section {
+    @apply px-2 mt-5 mb-1.5;
+  }
+
+  .sidebar-section-label {
+    @apply text-[10px] font-bold text-neutral-content/30 uppercase tracking-[0.15em];
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   TIPOGRAFIA ESPORTIVA — classes utilitárias customizadas
+───────────────────────────────────────────────────────────────────────────── */
+@layer utilities {
+
+  /* Placar de jogo — ex: "2 — 1" */
+  .score-display {
+    font-family: 'Oswald', sans-serif;
+    font-size: 3rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+
+  .score-display-lg {
+    font-family: 'Oswald', sans-serif;
+    font-size: 4.5rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+
+  /* Número de posição na tabela — ex: "1", "2", "3" */
+  .position-number {
+    font-family: 'Oswald', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  /* Números de estatística — ex: gols, assistências */
+  .stat-number {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  /* Títulos de seção estilo esportivo */
+  .section-heading {
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 0.1em;
+    line-height: 1;
+  }
+
+  /* ── Zonas da tabela de classificação ─────────────────────────────────── */
+  .zone-champions {
+    border-left: 3px solid #1d4ed8 !important;
+  }
+
+  .zone-promotion {
+    border-left: 3px solid #14532d !important;
+  }
+
+  .zone-relegation {
+    border-left: 3px solid #7f1d1d !important;
+    opacity: 0.80;
+  }
+
+  /* ── Indicador "AO VIVO" ──────────────────────────────────────────────── */
+  .live-dot {
+    display: inline-block;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 9999px;
+    background-color: #ef4444;
+    animation: live-pulse 1.4s ease-in-out infinite;
+  }
+
+  /* ── Cards hover com brilho dourado ──────────────────────────────────── */
+  .card-sport {
+    transition: box-shadow 0.2s ease, transform 0.15s ease, border-color 0.2s ease;
+  }
+  .card-sport:hover {
+    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5), 0 8px 10px rgba(201,151,46,0.10);
+    transform: translateY(-2px);
+  }
+
+  /* ── Resultado: V / E / D badge textual ──────────────────────────────── */
+  .result-win  { background-color: #22c55e; color: #fff; }
+  .result-draw { background-color: #6b7280; color: #fff; }
+  .result-loss { background-color: #ef4444; color: #fff; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   ANIMAÇÕES
+───────────────────────────────────────────────────────────────────────────── */
+
+/* Indicador ao vivo pulsante */
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.8); }
+}
+
+/* Entrada geral: sobe + aparece */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Toast desliza da direita */
+@keyframes slide-toast {
+  from { opacity: 0; transform: translateX(14px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Spinner de loading do botão */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── Classes de reveal (scroll-driven) ─────────────────────────────────── */
+@layer utilities {
+
+  /* Estado inicial — adicionado via JS; invisível antes do IO disparar */
+  .reveal {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.45s ease, transform 0.45s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Entrada única sem IO (usada em formulários stand-alone) */
+  .animate-fade-up {
+    animation: fade-up 0.4s ease both;
+  }
+
+  /* Atraso escalonado para grupos de cards */
+  .stagger-1 { animation-delay:  60ms; }
+  .stagger-2 { animation-delay: 120ms; }
+  .stagger-3 { animation-delay: 180ms; }
+  .stagger-4 { animation-delay: 240ms; }
+}

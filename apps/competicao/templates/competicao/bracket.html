@@ -3,212 +3,124 @@
 
 {% block estatico %}
 <style>
-.bracket-container {
-  overflow-x: auto;
-  padding-bottom: 16px;
-}
-.bracket {
-  display: flex;
-  gap: 48px;
-  align-items: center;
-  min-width: max-content;
-  padding: 16px;
-}
-.bracket-round {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  align-items: center;
-}
-.bracket-round-label {
-  font-size: .75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: #6c757d;
-  letter-spacing: .08em;
-  margin-bottom: 4px;
-  text-align: center;
-}
-.bracket-match {
-  background: #fff;
-  border: 1.5px solid #dee2e6;
-  border-radius: 10px;
-  width: 220px;
-  overflow: hidden;
-  box-shadow: 0 2px 6px rgba(0,0,0,.07);
-  position: relative;
-}
-.bracket-match.winner-match {
-  border-color: #198754;
-  box-shadow: 0 2px 8px rgba(25,135,84,.18);
-}
-.bracket-team {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  font-size: .85rem;
-  border-bottom: 1px solid #f0f0f0;
-  transition: background .15s;
-}
-.bracket-team:last-child { border-bottom: none; }
-.bracket-team.winner {
-  background: #d1e7dd;
-  font-weight: 700;
-}
-.bracket-team.loser { color: #adb5bd; }
-.bracket-score {
-  margin-left: auto;
-  font-weight: 700;
-  font-size: .9rem;
-  min-width: 22px;
-  text-align: right;
-}
-.bracket-status {
-  font-size: .7rem;
-  text-align: center;
-  padding: 2px 8px;
-  background: #f8f9fa;
-  color: #6c757d;
-  border-top: 1px solid #eee;
-}
-.bracket-team-badge {
-  width: 24px; height: 24px;
-  border-radius: 50%;
-  background: #6c757d;
-  color: #fff;
-  font-size: .7rem;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-  font-weight: 700;
-}
-.bracket-connector {
-  width: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #dee2e6;
-  font-size: 1.4rem;
-}
+.bracket-container { overflow-x: auto; padding-bottom: 16px; }
+.bracket { display: flex; gap: 48px; align-items: center; min-width: max-content; padding: 16px; }
+.bracket-round { display: flex; flex-direction: column; gap: 24px; align-items: center; }
+.bracket-match { width: 230px; overflow: hidden; border-radius: 12px; position: relative; }
+.bracket-connector { width: 48px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; opacity: .3; }
 </style>
 {% endblock %}
 
 {% block conteudo %}
-<div class="container-fluid mt-4">
+<div class="p-4 md:p-6">
 
-  <div class="d-flex justify-content-between align-items-center mb-3 px-3">
-    <h4 class="mb-0">
+  <div class="flex items-center justify-between mb-5 flex-wrap gap-2">
+    <h1 class="text-lg font-bold flex items-center gap-2">
       <i class="bi bi-diagram-3-fill text-warning"></i> {{ fase.nome }} — Bracket Visual
-    </h4>
-    <div class="d-flex gap-2">
-      <a href="{% url 'competicao:chaveamento' fase.pk %}" class="btn btn-sm btn-outline-secondary">
+    </h1>
+    <div class="flex gap-2">
+      <a href="{% url 'competicao:chaveamento' fase.pk %}" class="btn btn-ghost btn-sm gap-1">
         <i class="bi bi-list-ul"></i> Ver Lista
       </a>
-      <a href="{% url 'competicao:fases' fase.competicao.pk %}" class="btn btn-sm btn-outline-dark">
+      <a href="{% url 'competicao:fases' fase.competicao.pk %}" class="btn btn-ghost btn-sm gap-1">
         <i class="bi bi-arrow-left"></i> Fases
       </a>
     </div>
   </div>
 
   {% if confrontos %}
-  <div class="bracket-container px-3">
+  <div class="bracket-container">
     <div class="bracket">
-
       {% for confronto in confrontos %}
-      <div class="d-flex flex-column align-items-center" style="gap:4px">
+      <div class="flex flex-col items-center gap-1">
 
-        <div class="bracket-match {% if confronto.vencedor %}winner-match{% endif %}">
+        <div class="bracket-match border {% if confronto.vencedor %}border-success/50 shadow-[0_0_12px_rgba(0,200,100,.12)]{% else %}border-base-300{% endif %} bg-base-200">
 
           <!-- Equipe Mandante -->
-          <div class="bracket-team {% if confronto.vencedor == confronto.equipe_mandante %}winner{% elif confronto.vencedor %}loser{% endif %}">
-            <div class="bracket-team-badge">
+          <div class="flex items-center gap-2 px-3 py-2.5 border-b border-base-300/50
+                      {% if confronto.vencedor == confronto.equipe_mandante %}bg-success/15 font-bold{% elif confronto.vencedor %}opacity-40{% endif %}">
+            <div class="w-6 h-6 rounded-full bg-base-300 flex items-center justify-center text-xs font-bold shrink-0">
               {% if confronto.equipe_mandante %}{{ confronto.equipe_mandante.nome_equipe|first|upper }}{% else %}?{% endif %}
             </div>
-            <span class="flex-grow-1 text-truncate" style="max-width:130px">
+            <span class="flex-1 text-sm truncate">
               {{ confronto.equipe_mandante.nome_equipe|default:"A definir" }}
               {% if confronto.vencedor == confronto.equipe_mandante %}
-                <i class="bi bi-trophy-fill text-warning ms-1" style="font-size:.7rem"></i>
+                <i class="bi bi-trophy-fill text-warning text-xs ml-1"></i>
               {% endif %}
             </span>
-            <span class="bracket-score">
+            <span class="font-bold text-sm shrink-0">
               {% if confronto.jogo_ida and confronto.jogo_ida.finalizado %}
                 {{ confronto.gols_mandante_total }}
-                {% if confronto.penaltis_mandante is not None %}
-                  <small class="text-muted">({{ confronto.penaltis_mandante }})</small>
-                {% endif %}
+                {% if confronto.penaltis_mandante is not None %}<span class="text-xs opacity-50">({{ confronto.penaltis_mandante }})</span>{% endif %}
               {% else %}—{% endif %}
             </span>
           </div>
 
           <!-- Equipe Visitante -->
-          <div class="bracket-team {% if confronto.vencedor == confronto.equipe_visitante %}winner{% elif confronto.vencedor %}loser{% endif %}">
-            <div class="bracket-team-badge">
+          <div class="flex items-center gap-2 px-3 py-2.5
+                      {% if confronto.vencedor == confronto.equipe_visitante %}bg-success/15 font-bold{% elif confronto.vencedor %}opacity-40{% endif %}">
+            <div class="w-6 h-6 rounded-full bg-base-300 flex items-center justify-center text-xs font-bold shrink-0">
               {% if confronto.equipe_visitante %}{{ confronto.equipe_visitante.nome_equipe|first|upper }}{% else %}?{% endif %}
             </div>
-            <span class="flex-grow-1 text-truncate" style="max-width:130px">
+            <span class="flex-1 text-sm truncate">
               {{ confronto.equipe_visitante.nome_equipe|default:"A definir" }}
               {% if confronto.vencedor == confronto.equipe_visitante %}
-                <i class="bi bi-trophy-fill text-warning ms-1" style="font-size:.7rem"></i>
+                <i class="bi bi-trophy-fill text-warning text-xs ml-1"></i>
               {% endif %}
             </span>
-            <span class="bracket-score">
+            <span class="font-bold text-sm shrink-0">
               {% if confronto.jogo_ida and confronto.jogo_ida.finalizado %}
                 {{ confronto.gols_visitante_total }}
-                {% if confronto.penaltis_visitante is not None %}
-                  <small class="text-muted">({{ confronto.penaltis_visitante }})</small>
-                {% endif %}
+                {% if confronto.penaltis_visitante is not None %}<span class="text-xs opacity-50">({{ confronto.penaltis_visitante }})</span>{% endif %}
               {% else %}—{% endif %}
             </span>
           </div>
 
-          <!-- Status / Link -->
-          <div class="bracket-status">
+          <!-- Status -->
+          <div class="px-3 py-1.5 border-t border-base-300/50 bg-base-300/20 text-center text-xs">
             {% if confronto.vencedor %}
-              <span class="text-success">
-                <i class="bi bi-check-circle-fill"></i> {{ confronto.vencedor.nome_equipe }}
-              </span>
+              <span class="text-success font-semibold"><i class="bi bi-check-circle-fill"></i> {{ confronto.vencedor.nome_equipe }}</span>
             {% elif confronto.totalmente_jogado %}
               <span class="text-warning">Aguardando pênaltis</span>
             {% elif confronto.jogo_ida %}
-              <a href="{% url 'competicao:jogo_detalhe' confronto.jogo_ida.pk %}" class="text-muted text-decoration-none">
+              <a href="{% url 'competicao:jogo_detalhe' confronto.jogo_ida.pk %}" class="text-base-content/50 hover:text-base-content transition-colors">
                 <i class="bi bi-pencil-square"></i> Em andamento
               </a>
             {% else %}
-              <span class="text-muted">A iniciar</span>
+              <span class="text-base-content/30">A iniciar</span>
             {% endif %}
           </div>
+
         </div>
 
-        <!-- Ordem do confronto -->
-        <small class="text-muted">Conf. {{ confronto.ordem }}</small>
+        <span class="text-xs text-base-content/30">Conf. {{ confronto.ordem }}</span>
 
       </div>
       {% endfor %}
-
     </div>
   </div>
 
   <!-- Legenda -->
-  <div class="px-3 mt-3 d-flex gap-3 flex-wrap">
-    <div class="d-flex align-items-center gap-1">
-      <div style="width:14px;height:14px;background:#d1e7dd;border-radius:3px;"></div>
-      <small class="text-muted">Vencedor</small>
+  <div class="flex gap-4 flex-wrap mt-2 px-2">
+    <div class="flex items-center gap-1.5">
+      <div class="w-3 h-3 rounded bg-success/30 border border-success/50"></div>
+      <span class="text-xs text-base-content/50">Vencedor</span>
     </div>
-    <div class="d-flex align-items-center gap-1">
-      <i class="bi bi-trophy-fill text-warning" style="font-size:.85rem"></i>
-      <small class="text-muted">Classificado</small>
+    <div class="flex items-center gap-1.5">
+      <i class="bi bi-trophy-fill text-warning text-xs"></i>
+      <span class="text-xs text-base-content/50">Classificado</span>
     </div>
-    <div class="d-flex align-items-center gap-1">
-      <span class="text-muted small">(N)</span>
-      <small class="text-muted">Pênaltis</small>
+    <div class="flex items-center gap-1.5">
+      <span class="text-xs text-base-content/40">(N)</span>
+      <span class="text-xs text-base-content/50">Pênaltis</span>
     </div>
   </div>
 
   {% else %}
-  <div class="alert alert-info mx-3">
+  <div class="alert alert-info text-sm">
     <i class="bi bi-info-circle"></i>
     Nenhum confronto gerado ainda.
-    <a href="{% url 'competicao:chaveamento' fase.pk %}" class="alert-link">Gerar chaveamento</a>.
+    <a href="{% url 'competicao:chaveamento' fase.pk %}" class="link link-warning ml-1">Gerar chaveamento</a>.
   </div>
   {% endif %}
 

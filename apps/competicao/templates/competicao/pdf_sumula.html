@@ -4,21 +4,63 @@
 <head>
 <meta charset="utf-8">
 <title>Súmula — {{ jogo.equipe_casa }} x {{ jogo.equipe_fora }}</title>
-<link href="{% static 'assets/dist/css/bootstrap.min.css' %}" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 <style>
+  /* Reset & base */
+  *, *::before, *::after { box-sizing: border-box; }
+  body { background: #fff; font-family: Arial, sans-serif; margin: 0; font-size: 13px; }
+
+  /* Layout */
+  .d-flex { display: flex; }
+  .align-items-center { align-items: center; }
+  .justify-content-between { justify-content: space-between; }
+  .gap-2 { gap: 0.5rem; }
+  .row { display: flex; flex-wrap: wrap; margin: -4px; }
+  .col-4 { width: 33.333%; padding: 4px; }
+  .col-6 { width: 50%; padding: 4px; }
+  .col-auto { width: auto; padding: 4px; }
+  .text-center { text-align: center; }
+  .text-start { text-align: left; }
+  .text-end { text-align: right; }
+  .g-2 > * { padding: 4px; }
+
+  /* Spacing */
+  .mb-0 { margin-bottom: 0; }
+  .mb-1 { margin-bottom: 4px; }
+  .mt-1 { margin-top: 4px; }
+  .mt-2 { margin-top: 8px; }
+  .px-4 { padding-left: 1.5rem; padding-right: 1.5rem; }
+  .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+  .container-fluid { width: 100%; }
+  .small, small { font-size: 0.85em; }
+  .opacity-75 { opacity: 0.75; }
+  .text-muted { color: #6c757d; }
+  .text-danger { color: #dc3545; }
+
+  /* Tables */
+  .table { width: 100%; border-collapse: collapse; margin-bottom: 0; font-size: .82rem; }
+  .table th, .table td { padding: 4px 6px; vertical-align: top; }
+  .table-bordered th, .table-bordered td { border: 1px solid #dee2e6; }
+  .table-sm th, .table-sm td { padding: 3px 5px; }
+  th { font-size: .78rem; background: #f8f9fa; }
+
+  /* Buttons */
+  .btn { display: inline-block; padding: 4px 10px; border-radius: 4px; border: 1px solid transparent; cursor: pointer; font-size: 0.8rem; font-weight: 400; }
+  .btn-sm { padding: 2px 8px; font-size: 0.75rem; }
+  .btn-light { background: #f8f9fa; color: #212529; border-color: #ddd; }
+  .btn-outline-light { background: transparent; color: #fff; border-color: rgba(255,255,255,.5); }
+
+  /* Custom */
   @media print {
     .no-print { display: none !important; }
     body { font-size: 11px; }
   }
-  body { background: #fff; font-family: Arial, sans-serif; }
   .header-bar { background: #212529; color: #fff; padding: 14px 24px; }
   .scoreboard { text-align: center; padding: 20px; border-bottom: 2px solid #dee2e6; }
   .score { font-size: 3rem; font-weight: 900; line-height: 1; }
   .team-name { font-size: 1.1rem; font-weight: 700; }
   .team-role { font-size: .75rem; color: #6c757d; }
   .section-title { font-size: .85rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #6c757d; border-bottom: 1px solid #dee2e6; padding-bottom: 4px; margin-bottom: 10px; margin-top: 18px; }
-  table { font-size: .82rem; }
-  th { font-size: .78rem; background: #f8f9fa; }
   .gol-icon { font-size: 1rem; }
   .card-amarelo { background: #ffc107; color: #000; display: inline-block; width: 12px; height: 16px; border-radius: 2px; }
   .card-vermelho { background: #dc3545; display: inline-block; width: 12px; height: 16px; border-radius: 2px; }
@@ -43,9 +85,8 @@
   </div>
 </div>
 
-<!-- Placar -->
 <div class="scoreboard">
-  <div class="row align-items-center justify-content-center g-2">
+  <div class="row g-2" style="justify-content: center; align-items: center;">
     <div class="col-4 text-end">
       <div class="team-name">{{ jogo.equipe_casa.nome_equipe }}</div>
       <div class="team-role">Mandante</div>
@@ -68,18 +109,24 @@
   <div class="small text-muted mt-2">
     {% if jogo.data_hora %}Data: <strong>{{ jogo.data_hora|date:"d/m/Y H:i" }}</strong>{% endif %}
     {% if jogo.local %} &nbsp;|&nbsp; Local: <strong>{{ jogo.local.nome }}</strong>{% if jogo.local.cidade %}, {{ jogo.local.cidade }}{% endif %}{% endif %}
-    {% if jogo.arbitro %} &nbsp;|&nbsp; Árbitro: <strong>{{ jogo.arbitro.nome }}</strong>{% endif %}
+    {% if jogo.publico %} &nbsp;|&nbsp; Público: <strong>{{ jogo.publico }}</strong>{% endif %}
   </div>
+  {% if jogo.arbitro or arbitros_jogo %}
+  <div class="small text-muted mt-1">
+    {% if jogo.arbitro %}Árbitro Principal: <strong>{{ jogo.arbitro.nome }}</strong>{% endif %}
+    {% for arb in arbitros_jogo %}
+      &nbsp;|&nbsp; {{ arb.get_tipo_display }}: <strong>{{ arb.arbitro.nome }}</strong>
+    {% endfor %}
+  </div>
+  {% endif %}
 </div>
 
 <div class="container-fluid px-4 py-2">
 
-  <!-- Escalações lado a lado -->
   <div class="section-title">Escalações</div>
   <div class="row g-2">
-
     <div class="col-6">
-      <table class="table table-bordered table-sm mb-0">
+      <table class="table table-bordered table-sm" style="margin-bottom: 0;">
         <thead>
           <tr><th colspan="3" class="text-center">{{ jogo.equipe_casa.nome_equipe }}</th></tr>
           <tr><th>#</th><th>Atleta</th><th>T</th></tr>
@@ -97,9 +144,8 @@
         </tbody>
       </table>
     </div>
-
     <div class="col-6">
-      <table class="table table-bordered table-sm mb-0">
+      <table class="table table-bordered table-sm" style="margin-bottom: 0;">
         <thead>
           <tr><th colspan="3" class="text-center">{{ jogo.equipe_fora.nome_equipe }}</th></tr>
           <tr><th>#</th><th>Atleta</th><th>T</th></tr>
@@ -119,7 +165,6 @@
     </div>
   </div>
 
-  <!-- Gols -->
   <div class="section-title">Gols</div>
   <table class="table table-bordered table-sm">
     <thead><tr><th>Min.</th><th>Atleta</th><th>Assistência</th><th>Tipo</th><th>Equipe</th></tr></thead>
@@ -148,7 +193,6 @@
     </tbody>
   </table>
 
-  <!-- Cartões -->
   <div class="section-title">Cartões Disciplinares</div>
   <table class="table table-bordered table-sm">
     <thead><tr><th>Min.</th><th>Atleta</th><th>Equipe</th><th>Cartão</th></tr></thead>
@@ -172,7 +216,6 @@
     </tbody>
   </table>
 
-  <!-- Substituições -->
   {% if substituicoes %}
   <div class="section-title">Substituições</div>
   <table class="table table-bordered table-sm">
@@ -190,19 +233,23 @@
   </table>
   {% endif %}
 
-  <!-- Assinaturas -->
+  {% if jogo.observacoes %}
+  <div class="section-title">Observações / Ocorrências</div>
+  <p class="small">{{ jogo.observacoes }}</p>
+  {% endif %}
+
   <div class="section-title no-print" style="margin-top:32px">Assinaturas</div>
-  <div class="row g-3 no-print" style="margin-top:24px">
+  <div class="row g-2 no-print" style="margin-top:24px">
     <div class="col-4 text-center">
-      <div class="assinatura-box mb-1"></div>
+      <div class="assinatura-box" style="margin-bottom:4px"></div>
       <small>Árbitro{% if jogo.arbitro %}: {{ jogo.arbitro.nome }}{% endif %}</small>
     </div>
     <div class="col-4 text-center">
-      <div class="assinatura-box mb-1"></div>
+      <div class="assinatura-box" style="margin-bottom:4px"></div>
       <small>Delegado — {{ jogo.equipe_casa.nome_equipe }}</small>
     </div>
     <div class="col-4 text-center">
-      <div class="assinatura-box mb-1"></div>
+      <div class="assinatura-box" style="margin-bottom:4px"></div>
       <small>Delegado — {{ jogo.equipe_fora.nome_equipe }}</small>
     </div>
   </div>

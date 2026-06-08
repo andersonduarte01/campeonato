@@ -1,0 +1,310 @@
+{% extends 'base/indice.html' %}
+{% block titulo %}Dashboard{% endblock %}
+
+{% block conteudo %}
+<div class="p-4 md:p-6 space-y-6 max-w-[1400px] mx-auto">
+
+  <!-- ── Cabeçalho da página ───────────────────────────────────────── -->
+  <div class="flex items-end justify-between gap-4">
+    <div>
+      <h1 class="section-heading text-4xl text-base-content leading-none">DASHBOARD</h1>
+      <p class="text-sm text-base-content/40 mt-1">Visão geral do sistema de campeonatos</p>
+    </div>
+    {% if competicoes_andamento %}
+    <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-error/10 border border-error/20 rounded-full">
+      <span class="live-dot"></span>
+      <span class="text-xs font-bold text-error/80 uppercase tracking-wider">
+        {{ competicoes_andamento|length }} em andamento
+      </span>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ── KPI Cards ──────────────────────────────────────────────────── -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+
+    <!-- Competições -->
+    <div class="card bg-base-200 border border-base-300 card-sport group overflow-hidden relative">
+      <div class="absolute inset-0 bg-gradient-to-br from-warning/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+      <div class="card-body p-4 md:p-5">
+        <div class="flex items-start justify-between mb-3">
+          <div class="w-10 h-10 rounded-2xl bg-warning/10 border border-warning/20
+                      flex items-center justify-center
+                      group-hover:bg-warning/20 group-hover:border-warning/40 transition-all duration-200">
+            <i class="bi bi-trophy-fill text-warning text-base"></i>
+          </div>
+          <span class="text-xs font-bold uppercase tracking-[0.12em] text-base-content/35 mt-1">Total</span>
+        </div>
+        <div class="stat-number text-4xl md:text-5xl text-base-content leading-none">{{ total_competicoes }}</div>
+        <p class="text-xs text-base-content/40 mt-2 font-medium">Competições</p>
+      </div>
+    </div>
+
+    <!-- Equipes -->
+    <div class="card bg-base-200 border border-base-300 card-sport group overflow-hidden relative">
+      <div class="absolute inset-0 bg-gradient-to-br from-success/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+      <div class="card-body p-4 md:p-5">
+        <div class="flex items-start justify-between mb-3">
+          <div class="w-10 h-10 rounded-2xl bg-success/10 border border-success/20
+                      flex items-center justify-center
+                      group-hover:bg-success/20 group-hover:border-success/40 transition-all duration-200">
+            <i class="bi bi-shield-fill text-success text-base"></i>
+          </div>
+          <span class="text-xs font-bold uppercase tracking-[0.12em] text-base-content/35 mt-1">Total</span>
+        </div>
+        <div class="stat-number text-4xl md:text-5xl text-base-content leading-none">{{ total_equipes }}</div>
+        <p class="text-xs text-base-content/40 mt-2 font-medium">Equipes</p>
+      </div>
+    </div>
+
+    <!-- Atletas -->
+    <div class="card bg-base-200 border border-base-300 card-sport group overflow-hidden relative">
+      <div class="absolute inset-0 bg-gradient-to-br from-info/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+      <div class="card-body p-4 md:p-5">
+        <div class="flex items-start justify-between mb-3">
+          <div class="w-10 h-10 rounded-2xl bg-info/10 border border-info/20
+                      flex items-center justify-center
+                      group-hover:bg-info/20 group-hover:border-info/40 transition-all duration-200">
+            <i class="bi bi-people-fill text-info text-base"></i>
+          </div>
+          <span class="text-xs font-bold uppercase tracking-[0.12em] text-base-content/35 mt-1">Total</span>
+        </div>
+        <div class="stat-number text-4xl md:text-5xl text-base-content leading-none">{{ total_atletas }}</div>
+        <p class="text-xs text-base-content/40 mt-2 font-medium">Atletas</p>
+      </div>
+    </div>
+
+    <!-- Gols -->
+    <div class="card bg-base-200 border border-base-300 card-sport group overflow-hidden relative">
+      <div class="absolute inset-0 bg-gradient-to-br from-error/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+      <div class="card-body p-4 md:p-5">
+        <div class="flex items-start justify-between mb-3">
+          <div class="w-10 h-10 rounded-2xl bg-error/10 border border-error/20
+                      flex items-center justify-center
+                      group-hover:bg-error/20 group-hover:border-error/40 transition-all duration-200">
+            <i class="bi bi-dribbble text-error text-base"></i>
+          </div>
+          <span class="text-xs font-bold uppercase tracking-[0.12em] text-base-content/35 mt-1">Total</span>
+        </div>
+        <div class="stat-number text-4xl md:text-5xl text-base-content leading-none">{{ total_gols }}</div>
+        <p class="text-xs text-base-content/40 mt-2 font-medium">Gols marcados</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Linha central: Em andamento | Próximos jogos | Resultados ── -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+    <!-- Competições em andamento -->
+    <div class="card bg-base-200 border border-base-300 overflow-hidden">
+      <div class="flex items-center gap-2.5 px-4 py-3 border-b border-base-300 bg-base-300/30">
+        <span class="live-dot shrink-0"></span>
+        <span class="section-heading text-base text-error/80 tracking-widest">AO VIVO</span>
+        {% if competicoes_andamento %}
+        <span class="badge badge-error badge-sm ml-auto">{{ competicoes_andamento|length }}</span>
+        {% endif %}
+      </div>
+      <ul class="divide-y divide-base-300">
+        {% for c in competicoes_andamento %}
+        <li>
+          <a href="{% url 'competicao:classificacao' c.pk %}"
+             class="flex items-center gap-3 px-4 py-3 hover:bg-base-300/50 transition-colors group">
+            <i class="bi bi-trophy-fill text-warning/60 text-xs shrink-0"></i>
+            <span class="text-sm font-semibold group-hover:text-warning transition-colors flex-1 truncate">
+              {{ c.nome }}
+            </span>
+            <span class="badge badge-warning badge-sm shrink-0">{{ c.get_modalidade_display }}</span>
+          </a>
+        </li>
+        {% empty %}
+        <li class="flex flex-col items-center justify-center py-10 gap-2 text-base-content/30">
+          <i class="bi bi-trophy text-3xl"></i>
+          <p class="text-sm font-medium">Nenhuma em andamento</p>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <!-- Próximos Jogos -->
+    <div class="card bg-base-200 border border-base-300 overflow-hidden">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
+        <i class="bi bi-calendar-event text-info text-sm"></i>
+        <span class="section-heading text-base text-base-content/70 tracking-widest">PRÓXIMOS JOGOS</span>
+      </div>
+      <ul class="divide-y divide-base-300">
+        {% for j in proximos_jogos %}
+        <li class="px-4 py-3 hover:bg-base-300/50 transition-colors">
+          <div class="text-xs text-base-content/40 mb-2 flex items-center gap-1.5">
+            <i class="bi bi-calendar3 shrink-0"></i>
+            <span>{{ j.data_hora|date:"d/m" }}</span>
+            <span class="font-bold text-info">{{ j.data_hora|date:"H:i" }}</span>
+            <span class="text-base-content/20">·</span>
+            <span class="truncate">{{ j.rodada.competicao.nome }}</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="flex-1 text-right text-sm font-semibold text-base-content truncate">
+              {{ j.equipe_casa.nome_equipe }}
+            </span>
+            <span class="shrink-0 px-2.5 py-0.5 bg-base-300 rounded-md text-[10px] font-black
+                         text-base-content/40 tracking-widest">VS</span>
+            <span class="flex-1 text-sm font-semibold text-base-content truncate">
+              {{ j.equipe_fora.nome_equipe }}
+            </span>
+          </div>
+          {% if j.local %}
+          <div class="text-xs text-base-content/30 mt-1.5 flex items-center gap-1">
+            <i class="bi bi-geo-alt shrink-0"></i>
+            <span class="truncate">{{ j.local.nome }}</span>
+          </div>
+          {% endif %}
+        </li>
+        {% empty %}
+        <li class="flex flex-col items-center justify-center py-10 gap-2 text-base-content/30">
+          <i class="bi bi-calendar-x text-3xl"></i>
+          <p class="text-sm font-medium">Nenhum jogo agendado</p>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <!-- Últimos Resultados -->
+    <div class="card bg-base-200 border border-base-300 overflow-hidden">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
+        <i class="bi bi-check2-circle text-success text-sm"></i>
+        <span class="section-heading text-base text-base-content/70 tracking-widest">RESULTADOS</span>
+      </div>
+      <ul class="divide-y divide-base-300">
+        {% for j in jogos_recentes %}
+        <li class="px-4 py-3 hover:bg-base-300/50 transition-colors">
+          <div class="text-xs text-base-content/40 mb-2 truncate">{{ j.rodada.competicao.nome }}</div>
+          <div class="flex items-center gap-2">
+            <span class="flex-1 text-right text-sm font-semibold truncate
+              {% if j.gols_casa > j.gols_fora %}text-base-content{% else %}text-base-content/50{% endif %}">
+              {{ j.equipe_casa.nome_equipe }}
+            </span>
+            <!-- Placar -->
+            <div class="shrink-0 flex items-center gap-1.5 px-3 py-1 bg-base-300 rounded-lg">
+              <span class="stat-number text-lg leading-none
+                {% if j.gols_casa > j.gols_fora %}text-win
+                {% elif j.gols_casa == j.gols_fora %}text-draw
+                {% else %}text-base-content/40{% endif %}">{{ j.gols_casa }}</span>
+              <span class="text-base-content/20 text-xs font-bold">–</span>
+              <span class="stat-number text-lg leading-none
+                {% if j.gols_fora > j.gols_casa %}text-win
+                {% elif j.gols_casa == j.gols_fora %}text-draw
+                {% else %}text-base-content/40{% endif %}">{{ j.gols_fora }}</span>
+            </div>
+            <span class="flex-1 text-sm font-semibold truncate
+              {% if j.gols_fora > j.gols_casa %}text-base-content{% else %}text-base-content/50{% endif %}">
+              {{ j.equipe_fora.nome_equipe }}
+            </span>
+          </div>
+        </li>
+        {% empty %}
+        <li class="flex flex-col items-center justify-center py-10 gap-2 text-base-content/30">
+          <i class="bi bi-clipboard-x text-3xl"></i>
+          <p class="text-sm font-medium">Nenhum resultado ainda</p>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- ── Linha inferior: Artilheiros | Suspensões ───────────────────── -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+    <!-- Top Artilheiros -->
+    <div class="card bg-base-200 border border-base-300 overflow-hidden">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
+        <i class="bi bi-bullseye text-warning text-sm"></i>
+        <span class="section-heading text-base text-base-content/70 tracking-widest">TOP ARTILHEIROS</span>
+        <span class="text-xs text-base-content/30 ml-auto">geral</span>
+      </div>
+
+      {% if artilheiros_globais %}
+      {% with max_gols=artilheiros_globais.0.total %}
+      <div class="divide-y divide-base-300">
+        {% for a in artilheiros_globais %}
+        <div class="flex items-center gap-3 px-4 py-2.5 hover:bg-base-300/50 transition-colors group">
+
+          <!-- Posição -->
+          <div class="position-number w-6 text-center shrink-0
+            {% if forloop.counter == 1 %}text-warning
+            {% elif forloop.counter == 2 %}text-base-content/50
+            {% elif forloop.counter == 3 %}text-base-content/40
+            {% else %}text-base-content/25{% endif %}">
+            {% if forloop.counter == 1 %}<i class="bi bi-trophy-fill text-sm"></i>
+            {% else %}{{ forloop.counter }}{% endif %}
+          </div>
+
+          <!-- Nome e equipe -->
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-base-content leading-snug truncate
+                       group-hover:text-warning transition-colors">{{ a.atleta__nome }}</p>
+            <p class="text-xs text-base-content/40 truncate">{{ a.atleta__equipe__nome_equipe }}</p>
+          </div>
+
+          <!-- Barra de gols -->
+          <div class="hidden sm:flex items-center gap-2 w-24">
+            <div class="flex-1 h-1.5 bg-base-300 rounded-full overflow-hidden">
+              <div class="h-full bg-warning rounded-full transition-all duration-500"
+                   style="width: {% widthratio a.total max_gols 100 %}%"></div>
+            </div>
+          </div>
+
+          <!-- Contagem -->
+          <div class="stat-number text-xl text-warning shrink-0 w-7 text-right">{{ a.total }}</div>
+
+        </div>
+        {% endfor %}
+      </div>
+      {% endwith %}
+      {% else %}
+      <div class="flex flex-col items-center justify-center py-10 gap-2 text-base-content/30">
+        <i class="bi bi-dribbble text-3xl"></i>
+        <p class="text-sm font-medium">Nenhum gol registrado</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Suspensões Pendentes -->
+    <div class="card bg-base-200 border border-base-300 overflow-hidden">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
+        <i class="bi bi-exclamation-triangle-fill text-error text-sm"></i>
+        <span class="section-heading text-base text-error/70 tracking-widest">SUSPENSÕES</span>
+        {% if suspensoes_pendentes %}
+        <span class="badge badge-error badge-sm ml-auto">{{ suspensoes_pendentes|length }}</span>
+        {% endif %}
+      </div>
+      <ul class="divide-y divide-base-300">
+        {% for s in suspensoes_pendentes %}
+        <li class="flex items-start gap-3 px-4 py-3 hover:bg-base-300/50 transition-colors">
+          <div class="w-8 h-8 rounded-lg bg-error/10 border border-error/20 flex items-center justify-center shrink-0 mt-0.5">
+            <i class="bi bi-person-fill-slash text-error/70 text-xs"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-base-content leading-snug">{{ s.atleta.nome }}</p>
+            <p class="text-xs text-base-content/50 truncate">
+              {{ s.atleta.equipe.nome_equipe }} · {{ s.competicao.nome }}
+            </p>
+            <span class="inline-block mt-1 px-2 py-0.5 bg-error/10 text-error/70 text-[10px] font-bold
+                         uppercase tracking-wider rounded-full border border-error/20">
+              {{ s.get_motivo_display }}
+            </span>
+          </div>
+        </li>
+        {% empty %}
+        <li class="flex flex-col items-center justify-center py-10 gap-2 text-base-content/30">
+          <i class="bi bi-shield-check text-3xl"></i>
+          <p class="text-sm font-medium">Nenhuma suspensão pendente</p>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

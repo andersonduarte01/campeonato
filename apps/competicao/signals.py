@@ -146,3 +146,45 @@ def on_gol_change(sender, instance, **kwargs):
 @receiver(post_delete, sender='competicao.Cartao')
 def on_cartao_change(sender, instance, **kwargs):
     _verificar_suspensao(instance.jogador, instance.jogo)
+
+
+@receiver(post_save, sender='competicao.Suspensao')
+def on_suspensao_criada(sender, instance, created, **kwargs):
+    if not created:
+        return
+    from .models import Notificacao
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    admins = User.objects.filter(
+        is_active=True,
+    ).filter(Q(is_admin=True) | Q(perfil='admin') | Q(perfil='organizador'))
+    msg = f"Suspensão: {instance.atleta.nome} ({instance.get_motivo_display()}) — {instance.competicao.nome}"
+    for u in admins:
+        Notificacao.objects.create(usuario=u, mensagem=msg, tipo=Notificacao.SUSPENSAO)
+
+
+@receiver(post_save, sender='competicao.Jogo')
+def on_jogo_finalizado_notificacao(sender, instance, **kwargs):
+    if not (instance.finalizado and instance.rodada_id):
+        return
+    from .models import Notificacao
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    admins = User.objects.filter(
+        is_active=True,
+    ).filter(Q(is_admin=True) | Q(perfil='admin') | Q(perfil='organizador'))
+    msg = (
+        f"Resultado: {instance.equipe_casa.nome_equipe} {instance.gols_casa}"
+        f" x {instance.gols_fora} {instance.equipe_fora.nome_equipe}"
+        f" — {instance.rodada.competicao.nome}"
+    )
+    try:
+        from django.urls import reverse
+        url = reverse('competicao:jogo_detalhe', kwargs={'pk': instance.pk})
+    except Exception:
+        url = None
+    for u in admins:
+        Notificacao.objects.get_or_create(
+            usuario=u, mensagem=msg, tipo=Notificacao.RESULTADO,
+            defaults={'url': url},
+        )

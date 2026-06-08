@@ -2,113 +2,124 @@
 {% block titulo %}Locais / Campos{% endblock %}
 
 {% block conteudo %}
-<div class="container mt-4">
+<div class="p-4 md:p-6">
 
-  {% if messages %}
-    {% for message in messages %}
-    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
-      {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-    {% endfor %}
-  {% endif %}
-
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4 class="mb-0"><i class="bi bi-geo-alt-fill text-primary"></i> Locais / Campos</h4>
-    <button class="btn btn-sm btn-primary" data-bs-toggle="collapse" data-bs-target="#formNovoLocal">
+  <div class="flex items-center justify-between mb-5">
+    <h1 class="text-xl font-bold flex items-center gap-2">
+      <i class="bi bi-geo-alt-fill text-warning"></i> Locais / Campos
+    </h1>
+    <button class="btn btn-warning btn-sm gap-1.5"
+            onclick="document.getElementById('form-novo-local').classList.toggle('hidden')">
       <i class="bi bi-plus-circle"></i> Novo Local
     </button>
   </div>
 
-  <!-- Formulário de criação -->
-  <div class="collapse mb-4" id="formNovoLocal">
-    <div class="card">
-      <div class="card-header fw-semibold">Cadastrar Novo Local</div>
-      <div class="card-body">
-        <form method="post" action="{% url 'competicao:local_criar' %}">
+  <!-- Formulário de criação (toggle) -->
+  <div id="form-novo-local" class="hidden mb-5">
+    <div class="card bg-base-200 border border-warning/30">
+      <div class="px-4 py-3 border-b border-base-300 flex items-center gap-2">
+        <i class="bi bi-geo-alt text-warning text-sm"></i>
+        <span class="font-semibold text-sm">Cadastrar Novo Local</span>
+      </div>
+      <div class="card-body p-4">
+        <form method="post" action="{% url 'competicao:local_criar' %}" class="space-y-3">
           {% csrf_token %}
-          <div class="row g-2">
-            <div class="col-md-4">
-              <label class="form-label small fw-semibold">Nome *</label>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="label py-0 mb-1">
+                <span class="label-text font-semibold text-xs">Nome *</span>
+              </label>
               {{ form.nome }}
             </div>
-            <div class="col-md-4">
-              <label class="form-label small fw-semibold">Cidade</label>
+            <div>
+              <label class="label py-0 mb-1">
+                <span class="label-text font-semibold text-xs">Cidade</span>
+              </label>
               {{ form.cidade }}
             </div>
-            <div class="col-md-4">
-              <label class="form-label small fw-semibold">Capacidade</label>
+            <div>
+              <label class="label py-0 mb-1">
+                <span class="label-text font-semibold text-xs">Capacidade</span>
+              </label>
               {{ form.capacidade }}
             </div>
-            <div class="col-12">
-              <label class="form-label small fw-semibold">Endereço</label>
-              {{ form.endereco }}
-            </div>
           </div>
-          <div class="mt-3">
-            <button type="submit" class="btn btn-primary btn-sm">
-              <i class="bi bi-save"></i> Salvar
-            </button>
+          <div>
+            <label class="label py-0 mb-1">
+              <span class="label-text font-semibold text-xs">Endereço</span>
+            </label>
+            {{ form.endereco }}
           </div>
+          <button type="submit" class="btn btn-warning btn-sm gap-1">
+            <i class="bi bi-save"></i> Salvar
+          </button>
         </form>
       </div>
     </div>
   </div>
 
   <!-- Busca -->
-  <form method="get" class="d-flex gap-2 mb-3">
-    <input type="search" name="q" value="{{ q }}" class="form-control form-control-sm" placeholder="Buscar local...">
-    <button type="submit" class="btn btn-sm btn-outline-secondary">Buscar</button>
-    {% if q %}<a href="{% url 'competicao:local_lista' %}" class="btn btn-sm btn-outline-dark">Limpar</a>{% endif %}
+  <form method="get" class="mb-4 flex gap-2 max-w-sm">
+    <label class="input input-sm flex-1 flex items-center gap-2 bg-base-200 border-base-300">
+      <i class="bi bi-search text-base-content/30 text-xs"></i>
+      <input type="search" name="q" value="{{ q }}" class="grow bg-transparent text-sm outline-none" placeholder="Buscar local...">
+    </label>
+    <button type="submit" class="btn btn-sm btn-ghost">Buscar</button>
+    {% if q %}<a href="{% url 'competicao:local_lista' %}" class="btn btn-sm btn-ghost text-error">Limpar</a>{% endif %}
   </form>
 
   <!-- Listagem -->
-  <div class="card">
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-          <thead class="table-dark">
-            <tr>
-              <th>Nome</th>
-              <th>Cidade</th>
-              <th>Endereço</th>
-              <th class="text-center">Capacidade</th>
-              <th class="text-center">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for local in locais %}
-            <tr>
-              <td class="fw-semibold"><i class="bi bi-geo-alt text-secondary"></i> {{ local.nome }}</td>
-              <td>{{ local.cidade|default:"—" }}</td>
-              <td class="text-muted small">{{ local.endereco|default:"—" }}</td>
-              <td class="text-center">
-                {% if local.capacidade %}
-                  <span class="badge bg-secondary">{{ local.capacidade }}</span>
-                {% else %}—{% endif %}
-              </td>
-              <td class="text-center">
-                <a href="{% url 'competicao:local_editar' local.pk %}" class="btn btn-sm btn-outline-primary py-0 px-2">
-                  <i class="bi bi-pencil"></i>
-                </a>
-                <form method="post" action="{% url 'competicao:local_excluir' local.pk %}" class="d-inline"
-                      onsubmit="return confirm('Excluir local {{ local.nome }}?')">
-                  {% csrf_token %}
-                  <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2">
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </form>
-              </td>
-            </tr>
-            {% empty %}
-            <tr>
-              <td colspan="5" class="text-center text-muted py-4">
-                Nenhum local cadastrado.
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
+  <div class="card bg-base-200 border border-base-300 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="table table-sm">
+        <thead>
+          <tr class="bg-base-300/70 text-xs text-base-content/60 uppercase tracking-wider">
+            <th>Nome</th>
+            <th>Cidade</th>
+            <th>Endereço</th>
+            <th class="text-center">Capacidade</th>
+            <th class="text-center">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for local in locais %}
+          <tr class="hover:bg-base-300/30 transition-colors">
+            <td class="font-semibold text-sm">
+              <i class="bi bi-geo-alt text-base-content/30 text-xs mr-1"></i>
+              {{ local.nome }}
+            </td>
+            <td class="text-sm text-base-content/60">{{ local.cidade|default:"—" }}</td>
+            <td class="text-xs text-base-content/50">{{ local.endereco|default:"—" }}</td>
+            <td class="text-center">
+              {% if local.capacidade %}
+                <span class="badge badge-ghost badge-sm">{{ local.capacidade }}</span>
+              {% else %}
+                <span class="text-base-content/30">—</span>
+              {% endif %}
+            </td>
+            <td class="text-center">
+              <a href="{% url 'competicao:local_editar' local.pk %}" class="btn btn-ghost btn-xs">
+                <i class="bi bi-pencil"></i>
+              </a>
+              <form method="post" action="{% url 'competicao:local_excluir' local.pk %}" class="inline"
+                    onsubmit="return confirm('Excluir local {{ local.nome }}?')">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-ghost btn-xs text-error">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" class="text-center py-10 text-base-content/40">
+              <i class="bi bi-geo-alt text-4xl block mb-2 opacity-30"></i>
+              <p class="text-sm">Nenhum local cadastrado.</p>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
   </div>
 

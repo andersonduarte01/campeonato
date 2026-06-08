@@ -13,11 +13,13 @@ from .forms import (
     GolForm, CartaoForm, InscricaoAtletaForm,
     FaseForm, GrupoForm, ConfrontoPenaltisForm,
     LocalForm, ArbitroForm, EscalacaoJogoForm, SubstituicaoForm,
+    ArbitrosJogoForm, AvaliacaoArbitroForm,
 )
 from ..competicao.models import (
     Competicao, Rodada, Jogo, Classificacao, Gol, Cartao, InscricaoAtleta,
     Fase, Grupo, ClassificacaoGrupo, ConfrontoMatamate, Suspensao,
-    Local, Arbitro, EscalacaoJogo, Substituicao,
+    Local, Arbitro, EscalacaoJogo, Substituicao, ArbitrosJogo,
+    AvaliacaoArbitro, Notificacao,
 )
 from ..equipe.models import Equipe, Atleta
 from .gerador_de_jogos import (
@@ -206,8 +208,14 @@ class JogoDetalheView(LoginRequiredMixin, DetailView):
         ctx['gols_casa'] = jogo.gols.filter(equipe=jogo.equipe_casa).select_related('atleta')
         ctx['gols_fora'] = jogo.gols.filter(equipe=jogo.equipe_fora).select_related('atleta')
         ctx['cartoes'] = jogo.cartoes.select_related('jogador__equipe').order_by('minuto')
+        ctx['arbitros_jogo'] = jogo.arbitros_jogo.select_related('arbitro').all()
         ctx['form_gol'] = GolForm(jogo=jogo)
         ctx['form_cartao'] = CartaoForm(jogo=jogo)
+        try:
+            ctx['avaliacao_arbitro'] = jogo.avaliacao_arbitro
+        except AvaliacaoArbitro.DoesNotExist:
+            ctx['avaliacao_arbitro'] = None
+        ctx['form_avaliacao'] = AvaliacaoArbitroForm()
         ctx['atletas_casa'] = list(
             _atletas_por_equipe(jogo, jogo.equipe_casa)
             .values('id', 'nome')
@@ -344,12 +352,28 @@ class InscricaoView(LoginRequiredMixin, DetailView):
 
 @login_required
 def inscricao_criar_view(request, competicao_pk, equipe_pk):
+    from datetime import date
     competicao = get_object_or_404(Competicao, pk=competicao_pk)
     equipe = get_object_or_404(Equipe, pk=equipe_pk)
 
     if request.method == 'POST':
+        # Validação: período de inscrição
+        hoje = date.today()
+        if competicao.data_abertura_inscricao and hoje < competicao.data_abertura_inscricao:
+            messages.warning(request, f'Inscrições abertas a partir de {competicao.data_abertura_inscricao.strftime("%d/%m/%Y")}.')
+            return redirect(reverse('competicao:inscricao', kwargs={'pk': competicao_pk}))
+        if competicao.data_encerramento_inscricao and hoje > competicao.data_encerramento_inscricao:
+            messages.warning(request, 'Prazo de inscrições encerrado.')
+            return redirect(reverse('competicao:inscricao', kwargs={'pk': competicao_pk}))
+
         form = InscricaoAtletaForm(request.POST, competicao=competicao, equipe=equipe)
         if form.is_valid():
+            # Validação: limite de atletas por equipe
+            if competicao.limite_atletas:
+                total = InscricaoAtleta.objects.filter(competicao=competicao, atleta__equipe=equipe).count()
+                if total >= competicao.limite_atletas:
+                    messages.warning(request, f'Limite de {competicao.limite_atletas} atletas por equipe atingido.')
+                    return redirect(reverse('competicao:inscricao', kwargs={'pk': competicao_pk}))
             inscricao = form.save(commit=False)
             inscricao.competicao = competicao
             inscricao.save()
@@ -548,14 +572,17 @@ class ChaveamentoView(LoginRequiredMixin, DetailView):
                 'jogo_volta__equipe_casa', 'jogo_volta__equipe_fora',
             ).order_by('ordem')
         )
-        ctx['confrontos'] = confrontos
-        ctx['tem_confrontos'] = bool(confrontos)
+        normais = [c for c in confrontos if c.tipo_confronto != ConfrontoMatamate.TERCEIRO_LUGAR]
+        ctx['confrontos'] = normais
+        ctx['tem_confrontos'] = bool(normais)
         ctx['penaltis_forms'] = {
             c.pk: ConfrontoPenaltisForm(instance=c)
-            for c in confrontos
+            for c in normais
             if c.totalmente_jogado and c.vencedor is None
         }
         ctx['fases_grupos'] = Fase.objects.filter(competicao=fase.competicao, tipo=Fase.GRUPOS)
+        terceiro = next((c for c in confrontos if c.tipo_confronto == ConfrontoMatamate.TERCEIRO_LUGAR), None)
+        ctx['terceiro_lugar'] = terceiro
         return ctx
 
 
@@ -731,6 +758,21 @@ class EscalacaoJogoView(LoginRequiredMixin, DetailView):
         ctx['form_sub'] = SubstituicaoForm(jogo=jogo)
         ctx['atletas_casa'] = list(_atletas_por_equipe(jogo, jogo.equipe_casa).values('id', 'nome'))
         ctx['atletas_fora'] = list(_atletas_por_equipe(jogo, jogo.equipe_fora).values('id', 'nome'))
+        # Alertas de suspensos para a escalação
+        if jogo.rodada_id:
+            atleta_ids = [a['id'] for a in ctx['atletas_casa'] + ctx['atletas_fora']]
+            ctx['suspensos'] = list(
+                Suspensao.objects.filter(
+                    competicao=jogo.rodada.competicao,
+                    cumprida=False,
+                    atleta_id__in=atleta_ids,
+                ).select_related('atleta__equipe')
+            )
+        else:
+            ctx['suspensos'] = []
+        # Árbitros do jogo
+        ctx['arbitros_jogo'] = jogo.arbitros_jogo.select_related('arbitro').all()
+        ctx['form_arbitro_jogo'] = ArbitrosJogoForm()
         return ctx
 
 
@@ -745,7 +787,22 @@ def escalacao_criar_view(request, jogo_pk, equipe_pk):
             esc.jogo = jogo
             esc.equipe = equipe
             esc.save()
-            messages.success(request, f'{esc.atleta.nome} adicionado à escalação.')
+            # Aviso se o atleta está suspenso
+            if jogo.rodada_id:
+                suspenso = Suspensao.objects.filter(
+                    competicao=jogo.rodada.competicao,
+                    atleta=esc.atleta,
+                    cumprida=False,
+                ).first()
+                if suspenso:
+                    messages.warning(
+                        request,
+                        f'Atenção: {esc.atleta.nome} está SUSPENSO ({suspenso.get_motivo_display()}).'
+                    )
+                else:
+                    messages.success(request, f'{esc.atleta.nome} adicionado à escalação.')
+            else:
+                messages.success(request, f'{esc.atleta.nome} adicionado à escalação.')
         else:
             for errs in form.errors.values():
                 for e in errs:
@@ -787,6 +844,40 @@ def substituicao_excluir_view(request, pk):
     if request.method == 'POST':
         sub.delete()
         messages.success(request, 'Substituição removida.')
+    return redirect(reverse('competicao:escalacao', kwargs={'pk': jogo_pk}))
+
+
+# ---------------------------------------------------------------------------
+# Árbitros por Jogo
+# ---------------------------------------------------------------------------
+
+@login_required
+def arbitros_jogo_criar_view(request, jogo_pk):
+    jogo = get_object_or_404(Jogo, pk=jogo_pk)
+    if request.method == 'POST':
+        form = ArbitrosJogoForm(request.POST)
+        if form.is_valid():
+            arb = form.save(commit=False)
+            arb.jogo = jogo
+            try:
+                arb.save()
+                messages.success(request, f'{arb.arbitro.nome} ({arb.get_tipo_display()}) adicionado.')
+            except Exception:
+                messages.warning(request, 'Já existe um árbitro desse tipo para este jogo.')
+        else:
+            for errs in form.errors.values():
+                for e in errs:
+                    messages.warning(request, e)
+    return redirect(reverse('competicao:escalacao', kwargs={'pk': jogo_pk}))
+
+
+@login_required
+def arbitros_jogo_excluir_view(request, pk):
+    arb = get_object_or_404(ArbitrosJogo, pk=pk)
+    jogo_pk = arb.jogo_id
+    if request.method == 'POST':
+        arb.delete()
+        messages.success(request, 'Árbitro removido do jogo.')
     return redirect(reverse('competicao:escalacao', kwargs={'pk': jogo_pk}))
 
 
@@ -903,6 +994,31 @@ class EstatisticasView(LoginRequiredMixin, DetailView):
             )
             .order_by('-vermelhos', '-amarelos')
         )
+
+        # Goleiros menos vazados (L)
+        ctx['goleiros'] = (
+            EscalacaoJogo.objects
+            .filter(
+                jogo__rodada__competicao=comp,
+                jogo__finalizado=True,
+                jogo__anulado=False,
+                atleta__posicao='GOLEIRO',
+                titular=True,
+            )
+            .values('atleta__id', 'atleta__nome', 'atleta__equipe__nome_equipe', 'equipe_id')
+            .annotate(jogos=Count('jogo_id', distinct=True))
+            .order_by('-jogos')[:10]
+        )
+
+        # Mandante vs visitante (L)
+        equipes = comp.equipes.all()
+        mandante_visitante = []
+        for eq in equipes:
+            jogos_eq = jogos_finalizados.filter(Q(equipe_casa=eq) | Q(equipe_fora=eq))
+            v_man = sum(1 for j in jogos_eq if j.equipe_casa == eq and j.gols_casa > j.gols_fora)
+            v_vis = sum(1 for j in jogos_eq if j.equipe_fora == eq and j.gols_fora > j.gols_casa)
+            mandante_visitante.append({'equipe': eq, 'v_mandante': v_man, 'v_visitante': v_vis})
+        ctx['mandante_visitante'] = mandante_visitante
 
         return ctx
 
@@ -1028,6 +1144,7 @@ def pdf_sumula_view(request, pk):
     escalacao_fora = jogo.escalacao.filter(equipe=jogo.equipe_fora).select_related('atleta').order_by('-titular', 'numero_camisa')
     substituicoes = jogo.substituicoes.select_related('atleta_entra', 'atleta_sai', 'equipe').order_by('minuto')
 
+    arbitros_jogo = jogo.arbitros_jogo.select_related('arbitro').all()
     return render(request, 'competicao/pdf_sumula.html', {
         'jogo': jogo,
         'gols_casa': gols_casa,
@@ -1036,4 +1153,294 @@ def pdf_sumula_view(request, pk):
         'escalacao_casa': escalacao_casa,
         'escalacao_fora': escalacao_fora,
         'substituicoes': substituicoes,
+        'arbitros_jogo': arbitros_jogo,
+    })
+
+
+# ---------------------------------------------------------------------------
+# PDF Elenco e Artilheiros  (M)
+# ---------------------------------------------------------------------------
+
+@login_required
+def pdf_elenco_view(request, competicao_pk, equipe_pk):
+    competicao = get_object_or_404(Competicao, pk=competicao_pk)
+    equipe = get_object_or_404(Equipe, pk=equipe_pk)
+    inscricoes = InscricaoAtleta.objects.filter(
+        competicao=competicao, atleta__equipe=equipe,
+    ).select_related('atleta').order_by('numero_camisa', 'atleta__nome')
+    return render(request, 'competicao/pdf_elenco.html', {
+        'competicao': competicao, 'equipe': equipe, 'inscricoes': inscricoes,
+    })
+
+
+@login_required
+def pdf_artilheiros_view(request, pk):
+    comp = get_object_or_404(Competicao, pk=pk)
+    artilharia = (
+        Gol.objects
+        .filter(jogo__rodada__competicao=comp, tipo__in=['normal', 'penalti'])
+        .values('atleta__nome', 'atleta__equipe__nome_equipe')
+        .annotate(total=Count('id'))
+        .order_by('-total')
+    )
+    return render(request, 'competicao/pdf_artilheiros.html', {
+        'competicao': comp, 'artilharia': artilharia,
+    })
+
+
+# ---------------------------------------------------------------------------
+# Avaliação do Árbitro  (K)
+# ---------------------------------------------------------------------------
+
+@login_required
+def avaliacao_arbitro_view(request, jogo_pk):
+    jogo = get_object_or_404(Jogo, pk=jogo_pk)
+    if request.method == 'POST':
+        try:
+            avaliacao = jogo.avaliacao_arbitro
+            form = AvaliacaoArbitroForm(request.POST, instance=avaliacao)
+        except AvaliacaoArbitro.DoesNotExist:
+            form = AvaliacaoArbitroForm(request.POST)
+        if form.is_valid():
+            av = form.save(commit=False)
+            av.jogo = jogo
+            av.avaliado_por = request.user
+            av.save()
+            messages.success(request, 'Avaliação do árbitro registrada.')
+        else:
+            for errs in form.errors.values():
+                for e in errs:
+                    messages.warning(request, e)
+    return redirect(reverse('competicao:jogo_detalhe', kwargs={'pk': jogo_pk}))
+
+
+# ---------------------------------------------------------------------------
+# Notificações in-app  (N)
+# ---------------------------------------------------------------------------
+
+@login_required
+def notificacoes_view(request):
+    notifs = Notificacao.objects.filter(usuario=request.user).order_by('-criada_em')[:50]
+    Notificacao.objects.filter(usuario=request.user, lida=False).update(lida=True)
+    return render(request, 'competicao/notificacoes.html', {'notificacoes': notifs})
+
+
+# ---------------------------------------------------------------------------
+# Taxa de inscrição — toggle  (P)
+# ---------------------------------------------------------------------------
+
+@login_required
+def inscricao_toggle_taxa_view(request, pk):
+    inscricao = get_object_or_404(InscricaoAtleta, pk=pk)
+    if request.method == 'POST':
+        inscricao.taxa_paga = not inscricao.taxa_paga
+        inscricao.save(update_fields=['taxa_paga'])
+        status = 'paga' if inscricao.taxa_paga else 'pendente'
+        messages.success(request, f'Taxa de {inscricao.atleta.nome} marcada como {status}.')
+    return redirect(reverse('competicao:inscricao', kwargs={'pk': inscricao.competicao_id}))
+
+
+# ---------------------------------------------------------------------------
+# 3º Lugar  (R)
+# ---------------------------------------------------------------------------
+
+@login_required
+def terceiro_lugar_criar_view(request, fase_pk):
+    fase = get_object_or_404(Fase, pk=fase_pk)
+    if request.method == 'POST':
+        eq1_id = request.POST.get('equipe_mandante')
+        eq2_id = request.POST.get('equipe_visitante')
+        if eq1_id and eq2_id and eq1_id != eq2_id:
+            from .gerador_de_jogos import _criar_jogo_confronto
+            equipe_mandante = get_object_or_404(Equipe, pk=eq1_id)
+            equipe_visitante = get_object_or_404(Equipe, pk=eq2_id)
+            confronto, created = ConfrontoMatamate.objects.get_or_create(
+                fase=fase,
+                tipo_confronto=ConfrontoMatamate.TERCEIRO_LUGAR,
+                defaults={
+                    'equipe_mandante': equipe_mandante,
+                    'equipe_visitante': equipe_visitante,
+                    'ordem': 0,
+                },
+            )
+            if created:
+                rodada, _ = Rodada.objects.get_or_create(
+                    competicao=fase.competicao, fase=fase, numero=99,
+                )
+                jogo = Jogo.objects.create(
+                    rodada=rodada,
+                    equipe_casa=equipe_mandante,
+                    equipe_fora=equipe_visitante,
+                )
+                confronto.jogo_ida = jogo
+                confronto.save()
+                messages.success(request, 'Disputa de 3º lugar criada.')
+            else:
+                messages.warning(request, 'Disputa de 3º lugar já existe para esta fase.')
+        else:
+            messages.warning(request, 'Selecione duas equipes diferentes.')
+    return redirect(reverse('competicao:chaveamento', kwargs={'pk': fase_pk}))
+
+
+# ---------------------------------------------------------------------------
+# API REST simples  (S)
+# ---------------------------------------------------------------------------
+
+from django.http import JsonResponse as _JsonResponse
+
+
+def api_competicoes_view(request):
+    comps = Competicao.objects.values(
+        'id', 'nome', 'status', 'modalidade', 'categoria', 'data_inicio', 'data_fim',
+    )
+    return _JsonResponse({'competicoes': list(comps)})
+
+
+def api_classificacao_view(request, pk):
+    comp = get_object_or_404(Competicao, pk=pk)
+    cl_raw = Classificacao.objects.filter(competicao=comp).select_related('equipe')
+    cl = aplicar_criterios(comp, cl_raw)
+    data = [
+        {
+            'pos': i + 1,
+            'equipe': c.equipe.nome_equipe,
+            'pts': c.pontos, 'j': c.jogos, 'v': c.vitorias,
+            'e': c.empates, 'd': c.derrotas,
+            'gp': c.gols_pro, 'gc': c.gols_contra, 'sg': c.saldo_gols,
+        }
+        for i, c in enumerate(cl)
+    ]
+    return _JsonResponse({'competicao': comp.nome, 'classificacao': data})
+
+
+def api_jogos_view(request, pk):
+    comp = get_object_or_404(Competicao, pk=pk)
+    jogos = Jogo.objects.filter(rodada__competicao=comp).select_related(
+        'equipe_casa', 'equipe_fora', 'rodada__fase',
+    ).order_by('data_hora')
+    data = [
+        {
+            'id': j.pk,
+            'equipe_casa': j.equipe_casa.nome_equipe,
+            'equipe_fora': j.equipe_fora.nome_equipe,
+            'gols_casa': j.gols_casa, 'gols_fora': j.gols_fora,
+            'data_hora': j.data_hora.isoformat() if j.data_hora else None,
+            'finalizado': j.finalizado, 'em_andamento': j.em_andamento,
+        }
+        for j in jogos
+    ]
+    return _JsonResponse({'competicao': comp.nome, 'jogos': data})
+
+
+def api_artilheiros_view(request, pk):
+    comp = get_object_or_404(Competicao, pk=pk)
+    art = (
+        Gol.objects
+        .filter(jogo__rodada__competicao=comp, tipo__in=['normal', 'penalti'])
+        .values('atleta__nome', 'atleta__equipe__nome_equipe')
+        .annotate(gols=Count('id'))
+        .order_by('-gols')[:20]
+    )
+    return _JsonResponse({'competicao': comp.nome, 'artilheiros': list(art)})
+
+
+# ---------------------------------------------------------------------------
+# Busca Global  (T)
+# ---------------------------------------------------------------------------
+
+@login_required
+def busca_global_view(request):
+    q = request.GET.get('q', '').strip()
+    ctx = {'q': q, 'resultados': []}
+    if len(q) >= 2:
+        from ..equipe.models import Atleta as AtletaModel
+        equipes = Equipe.objects.filter(nome_equipe__icontains=q)[:8]
+        atletas = AtletaModel.objects.filter(nome__icontains=q).select_related('equipe')[:8]
+        comps = Competicao.objects.filter(nome__icontains=q)[:8]
+        ctx['equipes'] = equipes
+        ctx['atletas'] = atletas
+        ctx['comps'] = comps
+    return render(request, 'competicao/busca_global.html', ctx)
+
+
+# ---------------------------------------------------------------------------
+# Área Pública (sem login)  (O)
+# ---------------------------------------------------------------------------
+
+class PublicClassificacaoView(DetailView):
+    model = Competicao
+    template_name = 'competicao/public_classificacao.html'
+    context_object_name = 'competicao'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        comp = self.object
+        classificacao_raw = Classificacao.objects.filter(competicao=comp).select_related('equipe')
+        ctx['classificacao'] = aplicar_criterios(comp, classificacao_raw)
+        ctx['artilharia'] = (
+            Gol.objects
+            .filter(jogo__rodada__competicao=comp, tipo__in=['normal', 'penalti'])
+            .values('atleta__nome', 'atleta__equipe__nome_equipe')
+            .annotate(total=Count('id'))
+            .order_by('-total')[:10]
+        )
+        ctx['jogos_recentes'] = Jogo.objects.filter(
+            rodada__competicao=comp, finalizado=True, anulado=False,
+        ).select_related('equipe_casa', 'equipe_fora').order_by('-data_hora')[:5]
+        ctx['proximos_jogos'] = Jogo.objects.filter(
+            rodada__competicao=comp, finalizado=False, anulado=False,
+        ).select_related('equipe_casa', 'equipe_fora', 'local').order_by('data_hora')[:5]
+        return ctx
+
+
+# ---------------------------------------------------------------------------
+# Dashboard  (A)
+# ---------------------------------------------------------------------------
+
+@login_required
+def dashboard_view(request):
+    from django.utils import timezone
+    agora = timezone.now()
+    ctx = {}
+    ctx['total_competicoes'] = Competicao.objects.count()
+    ctx['total_equipes'] = Equipe.objects.count()
+    ctx['total_atletas'] = Atleta.objects.count()
+    ctx['total_gols'] = Gol.objects.count()
+    ctx['competicoes_andamento'] = Competicao.objects.filter(status='andamento')
+    ctx['proximos_jogos'] = Jogo.objects.filter(
+        finalizado=False, anulado=False, data_hora__gte=agora,
+    ).select_related('equipe_casa', 'equipe_fora', 'rodada__competicao', 'local').order_by('data_hora')[:8]
+    ctx['jogos_recentes'] = Jogo.objects.filter(
+        finalizado=True, anulado=False,
+    ).select_related('equipe_casa', 'equipe_fora', 'rodada__competicao').order_by('-data_hora')[:8]
+    ctx['artilheiros_globais'] = (
+        Gol.objects
+        .filter(tipo__in=['normal', 'penalti'])
+        .values('atleta__nome', 'atleta__equipe__nome_equipe')
+        .annotate(total=Count('id'))
+        .order_by('-total')[:8]
+    )
+    ctx['suspensoes_pendentes'] = Suspensao.objects.filter(
+        cumprida=False,
+    ).select_related('atleta__equipe', 'competicao').order_by('-pk')[:8]
+    return render(request, 'competicao/dashboard.html', ctx)
+
+
+# ---------------------------------------------------------------------------
+# Calendário de Jogos  (G)
+# ---------------------------------------------------------------------------
+
+@login_required
+def calendario_view(request):
+    competicao_id = request.GET.get('competicao')
+    qs = Jogo.objects.filter(data_hora__isnull=False).select_related(
+        'equipe_casa', 'equipe_fora', 'rodada__competicao', 'local',
+    ).order_by('data_hora')
+    if competicao_id:
+        qs = qs.filter(rodada__competicao_id=competicao_id)
+    competicoes = Competicao.objects.order_by('nome')
+    return render(request, 'competicao/calendario.html', {
+        'jogos': qs,
+        'competicoes': competicoes,
+        'competicao_id': competicao_id,
     })
