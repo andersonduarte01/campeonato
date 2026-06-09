@@ -115,15 +115,95 @@
       </div>
       {% if artilharia %}
       {% with max_gols=artilharia.0.total %}
-      <div class="divide-y divide-base-300 max-h-72 overflow-y-auto">
+
+      <!-- Pódio top 3 -->
+      {% if artilharia|length >= 3 %}
+      <div class="px-4 pt-5 pb-4 border-b border-base-300">
+        <div class="flex items-end justify-center gap-3">
+
+          <!-- 2º lugar -->
+          <div class="flex flex-col items-center gap-2 flex-1">
+            <div class="w-12 h-12 rounded-full bg-base-300 border-2 border-base-content/20
+                        flex items-center justify-center text-xl font-black text-base-content/50">
+              {{ artilharia.1.atleta__nome|default:"?"|first|upper }}
+            </div>
+            <div class="text-center">
+              <p class="text-xs font-bold text-base-content truncate max-w-[80px]"
+                 title="{{ artilharia.1.atleta__nome|default:'?' }}">
+                {{ artilharia.1.atleta__nome|default:"?"|truncatechars:10 }}
+              </p>
+              <p class="text-[10px] text-base-content/35 truncate max-w-[80px]">{{ artilharia.1.atleta__equipe__nome_equipe }}</p>
+            </div>
+            <div class="w-full flex flex-col items-center py-3 rounded-t-xl bg-base-300/60
+                        border-t-2 border-base-content/20">
+              <span class="stat-number text-2xl text-base-content/60">{{ artilharia.1.total }}</span>
+              <span class="text-[10px] text-base-content/30 font-medium">gols</span>
+              <span class="mt-1 text-base-content/40 text-xs font-bold">🥈 2º</span>
+            </div>
+          </div>
+
+          <!-- 1º lugar (mais alto) -->
+          <div class="flex flex-col items-center gap-2 flex-1 -mt-4">
+            <div class="relative">
+              <div class="w-14 h-14 rounded-full bg-warning/15 border-2 border-warning/60
+                          flex items-center justify-center text-2xl font-black text-warning/80
+                          shadow-lg shadow-warning/20">
+                {{ artilharia.0.atleta__nome|default:"?"|first|upper }}
+              </div>
+              <div class="absolute -top-2 -right-1 w-5 h-5 rounded-full bg-warning flex items-center justify-center">
+                <i class="bi bi-trophy-fill text-warning-content text-[9px]"></i>
+              </div>
+            </div>
+            <div class="text-center">
+              <p class="text-xs font-bold text-warning truncate max-w-[90px]"
+                 title="{{ artilharia.0.atleta__nome|default:'?' }}">
+                {{ artilharia.0.atleta__nome|default:"?"|truncatechars:12 }}
+              </p>
+              <p class="text-[10px] text-base-content/35 truncate max-w-[90px]">{{ artilharia.0.atleta__equipe__nome_equipe }}</p>
+            </div>
+            <div class="w-full flex flex-col items-center py-4 rounded-t-xl
+                        bg-warning/10 border-t-2 border-warning/50">
+              <span class="stat-number text-3xl text-warning">{{ artilharia.0.total }}</span>
+              <span class="text-[10px] text-warning/50 font-medium">gols</span>
+              <span class="mt-1 text-warning text-xs font-bold">🏆 1º</span>
+            </div>
+          </div>
+
+          <!-- 3º lugar -->
+          <div class="flex flex-col items-center gap-2 flex-1">
+            <div class="w-11 h-11 rounded-full bg-base-300 border-2 border-base-content/15
+                        flex items-center justify-center text-lg font-black text-base-content/40">
+              {{ artilharia.2.atleta__nome|default:"?"|first|upper }}
+            </div>
+            <div class="text-center">
+              <p class="text-xs font-bold text-base-content/60 truncate max-w-[70px]"
+                 title="{{ artilharia.2.atleta__nome|default:'?' }}">
+                {{ artilharia.2.atleta__nome|default:"?"|truncatechars:9 }}
+              </p>
+              <p class="text-[10px] text-base-content/30 truncate max-w-[70px]">{{ artilharia.2.atleta__equipe__nome_equipe }}</p>
+            </div>
+            <div class="w-full flex flex-col items-center py-2 rounded-t-xl bg-base-300/40
+                        border-t-2 border-base-content/15">
+              <span class="stat-number text-xl text-base-content/50">{{ artilharia.2.total }}</span>
+              <span class="text-[10px] text-base-content/25 font-medium">gols</span>
+              <span class="mt-1 text-base-content/35 text-xs font-bold">🥉 3º</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Ranking 4º em diante (ou todos se < 3) -->
+      <div class="divide-y divide-base-300 max-h-60 overflow-y-auto">
         {% for art in artilharia %}
+        {% if forloop.counter > 3 or artilharia|length < 3 %}
         <div class="flex items-center gap-3 px-4 py-2.5 hover:bg-base-300/40 transition-colors group">
           <div class="position-number w-5 text-center shrink-0
             {% if forloop.counter == 1 %}text-warning
             {% elif forloop.counter <= 3 %}text-base-content/40
             {% else %}text-base-content/20{% endif %}">
-            {% if forloop.counter == 1 %}<i class="bi bi-trophy-fill text-xs"></i>
-            {% else %}{{ forloop.counter }}{% endif %}
+            {{ forloop.counter }}
           </div>
           <div class="flex-1 min-w-0">
             <p class="text-sm font-semibold text-base-content truncate group-hover:text-warning transition-colors">
@@ -139,6 +219,7 @@
           </div>
           <div class="stat-number text-lg text-warning shrink-0 w-6 text-right">{{ art.total }}</div>
         </div>
+        {% endif %}
         {% endfor %}
       </div>
       {% endwith %}

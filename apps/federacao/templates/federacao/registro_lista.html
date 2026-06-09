@@ -1,0 +1,156 @@
+{% extends 'base/indice.html' %}
+{% block titulo %}Registros Federativos{% endblock %}
+
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-base-content/40">
+    <ul>
+      <li><a href="{% url 'federacao:dashboard' %}" class="hover:text-base-content/70">Federação</a></li>
+      <li><span class="text-base-content/60">Registros</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block conteudo %}
+<div class="p-4 md:p-6 max-w-[1200px] mx-auto space-y-5">
+
+  <div class="flex items-end justify-between gap-4">
+    <div>
+      <h1 class="section-heading text-4xl text-base-content leading-none">REGISTROS FEDERATIVOS</h1>
+      <p class="text-sm text-base-content/40 mt-1">Carteirinha e cadastro único de atletas</p>
+    </div>
+    <a href="{% url 'federacao:registro_criar' %}"
+       class="btn btn-warning gap-2 shadow-lg shadow-warning/20 font-semibold shrink-0">
+      <i class="bi bi-person-plus-fill"></i>
+      <span class="hidden sm:inline">Novo Registro</span>
+    </a>
+  </div>
+
+  <!-- Filtros -->
+  <form method="get" class="flex flex-wrap gap-3 items-end">
+    <label class="input input-sm flex-1 min-w-48 flex items-center gap-2 bg-base-200 border-base-300 rounded-xl">
+      <i class="bi bi-search text-base-content/30 text-xs shrink-0"></i>
+      <input type="text" name="q" value="{{ q }}" class="grow bg-transparent text-sm outline-none"
+             placeholder="Buscar por nome do atleta...">
+    </label>
+    <select name="status" class="select select-sm bg-base-200 border-base-300 min-w-36"
+            onchange="this.form.submit()">
+      <option value="">Todos os status</option>
+      {% for val, label in status_choices %}
+      <option value="{{ val }}" {% if val == status_atual %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-warning btn-sm font-semibold">Filtrar</button>
+    {% if q or status_atual %}
+    <a href="{% url 'federacao:registro_lista' %}" class="btn btn-ghost btn-sm border border-base-content/10">
+      <i class="bi bi-x"></i> Limpar
+    </a>
+    {% endif %}
+  </form>
+
+  <!-- Atletas sem registro -->
+  {% if atletas_sem_reg and not q and not status_atual %}
+  <div class="card bg-warning/5 border border-warning/25 overflow-hidden">
+    <div class="flex items-center gap-2 px-4 py-2.5 border-b border-warning/20">
+      <i class="bi bi-exclamation-triangle-fill text-warning text-sm"></i>
+      <span class="text-sm font-bold text-warning/80">{{ atletas_sem_reg|length }} atleta{{ atletas_sem_reg|length|pluralize }} sem registro federativo</span>
+    </div>
+    <div class="p-3 flex flex-wrap gap-2">
+      {% for atleta in atletas_sem_reg|slice:":8" %}
+      <a href="{% url 'federacao:registro_criar' %}?atleta={{ atleta.pk }}"
+         class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-base-300/60 border border-base-content/10
+                text-xs font-medium text-base-content/60 hover:text-warning hover:border-warning/30 transition-all">
+        <span class="w-4 h-4 rounded-full bg-warning/20 text-warning text-[9px] font-black flex items-center justify-center shrink-0">
+          {{ atleta.nome|first|upper }}
+        </span>
+        {{ atleta.nome }}
+        <span class="text-base-content/30">· {{ atleta.equipe.nome_equipe }}</span>
+      </a>
+      {% endfor %}
+      {% if atletas_sem_reg|length > 8 %}
+      <span class="text-xs text-base-content/35 self-center">+ {{ atletas_sem_reg|length|add:"-8" }} mais</span>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Tabela de registros -->
+  {% if registros %}
+  <div class="card bg-base-200 border border-base-300 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="table table-sm">
+        <thead>
+          <tr class="bg-base-300/50 text-[10px] text-base-content/40 uppercase tracking-wider">
+            <th>Nº Federativo</th>
+            <th>Atleta</th>
+            <th>Clube Atual</th>
+            <th>Filiação</th>
+            <th>Status</th>
+            <th class="text-right">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for reg in registros %}
+          <tr class="hover:bg-base-300/30 transition-colors">
+            <td>
+              <span class="font-mono text-xs font-bold text-warning/80">{{ reg.numero_federativo }}</span>
+            </td>
+            <td class="py-2.5">
+              <div class="flex items-center gap-2.5">
+                {% if reg.atleta.foto %}
+                <img src="{{ reg.atleta.foto.thumbnail.url }}"
+                     class="w-7 h-7 rounded-full object-cover border border-base-300 shrink-0">
+                {% else %}
+                <div class="w-7 h-7 rounded-full bg-warning/10 border border-warning/20
+                            flex items-center justify-center text-[11px] font-black text-warning shrink-0">
+                  {{ reg.atleta.nome|first|upper }}
+                </div>
+                {% endif %}
+                <span class="text-sm font-semibold text-base-content">{{ reg.atleta.nome }}</span>
+              </div>
+            </td>
+            <td class="text-sm text-base-content/60">{{ reg.atleta.equipe.nome_equipe }}</td>
+            <td class="text-xs text-base-content/50">{{ reg.data_filiacao|date:"d/m/Y" }}</td>
+            <td>
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border
+                {% if reg.status == 'ativo' %}bg-success/15 text-success border-success/20
+                {% elif reg.status == 'suspenso' %}bg-error/15 text-error border-error/20
+                {% elif reg.status == 'transferido' %}bg-info/15 text-info border-info/20
+                {% else %}bg-base-300 text-base-content/40 border-base-content/10{% endif %}">
+                {{ reg.get_status_display }}
+              </span>
+            </td>
+            <td class="text-right">
+              <a href="{% url 'federacao:registro_detalhe' reg.pk %}"
+                 class="btn btn-ghost btn-xs gap-1 border border-base-content/10">
+                <i class="bi bi-eye text-xs"></i>
+              </a>
+              <a href="{% url 'federacao:registro_editar' reg.pk %}"
+                 class="btn btn-ghost btn-xs gap-1 border border-base-content/10">
+                <i class="bi bi-pencil text-xs"></i>
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% else %}
+  <div class="card bg-base-200 border border-base-300">
+    <div class="flex flex-col items-center justify-center py-16 gap-4">
+      <i class="bi bi-person-badge text-4xl text-base-content/20"></i>
+      <div class="text-center">
+        <p class="section-heading text-xl text-base-content/40">SEM REGISTROS</p>
+        <p class="text-sm text-base-content/30 mt-1.5">Nenhum registro federativo encontrado.</p>
+      </div>
+      <a href="{% url 'federacao:registro_criar' %}" class="btn btn-warning btn-sm gap-1">
+        <i class="bi bi-plus-circle"></i> Criar primeiro registro
+      </a>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

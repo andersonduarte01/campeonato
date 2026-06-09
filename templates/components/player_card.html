@@ -1,0 +1,64 @@
+{#
+  player_card.html
+  Uso: {% include 'components/player_card.html' with atleta=atleta show_jersey=True jersey_number=10 edit_url=url delete_url=url %}
+  Parâmetros:
+    atleta       — objeto Atleta (obrigatório)
+    show_jersey  — exibir número de camisa (opcional)
+    jersey_number — número da camisa (opcional)
+    edit_url     — URL para editar atleta (opcional)
+    delete_url   — URL para excluir atleta (opcional)
+#}
+<div class="card bg-base-200 border border-base-300 card-sport text-center overflow-hidden group">
+
+  <!-- Foto / Avatar -->
+  <div class="pt-5 pb-2 px-4 flex flex-col items-center gap-2">
+
+    {% if show_jersey and jersey_number %}
+    <div class="absolute top-2 left-2">
+      <span class="badge badge-ghost badge-sm font-bold text-warning stat-number">#{{ jersey_number }}</span>
+    </div>
+    {% endif %}
+
+    <div class="relative">
+      {% if atleta.foto %}
+        <img src="{{ atleta.foto.thumbnail.url }}" alt="{{ atleta.nome }}"
+             class="w-16 h-16 rounded-full object-cover border-2 border-base-300
+                    group-hover:border-warning/40 transition-colors">
+      {% else %}
+        <div class="w-16 h-16 rounded-full bg-neutral-content/10 border-2 border-base-300
+                    flex items-center justify-center group-hover:border-warning/40 transition-colors">
+          <span class="text-xl font-black text-base-content/50">{{ atleta.nome|first|upper }}</span>
+        </div>
+      {% endif %}
+
+      {% if atleta.situacao == 'SUSPENSO' %}
+      <span class="absolute -bottom-1 -right-1 badge badge-error badge-xs">Sus</span>
+      {% elif atleta.situacao == 'LESIONADO' %}
+      <span class="absolute -bottom-1 -right-1 badge badge-warning badge-xs">Les</span>
+      {% endif %}
+    </div>
+
+    <div class="min-w-0 w-full">
+      <p class="font-semibold text-sm truncate leading-snug">{{ atleta.nome }}</p>
+      <span class="badge badge-ghost badge-sm text-xs mt-0.5">{{ atleta.get_posicao_display }}</span>
+    </div>
+  </div>
+
+  <!-- Ações (visíveis no hover) -->
+  {% if edit_url or delete_url %}
+  <div class="border-t border-base-300 px-3 py-2 flex gap-1 justify-center
+              opacity-0 group-hover:opacity-100 transition-opacity">
+    {% if edit_url %}
+    <a href="{{ edit_url }}" class="btn btn-ghost btn-xs gap-1">
+      <i class="bi bi-pencil text-xs"></i>
+    </a>
+    {% endif %}
+    {% if delete_url %}
+    <a href="{{ delete_url }}" class="btn btn-ghost btn-xs text-error gap-1">
+      <i class="bi bi-trash text-xs"></i>
+    </a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+</div>

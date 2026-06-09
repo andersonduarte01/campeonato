@@ -1,96 +1,344 @@
 {% extends 'base/indice.html' %}
 {% block titulo %}Rodadas — {{ competicao.nome }}{% endblock %}
 
-{% block conteudo %}
-<div class="p-4 md:p-6">
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-base-content/40">
+    <ul>
+      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-base-content/70">Dashboard</a></li>
+      <li><a href="{% url 'competicao:competicao_lista' %}" class="hover:text-base-content/70">Competições</a></li>
+      <li><a href="{% url 'competicao:classificacao' competicao.pk %}" class="hover:text-base-content/70">{{ competicao.nome }}</a></li>
+      <li><span class="text-base-content/60">Rodadas</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
 
-  <div class="flex items-center justify-between mb-5">
-    <h1 class="text-lg font-bold flex items-center gap-2">
-      <i class="bi bi-calendar3 text-warning"></i> {{ competicao.nome }}
-    </h1>
-    <div class="flex gap-2">
-      <a href="{% url 'competicao:classificacao' competicao.pk %}" class="btn btn-ghost btn-sm gap-1">
-        <i class="bi bi-trophy"></i> Classificação
+{% block conteudo %}
+<div class="p-4 md:p-6 max-w-[1100px] mx-auto space-y-5">
+
+  <!-- ── Cabeçalho ────────────────────────────────────────────────────── -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-warning/10 border border-warning/20 flex items-center justify-center shrink-0">
+        <i class="bi bi-calendar3 text-warning text-base"></i>
+      </div>
+      <div>
+        <h1 class="section-heading text-2xl leading-none">{{ competicao.nome|upper }}</h1>
+        <p class="text-xs text-base-content/40 mt-0.5">
+          {{ rodadas|length }} rodada{{ rodadas|length|pluralize }}
+        </p>
+      </div>
+    </div>
+    <div class="flex flex-wrap gap-2 shrink-0">
+      <a href="{% url 'competicao:classificacao' competicao.pk %}"
+         class="btn btn-ghost btn-sm gap-1.5 border border-base-content/10 text-base-content/60">
+        <i class="bi bi-trophy text-sm"></i> Classificação
       </a>
-      <a href="{% url 'competicao:fases' competicao.pk %}" class="btn btn-ghost btn-sm gap-1">
-        <i class="bi bi-layers"></i> Fases
+      <a href="{% url 'competicao:fases' competicao.pk %}"
+         class="btn btn-ghost btn-sm gap-1.5 border border-base-content/10 text-base-content/60">
+        <i class="bi bi-layers text-sm"></i> Fases
       </a>
-      <a href="{% url 'competicao:competicao_lista' %}" class="btn btn-ghost btn-sm gap-1">
-        <i class="bi bi-arrow-left"></i> Voltar
+      <a href="{% url 'competicao:criar_jogos' competicao.pk %}"
+         class="btn btn-warning btn-sm gap-1.5 shadow-sm shadow-warning/20 font-semibold">
+        <i class="bi bi-plus-circle text-sm"></i> Gerar Jogos
       </a>
     </div>
   </div>
 
   {% if rodadas %}
-    <div class="space-y-4">
-    {% for rodada in rodadas %}
-    <div class="card bg-base-200 border border-base-300 hover:border-warning/30 transition-colors">
-      <div class="px-4 py-3 border-b border-base-300 flex items-center justify-between">
-        <span class="font-semibold text-sm">
-          {% if rodada.grupo %}Grupo {{ rodada.grupo.nome }} —{% elif rodada.fase %}{{ rodada.fase.nome }} —{% endif %}
-          {{ rodada.numero }}ª Rodada
+
+  <!-- ── Barra de Tabs por Rodada (scroll horizontal) ─────────────────── -->
+  <div class="relative">
+    <div class="overflow-x-auto scrollbar-none -mx-4 px-4 md:-mx-6 md:px-6">
+      <div id="round-tabs" class="flex gap-1 min-w-max border-b border-base-300 pb-0">
+        {% for rodada in rodadas %}
+
+        {# Detecta se tem jogo ao vivo ou é a primeira rodada com jogo pendente #}
+        {% with has_live=False %}
+        {% for jogo in rodada.jogo_set.all %}
+          {% if jogo.em_andamento %}{% with has_live=True %}{% endwith %}{% endif %}
+        {% endfor %}
+
+        <button
+          class="round-tab group relative shrink-0 px-3.5 py-2.5 text-[11px] font-bold
+                 tracking-wide rounded-t-lg border-b-2 transition-all duration-150 whitespace-nowrap"
+          data-panel="panel-{{ rodada.pk }}"
+          data-index="{{ forloop.counter0 }}">
+
+          <span class="flex items-center gap-1.5">
+            <!-- Dot ao vivo -->
+            {% for jogo in rodada.jogo_set.all %}{% if jogo.em_andamento %}
+            <span class="live-dot w-1.5 h-1.5"></span>
+            {% endif %}{% endfor %}
+
+            {% if rodada.fase %}
+            <span class="text-base-content/30 font-normal text-[10px]">{{ rodada.fase.nome|truncatechars:8 }}</span>
+            {% endif %}
+            {% if rodada.grupo %}
+            <span class="text-base-content/30 font-normal text-[10px]">Gr.{{ rodada.grupo.nome }}</span>
+            {% endif %}
+            R{{ rodada.numero }}
+          </span>
+
+          <!-- Resumo compacto de status -->
+          {% with total=rodada.jogo_set.count %}
+          {% if total %}
+          <span class="block text-[9px] font-normal text-center mt-0.5 opacity-60">
+            {{ total }} jogo{{ total|pluralize }}
+          </span>
+          {% endif %}
+          {% endwith %}
+        </button>
+        {% endwith %}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Painéis de Rodada ─────────────────────────────────────────────── -->
+  {% for rodada in rodadas %}
+  <div id="panel-{{ rodada.pk }}" class="round-panel hidden space-y-3">
+
+    <!-- Header da rodada -->
+    {% with jogos=rodada.jogo_set.all %}
+    <div class="flex items-center gap-3 flex-wrap">
+      <h2 class="font-bold text-sm text-base-content/70 flex items-center gap-2">
+        {% if rodada.fase %}
+        <span class="badge badge-ghost badge-sm">{{ rodada.fase.nome }}</span>
+        {% endif %}
+        {% if rodada.grupo %}
+        <span class="badge badge-ghost badge-sm">Grupo {{ rodada.grupo.nome }}</span>
+        {% endif %}
+        {{ rodada.numero }}ª Rodada
+      </h2>
+      <!-- Status summary -->
+      <div class="flex items-center gap-2 ml-auto flex-wrap">
+        {% for jogo in jogos %}{% if jogo.em_andamento %}
+          {% if forloop.first %}<span class="flex items-center gap-1.5 text-xs font-bold text-error"><span class="live-dot"></span> Ao Vivo</span>{% endif %}
+        {% endif %}{% endfor %}
+
+        <span class="text-xs text-base-content/30">
+          {{ jogos.count }} jogo{{ jogos.count|pluralize }}
         </span>
-        <span class="text-xs text-base-content/40">{{ rodada.jogo_set.count }} jogo{{ rodada.jogo_set.count|pluralize }}</span>
       </div>
-      <div class="overflow-x-auto">
-        <table class="table table-sm">
-          <tbody>
-            {% for jogo in rodada.jogo_set.all %}
-            <tr class="hover:bg-base-300/30 transition-colors">
-              <td class="text-right w-2/5">
-                <span class="text-sm {% if jogo.finalizado and jogo.gols_casa > jogo.gols_fora %}font-bold text-base-content{% else %}text-base-content/70{% endif %}">
-                  {{ jogo.equipe_casa.nome_equipe }}
+    </div>
+
+    <!-- Grid de cards de jogo -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+      {% for jogo in jogos %}
+
+      <div class="card bg-base-200 border card-sport overflow-hidden
+                  {% if jogo.em_andamento %}border-error/40{% else %}border-base-300{% endif %}">
+
+        <!-- Barra de status no topo -->
+        <div class="h-0.5 w-full
+          {% if jogo.em_andamento %}bg-error animate-pulse
+          {% elif jogo.finalizado %}bg-success
+          {% elif jogo.anulado %}bg-base-300
+          {% else %}bg-base-300{% endif %}">
+        </div>
+
+        <div class="p-4">
+
+          <!-- Meta: data + local -->
+          {% if jogo.data_hora or jogo.local %}
+          <div class="flex items-center gap-3 text-[10px] text-base-content/35 mb-3 flex-wrap">
+            {% if jogo.data_hora %}
+            <span class="flex items-center gap-1">
+              <i class="bi bi-calendar3 text-[9px]"></i>
+              {{ jogo.data_hora|date:"d/m/Y" }} · {{ jogo.data_hora|time:"H:i" }}
+            </span>
+            {% endif %}
+            {% if jogo.local %}
+            <span class="flex items-center gap-1">
+              <i class="bi bi-geo-alt-fill text-[9px]"></i>
+              {{ jogo.local.nome }}
+            </span>
+            {% endif %}
+          </div>
+          {% endif %}
+
+          <!-- Times e placar -->
+          <div class="flex items-center gap-2">
+
+            <!-- Equipe Casa -->
+            <div class="flex-1 flex flex-col items-center text-center gap-1.5 min-w-0">
+              {% if jogo.equipe_casa.escudo %}
+              <img src="{{ jogo.equipe_casa.escudo.thumbnail.url }}" alt="{{ jogo.equipe_casa.nome_equipe }}"
+                   class="w-10 h-10 rounded-full object-cover border-2 shrink-0
+                          {% if jogo.finalizado and jogo.gols_casa < jogo.gols_fora %}border-base-300 opacity-50{% else %}border-warning/30{% endif %}">
+              {% else %}
+              <div class="w-10 h-10 rounded-full bg-base-300 border-2 border-base-300
+                          flex items-center justify-center shrink-0
+                          {% if jogo.finalizado and jogo.gols_casa < jogo.gols_fora %}opacity-50{% endif %}">
+                <span class="text-xs font-black text-base-content/40">{{ jogo.equipe_casa.nome_equipe|first|upper }}</span>
+              </div>
+              {% endif %}
+              <span class="text-xs font-semibold leading-snug truncate w-full
+                           {% if jogo.finalizado and jogo.gols_casa < jogo.gols_fora %}text-base-content/40{% endif %}">
+                {{ jogo.equipe_casa.nome_equipe|truncatechars:14 }}
+              </span>
+            </div>
+
+            <!-- Placar central -->
+            <div class="shrink-0 flex flex-col items-center gap-1 px-1">
+              {% if jogo.anulado %}
+                <span class="badge badge-error badge-sm text-[10px]">Anulado</span>
+              {% elif jogo.finalizado or jogo.em_andamento %}
+                <div class="flex items-center gap-1.5">
+                  <span class="stat-number text-2xl
+                    {% if jogo.gols_casa > jogo.gols_fora %}text-base-content
+                    {% elif jogo.gols_casa == jogo.gols_fora %}text-base-content/70
+                    {% else %}text-base-content/35{% endif %}">{{ jogo.gols_casa }}</span>
+                  <span class="text-base-content/25 font-bold text-sm">–</span>
+                  <span class="stat-number text-2xl
+                    {% if jogo.gols_fora > jogo.gols_casa %}text-base-content
+                    {% elif jogo.gols_casa == jogo.gols_fora %}text-base-content/70
+                    {% else %}text-base-content/35{% endif %}">{{ jogo.gols_fora }}</span>
+                </div>
+              {% else %}
+                <span class="text-xs text-base-content/30 font-medium px-2 py-1">
+                  {% if jogo.data_hora %}{{ jogo.data_hora|time:"H:i" }}{% else %}×{% endif %}
                 </span>
-              </td>
-              <td class="text-center px-2 whitespace-nowrap">
-                {% if jogo.anulado %}
-                  <span class="badge badge-error badge-sm">Anulado</span>
-                {% elif jogo.finalizado %}
-                  <a href="{% url 'competicao:jogo_detalhe' jogo.pk %}"
-                     class="badge badge-neutral font-bold px-3 hover:badge-warning transition-colors">
-                    {{ jogo.gols_casa }} — {{ jogo.gols_fora }}
-                  </a>
-                {% elif jogo.em_andamento %}
-                  <span class="badge badge-error badge-sm animate-pulse">
-                    <i class="bi bi-broadcast"></i> AO VIVO
+              {% endif %}
+
+              <!-- Status badge -->
+              <div>
+                {% if jogo.em_andamento %}
+                  <span class="flex items-center gap-1 text-[10px] font-bold text-error">
+                    <span class="live-dot w-1.5 h-1.5"></span> AO VIVO
                   </span>
-                {% else %}
-                  <span class="text-base-content/30 font-bold">×</span>
+                {% elif jogo.wo %}
+                  <span class="badge badge-warning badge-xs">W.O.</span>
+                {% elif jogo.finalizado %}
+                  <span class="badge badge-success badge-xs">FIM</span>
+                {% elif not jogo.anulado %}
+                  <span class="badge badge-ghost badge-xs text-[9px]">Pendente</span>
                 {% endif %}
-              </td>
-              <td class="text-left w-2/5">
-                <span class="text-sm {% if jogo.finalizado and jogo.gols_fora > jogo.gols_casa %}font-bold text-base-content{% else %}text-base-content/70{% endif %}">
-                  {{ jogo.equipe_fora.nome_equipe }}
-                </span>
-              </td>
-              <td class="text-xs text-base-content/40 whitespace-nowrap">
-                {% if jogo.data_hora %}{{ jogo.data_hora|date:"d/m H:i" }}{% endif %}
-              </td>
-              <td>
-                <a href="{% url 'competicao:jogo_detalhe' jogo.pk %}" class="btn btn-ghost btn-xs" title="Detalhes">
-                  <i class="bi bi-pencil-square"></i>
-                </a>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+              </div>
+            </div>
+
+            <!-- Equipe Fora -->
+            <div class="flex-1 flex flex-col items-center text-center gap-1.5 min-w-0">
+              {% if jogo.equipe_fora.escudo %}
+              <img src="{{ jogo.equipe_fora.escudo.thumbnail.url }}" alt="{{ jogo.equipe_fora.nome_equipe }}"
+                   class="w-10 h-10 rounded-full object-cover border-2 shrink-0
+                          {% if jogo.finalizado and jogo.gols_fora < jogo.gols_casa %}border-base-300 opacity-50{% else %}border-base-300{% endif %}">
+              {% else %}
+              <div class="w-10 h-10 rounded-full bg-base-300 border-2 border-base-300
+                          flex items-center justify-center shrink-0
+                          {% if jogo.finalizado and jogo.gols_fora < jogo.gols_casa %}opacity-50{% endif %}">
+                <span class="text-xs font-black text-base-content/40">{{ jogo.equipe_fora.nome_equipe|first|upper }}</span>
+              </div>
+              {% endif %}
+              <span class="text-xs font-semibold leading-snug truncate w-full
+                           {% if jogo.finalizado and jogo.gols_fora < jogo.gols_casa %}text-base-content/40{% endif %}">
+                {{ jogo.equipe_fora.nome_equipe|truncatechars:14 }}
+              </span>
+            </div>
+
+          </div>
+
+          <!-- Footer: link para detalhes -->
+          <div class="flex items-center justify-end mt-3 pt-2.5 border-t border-base-300/60 gap-2">
+            <a href="{% url 'competicao:jogo_detalhe' jogo.pk %}"
+               class="btn btn-ghost btn-xs gap-1 text-base-content/40 hover:text-base-content transition-colors">
+              <i class="bi bi-pencil-square text-xs"></i>
+              <span class="text-[10px]">Detalhes / Editar</span>
+            </a>
+          </div>
+
+        </div>
       </div>
+
+      {% empty %}
+      {% include 'components/empty_state.html' with icon="calendar-x" title="Nenhum jogo nesta rodada." %}
+      {% endfor %}
     </div>
-    {% endfor %}
-    </div>
+    {% endwith %}
+  </div>
+  {% endfor %}
+
   {% else %}
+  <!-- Empty state: sem rodadas -->
   <div class="card bg-base-200 border border-base-300">
-    <div class="card-body text-center py-12 text-base-content/40">
-      <i class="bi bi-calendar-x text-4xl block mb-3 opacity-30"></i>
-      <p class="font-semibold">Nenhuma rodada gerada ainda.</p>
-      <div class="flex gap-2 justify-center mt-4">
-        <a href="{% url 'competicao:criar_jogos' competicao.pk %}" class="btn btn-warning btn-sm">Gerar tabela</a>
-        <a href="{% url 'competicao:fases' competicao.pk %}" class="btn btn-ghost btn-sm">Configurar Fases</a>
+    <div class="card-body">
+      {% url 'competicao:criar_jogos' competicao.pk as url_gerar %}
+      {% url 'competicao:fases' competicao.pk as url_fases %}
+      {% include 'components/empty_state.html' with
+         icon="calendar-x"
+         title="Nenhuma rodada gerada ainda."
+         subtitle="Configure as fases da competição e gere a tabela de jogos."
+         cta_url=url_gerar
+         cta_label="Gerar Tabela" %}
+      <div class="flex justify-center mt-2">
+        <a href="{{ url_fases }}" class="btn btn-ghost btn-sm gap-1">
+          <i class="bi bi-layers"></i> Configurar Fases
+        </a>
       </div>
     </div>
   </div>
   {% endif %}
 
 </div>
+{% endblock %}
+
+{% block script %}
+<script>
+(function () {
+  'use strict';
+
+  var tabs   = document.querySelectorAll('.round-tab');
+  var panels = document.querySelectorAll('.round-panel');
+
+  function activateTab(tab) {
+    // Reset all
+    tabs.forEach(function (t) {
+      t.classList.remove('border-warning', 'text-warning', 'bg-warning/5');
+      t.classList.add('border-transparent', 'text-base-content/40');
+    });
+    panels.forEach(function (p) { p.classList.add('hidden'); });
+
+    // Activate selected
+    tab.classList.add('border-warning', 'text-warning', 'bg-warning/5');
+    tab.classList.remove('border-transparent', 'text-base-content/40');
+    var panel = document.getElementById(tab.dataset.panel);
+    if (panel) panel.classList.remove('hidden');
+
+    // Scroll tab into view
+    tab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }
+
+  // Bind click handlers
+  tabs.forEach(function (tab) {
+    tab.addEventListener('click', function () { activateTab(this); });
+  });
+
+  // Auto-select: prefer tab with live game, then first with pending, else first
+  var target = null;
+  tabs.forEach(function (tab) {
+    var panel = document.getElementById(tab.dataset.panel);
+    if (!panel) return;
+    var liveDot = panel.querySelector('.live-dot');
+    if (liveDot && !target) { target = tab; }
+  });
+
+  if (!target) {
+    // Find first round with a pending game (no "FIM" badge and no "Anulado")
+    tabs.forEach(function (tab) {
+      if (target) return;
+      var panel = document.getElementById(tab.dataset.panel);
+      if (!panel) return;
+      var badges = panel.querySelectorAll('.badge-success, .badge-error');
+      var cards  = panel.querySelectorAll('.card');
+      if (cards.length > 0 && badges.length < cards.length) { target = tab; }
+    });
+  }
+
+  if (!target && tabs.length) { target = tabs[0]; }
+  if (target) { activateTab(target); }
+
+})();
+</script>
 {% endblock %}

@@ -1,128 +1,343 @@
 {% extends 'base/indice.html' %}
 {% block titulo %}Bracket — {{ fase.nome }}{% endblock %}
 
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-base-content/40">
+    <ul>
+      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-base-content/70">Dashboard</a></li>
+      <li><a href="{% url 'competicao:competicao_lista' %}" class="hover:text-base-content/70">Competições</a></li>
+      <li><a href="{% url 'competicao:fases' fase.competicao.pk %}" class="hover:text-base-content/70">{{ fase.competicao.nome }}</a></li>
+      <li><span class="text-base-content/60">Bracket</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
 {% block estatico %}
 <style>
-.bracket-container { overflow-x: auto; padding-bottom: 16px; }
-.bracket { display: flex; gap: 48px; align-items: center; min-width: max-content; padding: 16px; }
-.bracket-round { display: flex; flex-direction: column; gap: 24px; align-items: center; }
-.bracket-match { width: 230px; overflow: hidden; border-radius: 12px; position: relative; }
-.bracket-connector { width: 48px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; opacity: .3; }
+/* ── Bracket layout ───────────────────────────────────── */
+.bracket-wrapper {
+  overflow-x: auto;
+  padding: 1.5rem 1rem 2rem;
+  -webkit-overflow-scrolling: touch;
+}
+.bracket-rounds {
+  display: flex;
+  gap: 0;
+  align-items: stretch;
+  min-width: max-content;
+}
+.bracket-round-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 220px;
+}
+.bracket-round-header {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-align: center;
+  padding: 0.5rem 0 1rem;
+  color: rgba(255,255,255,0.25);
+  text-transform: uppercase;
+}
+.bracket-matches {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+}
+.bracket-match-wrap {
+  display: flex;
+  align-items: center;
+}
+.bracket-match {
+  flex: 1;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.bracket-match:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.bracket-connector {
+  width: 3rem;
+  display: flex;
+  align-items: center;
+  position: relative;
+  flex-shrink: 0;
+}
+/* Linha horizontal saindo do match */
+.bracket-connector::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 100%;
+  height: 1px;
+  background: rgba(255,255,255,0.08);
+}
+.bracket-final-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 240px;
+  padding: 0 1rem;
+}
+.bracket-final-col .bracket-round-header {
+  color: rgba(201,151,46,0.7);
+}
 </style>
 {% endblock %}
 
 {% block conteudo %}
-<div class="p-4 md:p-6">
+<div class="p-4 md:p-6 space-y-5">
 
-  <div class="flex items-center justify-between mb-5 flex-wrap gap-2">
-    <h1 class="text-lg font-bold flex items-center gap-2">
-      <i class="bi bi-diagram-3-fill text-warning"></i> {{ fase.nome }} — Bracket Visual
-    </h1>
-    <div class="flex gap-2">
-      <a href="{% url 'competicao:chaveamento' fase.pk %}" class="btn btn-ghost btn-sm gap-1">
+  <!-- Cabeçalho -->
+  <div class="flex items-center justify-between flex-wrap gap-3">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-warning/10 border border-warning/20
+                  flex items-center justify-center shrink-0">
+        <i class="bi bi-diagram-3-fill text-warning text-base"></i>
+      </div>
+      <div>
+        <h1 class="section-heading text-2xl text-base-content leading-none">BRACKET</h1>
+        <p class="text-sm text-base-content/40 mt-0.5">{{ fase.nome }}</p>
+      </div>
+    </div>
+    <div class="flex gap-2 shrink-0">
+      {% if fase.ida_e_volta %}
+      <span class="badge badge-ghost gap-1">
+        <i class="bi bi-arrow-left-right"></i> Ida e Volta
+      </span>
+      {% endif %}
+      <a href="{% url 'competicao:chaveamento' fase.pk %}"
+         class="btn btn-ghost btn-sm gap-1.5 border border-base-content/10">
         <i class="bi bi-list-ul"></i> Ver Lista
       </a>
-      <a href="{% url 'competicao:fases' fase.competicao.pk %}" class="btn btn-ghost btn-sm gap-1">
+      <a href="{% url 'competicao:fases' fase.competicao.pk %}"
+         class="btn btn-ghost btn-sm gap-1.5 border border-base-content/10">
         <i class="bi bi-arrow-left"></i> Fases
       </a>
     </div>
   </div>
 
   {% if confrontos %}
-  <div class="bracket-container">
-    <div class="bracket">
-      {% for confronto in confrontos %}
-      <div class="flex flex-col items-center gap-1">
 
-        <div class="bracket-match border {% if confronto.vencedor %}border-success/50 shadow-[0_0_12px_rgba(0,200,100,.12)]{% else %}border-base-300{% endif %} bg-base-200">
+  <!-- Linha dourada separadora -->
+  <div class="h-px bg-gradient-to-r from-transparent via-warning/20 to-transparent"></div>
 
-          <!-- Equipe Mandante -->
-          <div class="flex items-center gap-2 px-3 py-2.5 border-b border-base-300/50
-                      {% if confronto.vencedor == confronto.equipe_mandante %}bg-success/15 font-bold{% elif confronto.vencedor %}opacity-40{% endif %}">
-            <div class="w-6 h-6 rounded-full bg-base-300 flex items-center justify-center text-xs font-bold shrink-0">
-              {% if confronto.equipe_mandante %}{{ confronto.equipe_mandante.nome_equipe|first|upper }}{% else %}?{% endif %}
-            </div>
-            <span class="flex-1 text-sm truncate">
-              {{ confronto.equipe_mandante.nome_equipe|default:"A definir" }}
-              {% if confronto.vencedor == confronto.equipe_mandante %}
-                <i class="bi bi-trophy-fill text-warning text-xs ml-1"></i>
-              {% endif %}
-            </span>
-            <span class="font-bold text-sm shrink-0">
-              {% if confronto.jogo_ida and confronto.jogo_ida.finalizado %}
-                {{ confronto.gols_mandante_total }}
-                {% if confronto.penaltis_mandante is not None %}<span class="text-xs opacity-50">({{ confronto.penaltis_mandante }})</span>{% endif %}
-              {% else %}—{% endif %}
-            </span>
-          </div>
-
-          <!-- Equipe Visitante -->
-          <div class="flex items-center gap-2 px-3 py-2.5
-                      {% if confronto.vencedor == confronto.equipe_visitante %}bg-success/15 font-bold{% elif confronto.vencedor %}opacity-40{% endif %}">
-            <div class="w-6 h-6 rounded-full bg-base-300 flex items-center justify-center text-xs font-bold shrink-0">
-              {% if confronto.equipe_visitante %}{{ confronto.equipe_visitante.nome_equipe|first|upper }}{% else %}?{% endif %}
-            </div>
-            <span class="flex-1 text-sm truncate">
-              {{ confronto.equipe_visitante.nome_equipe|default:"A definir" }}
-              {% if confronto.vencedor == confronto.equipe_visitante %}
-                <i class="bi bi-trophy-fill text-warning text-xs ml-1"></i>
-              {% endif %}
-            </span>
-            <span class="font-bold text-sm shrink-0">
-              {% if confronto.jogo_ida and confronto.jogo_ida.finalizado %}
-                {{ confronto.gols_visitante_total }}
-                {% if confronto.penaltis_visitante is not None %}<span class="text-xs opacity-50">({{ confronto.penaltis_visitante }})</span>{% endif %}
-              {% else %}—{% endif %}
-            </span>
-          </div>
-
-          <!-- Status -->
-          <div class="px-3 py-1.5 border-t border-base-300/50 bg-base-300/20 text-center text-xs">
-            {% if confronto.vencedor %}
-              <span class="text-success font-semibold"><i class="bi bi-check-circle-fill"></i> {{ confronto.vencedor.nome_equipe }}</span>
-            {% elif confronto.totalmente_jogado %}
-              <span class="text-warning">Aguardando pênaltis</span>
-            {% elif confronto.jogo_ida %}
-              <a href="{% url 'competicao:jogo_detalhe' confronto.jogo_ida.pk %}" class="text-base-content/50 hover:text-base-content transition-colors">
-                <i class="bi bi-pencil-square"></i> Em andamento
-              </a>
-            {% else %}
-              <span class="text-base-content/30">A iniciar</span>
-            {% endif %}
-          </div>
-
-        </div>
-
-        <span class="text-xs text-base-content/30">Conf. {{ confronto.ordem }}</span>
-
-      </div>
-      {% endfor %}
+  <!-- Bracket visual -->
+  <div class="bracket-wrapper">
+    <div id="bracket-rounds" class="bracket-rounds">
+      <!-- Preenchido pelo JavaScript -->
     </div>
   </div>
 
   <!-- Legenda -->
-  <div class="flex gap-4 flex-wrap mt-2 px-2">
-    <div class="flex items-center gap-1.5">
+  <div class="flex gap-6 flex-wrap px-1">
+    <div class="flex items-center gap-2">
       <div class="w-3 h-3 rounded bg-success/30 border border-success/50"></div>
-      <span class="text-xs text-base-content/50">Vencedor</span>
+      <span class="text-xs text-base-content/40">Vencedor classificado</span>
     </div>
-    <div class="flex items-center gap-1.5">
+    <div class="flex items-center gap-2">
       <i class="bi bi-trophy-fill text-warning text-xs"></i>
-      <span class="text-xs text-base-content/50">Classificado</span>
+      <span class="text-xs text-base-content/40">Campeão</span>
     </div>
-    <div class="flex items-center gap-1.5">
-      <span class="text-xs text-base-content/40">(N)</span>
-      <span class="text-xs text-base-content/50">Pênaltis</span>
+    <div class="flex items-center gap-2">
+      <span class="text-xs text-base-content/40 font-mono">(N)</span>
+      <span class="text-xs text-base-content/40">Pênaltis</span>
     </div>
   </div>
 
+  <!-- Dados JSON dos confrontos para o JS -->
+  <script id="confrontos-data" type="application/json">
+  [{% for c in confrontos %}
+    {
+      "ordem": {{ c.ordem }},
+      "mandante": "{{ c.equipe_mandante.nome_equipe|default:'A definir'|escapejs }}",
+      "visitante": "{{ c.equipe_visitante.nome_equipe|default:'A definir'|escapejs }}",
+      "gols_mandante": {% if c.jogo_ida and c.jogo_ida.finalizado %}{{ c.gols_mandante_total }}{% else %}null{% endif %},
+      "gols_visitante": {% if c.jogo_ida and c.jogo_ida.finalizado %}{{ c.gols_visitante_total }}{% else %}null{% endif %},
+      "penaltis_mandante": {% if c.penaltis_mandante is not None %}{{ c.penaltis_mandante }}{% else %}null{% endif %},
+      "penaltis_visitante": {% if c.penaltis_visitante is not None %}{{ c.penaltis_visitante }}{% else %}null{% endif %},
+      "vencedor": "{% if c.vencedor %}{{ c.vencedor.nome_equipe|escapejs }}{% endif %}",
+      "status": "{% if c.vencedor %}done{% elif c.totalmente_jogado %}penalties{% elif c.jogo_ida %}playing{% else %}pending{% endif %}",
+      "jogo_url": "{% if c.jogo_ida %}{% url 'competicao:jogo_detalhe' c.jogo_ida.pk %}{% endif %}"
+    }{% if not forloop.last %},{% endif %}
+  {% endfor %}]
+  </script>
+
   {% else %}
-  <div class="alert alert-info text-sm">
-    <i class="bi bi-info-circle"></i>
-    Nenhum confronto gerado ainda.
-    <a href="{% url 'competicao:chaveamento' fase.pk %}" class="link link-warning ml-1">Gerar chaveamento</a>.
+  <!-- Empty state -->
+  <div class="flex flex-col items-center justify-center py-20 gap-5 text-center">
+    <div class="w-20 h-20 rounded-full bg-base-200 border border-base-content/10
+                flex items-center justify-center">
+      <i class="bi bi-diagram-3 text-3xl text-base-content/15"></i>
+    </div>
+    <div>
+      <p class="section-heading text-xl text-base-content/40">Nenhum confronto gerado</p>
+      <p class="text-sm text-base-content/30 mt-1">
+        <a href="{% url 'competicao:chaveamento' fase.pk %}" class="link link-warning">
+          Gerar chaveamento
+        </a>
+      </p>
+    </div>
   </div>
   {% endif %}
 
 </div>
+{% endblock %}
+
+{% block script %}
+{% if confrontos %}
+<script>
+(function () {
+  var confrontos = JSON.parse(document.getElementById('confrontos-data').textContent);
+  var container  = document.getElementById('bracket-rounds');
+  if (!confrontos.length || !container) return;
+
+  var total = confrontos.length;
+
+  // Calcula rodadas: [r1_size, r2_size, ..., 1]
+  // Estratégia: dividir ao meio em cada round
+  function getRounds(n) {
+    var rounds = [];
+    var remaining = n;
+    while (remaining > 0) {
+      var half = Math.ceil(remaining / 2);
+      rounds.push(remaining - half); // guardamos o que sobra para frente
+      remaining = half;
+    }
+    rounds.reverse();
+    // Agora rounds[last] = 1 (final), rounds[0] = maior round
+    // Mas isso não é correto, vamos recalcular:
+    rounds = [];
+    var r = 1;
+    while (r <= n) { rounds.unshift(r); r = r * 2; }
+    // Garante que somamos até n
+    var soma = rounds.reduce(function(a,b){return a+b;},0);
+    if (soma !== n) {
+      // Fallback: distribui os restantes no primeiro round
+      rounds = [n]; // mostra tudo em uma coluna
+    }
+    return rounds;
+  }
+
+  var rounds = getRounds(total);
+
+  // Nomes dos rounds (da final para o início)
+  var roundNames = ['FINAL', 'SEMIFINAL', 'QUARTAS', 'OITAVAS', 'ROUND OF 16'];
+  // rounds está em ordem [maior → menor], índice 0 = round inicial
+  // Queremos dar nomes de trás para frente (o último round = FINAL)
+
+  var idx = 0; // posição atual nos confrontos
+
+  rounds.forEach(function (size, ri) {
+    var isLast = (ri === rounds.length - 1);
+    var nameIdx = rounds.length - 1 - ri;
+    var roundName = roundNames[nameIdx] || ('ROUND ' + (ri + 1));
+
+    var col = document.createElement('div');
+    col.className = isLast ? 'bracket-final-col' : 'bracket-round-col';
+
+    // Header
+    var header = document.createElement('div');
+    header.className = 'bracket-round-header';
+    header.textContent = roundName;
+    col.appendChild(header);
+
+    // Match container
+    var matchesDiv = document.createElement('div');
+    matchesDiv.className = 'bracket-matches';
+    if (isLast) {
+      matchesDiv.style.alignItems = 'center';
+      matchesDiv.style.justifyContent = 'center';
+    }
+
+    for (var i = 0; i < size; i++) {
+      if (idx >= confrontos.length) break;
+      var c = confrontos[idx++];
+
+      var wrap = document.createElement('div');
+      wrap.className = 'bracket-match-wrap';
+      wrap.style.padding = '6px 0';
+
+      var match = document.createElement('div');
+      match.className = 'bracket-match border ' +
+        (c.status === 'done' ? 'border-success/40 bg-base-200' : 'border-base-300 bg-base-200');
+
+      match.innerHTML = buildMatchHTML(c, isLast);
+
+      if (c.jogo_url) {
+        match.style.cursor = 'pointer';
+        match.addEventListener('click', function(url) {
+          return function() { window.location = url; };
+        }(c.jogo_url));
+      }
+
+      wrap.appendChild(match);
+
+      // Connector arrow (not on last round)
+      if (!isLast) {
+        var conn = document.createElement('div');
+        conn.className = 'bracket-connector';
+        wrap.appendChild(conn);
+      }
+
+      matchesDiv.appendChild(wrap);
+    }
+
+    col.appendChild(matchesDiv);
+    container.appendChild(col);
+  });
+
+  function buildMatchHTML(c, isFinal) {
+    var width = isFinal ? 'min-width:240px;' : '';
+    var mandanteWon = c.vencedor && c.vencedor === c.mandante;
+    var visitanteWon = c.vencedor && c.vencedor === c.visitante;
+
+    function teamRow(name, gols, pen, won, lost) {
+      var bg   = won  ? 'bg-success/15' : '';
+      var op   = lost ? 'opacity-40'    : '';
+      var bold = won  ? 'font-bold'     : '';
+      var score = gols !== null
+        ? '<span class="font-bold text-sm shrink-0 ' + (won ? 'text-success' : '') + '">' +
+          gols + (pen !== null ? '<span class="text-[10px] opacity-50 ml-0.5">(' + pen + ')</span>' : '') +
+          '</span>'
+        : '<span class="text-base-content/25 text-sm shrink-0">—</span>';
+      var trophy = won ? '<i class="bi bi-trophy-fill text-warning text-[10px] ml-1"></i>' : '';
+      return '<div class="flex items-center gap-2 px-3 py-2.5 border-b border-base-300/40 ' + bg + ' ' + op + '">' +
+        '<div class="w-5 h-5 rounded-full bg-base-300 flex items-center justify-center text-[10px] font-black shrink-0">' +
+        name.charAt(0).toUpperCase() + '</div>' +
+        '<span class="flex-1 text-sm truncate ' + bold + '" style="max-width:110px">' + name + trophy + '</span>' +
+        score + '</div>';
+    }
+
+    var footer = '';
+    if (c.status === 'done') {
+      footer = '<div class="px-3 py-1.5 bg-success/10 text-center text-[10px] text-success font-semibold">' +
+        '<i class="bi bi-check-circle-fill mr-1"></i>' + c.vencedor + '</div>';
+    } else if (c.status === 'penalties') {
+      footer = '<div class="px-3 py-1.5 bg-warning/10 text-center text-[10px] text-warning">' +
+        'Aguardando pênaltis</div>';
+    } else if (c.status === 'playing') {
+      footer = '<div class="px-3 py-1.5 text-center text-[10px] text-base-content/30">' +
+        '<i class="bi bi-pencil-square mr-1"></i>Em andamento</div>';
+    } else {
+      footer = '<div class="px-3 py-1.5 text-center text-[10px] text-base-content/20">A iniciar</div>';
+    }
+
+    return '<div style="' + width + '">' +
+      teamRow(c.mandante, c.gols_mandante, c.penaltis_mandante, mandanteWon, visitanteWon && !mandanteWon) +
+      teamRow(c.visitante, c.gols_visitante, c.penaltis_visitante, visitanteWon, mandanteWon && !visitanteWon) +
+      footer + '</div>';
+  }
+
+})();
+</script>
+{% endif %}
 {% endblock %}

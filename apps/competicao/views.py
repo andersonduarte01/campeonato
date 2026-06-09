@@ -153,6 +153,16 @@ class ClassificacaoView(LoginRequiredMixin, DetailView):
             fases_grupos_data.append({'fase': fase, 'grupos': grupos_data})
         ctx['fases_grupos_data'] = fases_grupos_data
         ctx['fases_mata_mata'] = comp.fases.filter(tipo=Fase.MATA_MATA)
+        # Forma recente — attach directly to each cls item so templates can access it
+        jogos_fin = Jogo.objects.filter(
+            rodada__competicao=comp, finalizado=True, anulado=False,
+        ).select_related('equipe_casa', 'equipe_fora')
+        forma_map = {
+            item['equipe'].pk: item['forma']
+            for item in _forma_recente(comp, jogos_fin)
+        }
+        for cls_item in ctx['classificacao']:
+            cls_item.forma = forma_map.get(cls_item.equipe.pk, [])
         return ctx
 
 
@@ -1432,15 +1442,34 @@ def dashboard_view(request):
 
 @login_required
 def calendario_view(request):
+    from django.utils import timezone
+    from datetime import timedelta
+
     competicao_id = request.GET.get('competicao')
+    periodo = request.GET.get('periodo')
+
     qs = Jogo.objects.filter(data_hora__isnull=False).select_related(
         'equipe_casa', 'equipe_fora', 'rodada__competicao', 'local',
     ).order_by('data_hora')
+
     if competicao_id:
         qs = qs.filter(rodada__competicao_id=competicao_id)
+
+    agora = timezone.now()
+    if periodo == 'hoje':
+        qs = qs.filter(data_hora__date=agora.date())
+    elif periodo == 'semana':
+        qs = qs.filter(
+            data_hora__date__gte=agora.date(),
+            data_hora__date__lte=(agora + timedelta(days=7)).date(),
+        )
+    elif periodo == 'mes':
+        qs = qs.filter(data_hora__year=agora.year, data_hora__month=agora.month)
+
     competicoes = Competicao.objects.order_by('nome')
     return render(request, 'competicao/calendario.html', {
         'jogos': qs,
         'competicoes': competicoes,
         'competicao_id': competicao_id,
+        'periodo': periodo,
     })

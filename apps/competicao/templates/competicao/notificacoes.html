@@ -1,52 +1,208 @@
 {% extends 'base/indice.html' %}
 {% block titulo %}Notificações{% endblock %}
 
-{% block conteudo %}
-<div class="p-4 md:p-6 max-w-2xl mx-auto">
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-base-content/40">
+    <ul>
+      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-base-content/70">Dashboard</a></li>
+      <li><span class="text-base-content/60">Notificações</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
 
-  <div class="flex items-center justify-between mb-5">
-    <h1 class="text-xl font-bold flex items-center gap-2">
-      <i class="bi bi-bell-fill text-warning"></i> Notificações
-    </h1>
+{% block conteudo %}
+<div class="p-4 md:p-6 max-w-2xl mx-auto space-y-5">
+
+  <!-- Cabeçalho -->
+  <div class="flex items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-warning/10 border border-warning/20
+                  flex items-center justify-center shrink-0">
+        <i class="bi bi-bell-fill text-warning text-base"></i>
+      </div>
+      <div>
+        <h1 class="section-heading text-2xl text-base-content leading-none">NOTIFICAÇÕES</h1>
+        {% with nao_lidas=notificacoes|length %}
+        <p class="text-xs text-base-content/40 mt-0.5">
+          {{ notificacoes|length }} notificaç{{ notificacoes|length|pluralize:"ão,ões" }}
+        </p>
+        {% endwith %}
+      </div>
+    </div>
+    {% if notificacoes %}
+    <form method="post" action="{% url 'competicao:marcar_todas_lidas' %}">
+      {% csrf_token %}
+      <button type="submit"
+              class="btn btn-ghost btn-sm gap-1.5 border border-base-content/10 text-base-content/50 hover:text-base-content">
+        <i class="bi bi-check2-all text-sm"></i>
+        <span class="hidden sm:inline">Marcar todas lidas</span>
+      </button>
+    </form>
+    {% endif %}
   </div>
 
   {% if notificacoes %}
-  <div class="card bg-base-200 border border-base-300 overflow-hidden">
-    <div class="divide-y divide-base-300">
+
+  <!-- Tabs -->
+  <div class="flex gap-1 border-b border-base-300 -mb-2">
+    <button class="notif-tab px-4 py-2.5 text-xs font-bold border-b-2 border-warning text-warning
+                   bg-warning/5 rounded-t-lg transition-all duration-150 shrink-0"
+            data-filter="all">
+      Todas
+      <span class="badge badge-ghost badge-xs ml-1" id="count-notif-all">{{ notificacoes|length }}</span>
+    </button>
+    <button class="notif-tab px-4 py-2.5 text-xs font-bold border-b-2 border-transparent
+                   text-base-content/40 hover:text-base-content/70 rounded-t-lg transition-all duration-150 shrink-0"
+            data-filter="nao-lida">
+      Não lidas
+      <span class="badge badge-error badge-xs ml-1" id="count-notif-nao-lida">0</span>
+    </button>
+    <button class="notif-tab px-4 py-2.5 text-xs font-bold border-b-2 border-transparent
+                   text-base-content/40 hover:text-base-content/70 rounded-t-lg transition-all duration-150 shrink-0"
+            data-filter="suspensao">
+      Suspensões
+    </button>
+    <button class="notif-tab px-4 py-2.5 text-xs font-bold border-b-2 border-transparent
+                   text-base-content/40 hover:text-base-content/70 rounded-t-lg transition-all duration-150 shrink-0"
+            data-filter="resultado">
+      Resultados
+    </button>
+  </div>
+
+  <div class="card bg-base-200 border border-base-300 overflow-hidden mt-4">
+    <div class="divide-y divide-base-300" id="notif-list">
       {% for n in notificacoes %}
-      <div class="flex items-start gap-3 px-4 py-3 hover:bg-base-300/30 transition-colors {% if not n.lida %}bg-info/5 border-l-2 border-info{% endif %}">
-        <div class="mt-0.5 shrink-0">
+      <a href="{% if n.url %}{{ n.url }}{% else %}#{% endif %}"
+         class="notif-item flex items-start gap-3 px-4 py-3.5 transition-colors group
+                {% if not n.lida %}bg-info/5 hover:bg-info/10{% else %}hover:bg-base-300/30{% endif %}"
+         data-tipo="{{ n.tipo }}"
+         data-lida="{{ n.lida|yesno:'sim,nao' }}">
+
+        <!-- Ícone por tipo -->
+        <div class="mt-0.5 shrink-0 w-8 h-8 rounded-lg flex items-center justify-center
+          {% if n.tipo == 'suspensao' %}bg-error/10 border border-error/20
+          {% elif n.tipo == 'resultado' %}bg-success/10 border border-success/20
+          {% else %}bg-info/10 border border-info/20{% endif %}">
           {% if n.tipo == 'suspensao' %}
-            <i class="bi bi-exclamation-triangle-fill text-error text-base"></i>
+            <i class="bi bi-exclamation-triangle-fill text-error text-sm"></i>
           {% elif n.tipo == 'resultado' %}
-            <i class="bi bi-check2-circle text-success text-base"></i>
+            <i class="bi bi-check2-circle text-success text-sm"></i>
           {% else %}
-            <i class="bi bi-info-circle text-info text-base"></i>
+            <i class="bi bi-info-circle-fill text-info text-sm"></i>
           {% endif %}
         </div>
+
+        <!-- Conteúdo -->
         <div class="flex-1 min-w-0">
-          {% if n.url %}
-            <a href="{{ n.url }}" class="font-semibold text-sm hover:text-warning transition-colors">{{ n.mensagem }}</a>
-          {% else %}
-            <span class="font-semibold text-sm">{{ n.mensagem }}</span>
-          {% endif %}
-          <p class="text-xs text-base-content/40 mt-0.5">{{ n.criada_em|date:"d/m/Y H:i" }}</p>
+          <p class="text-sm font-semibold text-base-content leading-snug
+                    group-hover:text-warning transition-colors">
+            {{ n.mensagem }}
+          </p>
+          <p class="text-xs text-base-content/40 mt-0.5">
+            {{ n.criada_em|date:"d/m/Y" }}
+            <span class="text-base-content/25 mx-1">·</span>
+            {{ n.criada_em|date:"H:i" }}
+          </p>
         </div>
+
+        <!-- Indicador não lida -->
         {% if not n.lida %}
-          <span class="badge badge-info badge-sm shrink-0">Nova</span>
+        <div class="shrink-0 mt-1.5">
+          <div class="w-2.5 h-2.5 rounded-full bg-info shadow-sm shadow-info/50"></div>
+        </div>
         {% endif %}
-      </div>
+
+        <!-- Seta -->
+        {% if n.url %}
+        <i class="bi bi-chevron-right text-xs text-base-content/20 shrink-0 mt-1
+                  group-hover:text-base-content/50 transition-colors"></i>
+        {% endif %}
+
+      </a>
       {% endfor %}
     </div>
   </div>
+
+  <!-- Empty state dentro do filtro -->
+  <div id="notif-empty" class="hidden">
+    <div class="card bg-base-200 border border-base-300">
+      <div class="flex flex-col items-center justify-center py-14 gap-3 text-base-content/30">
+        <i class="bi bi-bell-slash text-4xl opacity-40"></i>
+        <p class="text-sm font-medium">Nenhuma notificação neste filtro</p>
+      </div>
+    </div>
+  </div>
+
   {% else %}
   <div class="card bg-base-200 border border-base-300">
-    <div class="card-body text-center py-12 text-base-content/40">
-      <i class="bi bi-bell-slash text-4xl block mb-3 opacity-30"></i>
-      <p class="font-semibold">Nenhuma notificação no momento.</p>
+    <div class="flex flex-col items-center justify-center py-16 gap-4 text-center">
+      <div class="w-16 h-16 rounded-full bg-base-300 border border-base-content/10
+                  flex items-center justify-center">
+        <i class="bi bi-bell-slash text-2xl text-base-content/20"></i>
+      </div>
+      <div>
+        <p class="section-heading text-xl text-base-content/40">SEM NOTIFICAÇÕES</p>
+        <p class="text-sm text-base-content/30 mt-1.5">
+          Você receberá alertas de suspensões, resultados e eventos aqui.
+        </p>
+      </div>
     </div>
   </div>
   {% endif %}
 
 </div>
+{% endblock %}
+
+{% block script %}
+<script>
+(function () {
+  'use strict';
+  var tabs  = document.querySelectorAll('.notif-tab');
+  var items = document.querySelectorAll('.notif-item');
+  var empty = document.getElementById('notif-empty');
+  var list  = document.getElementById('notif-list');
+
+  // Conta não lidas
+  var naoLidas = 0;
+  items.forEach(function (el) {
+    if (el.dataset.lida === 'nao') naoLidas++;
+  });
+  var elNaoLida = document.getElementById('count-notif-nao-lida');
+  if (elNaoLida) elNaoLida.textContent = naoLidas;
+
+  function activateTab(tab) {
+    var filter = tab.dataset.filter;
+
+    tabs.forEach(function (t) {
+      var active = t === tab;
+      t.classList.toggle('border-warning',       active);
+      t.classList.toggle('text-warning',         active);
+      t.classList.toggle('bg-warning/5',         active);
+      t.classList.toggle('border-transparent',   !active);
+      t.classList.toggle('text-base-content/40', !active);
+    });
+
+    var visible = 0;
+    items.forEach(function (el) {
+      var show = filter === 'all'
+        || (filter === 'nao-lida'  && el.dataset.lida === 'nao')
+        || (filter === 'suspensao' && el.dataset.tipo === 'suspensao')
+        || (filter === 'resultado' && el.dataset.tipo === 'resultado');
+      el.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+
+    if (list)  list.style.display  = visible ? '' : 'none';
+    if (empty) empty.style.display = visible ? 'none' : '';
+  }
+
+  tabs.forEach(function (tab) {
+    tab.addEventListener('click', function () { activateTab(this); });
+  });
+
+  if (tabs.length) activateTab(tabs[0]);
+})();
+</script>
 {% endblock %}

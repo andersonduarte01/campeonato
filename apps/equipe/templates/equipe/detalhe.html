@@ -2,105 +2,194 @@
 {% load static %}
 {% block titulo %}{{ equipe.nome_equipe }}{% endblock %}
 
-{% block conteudo %}
-<div class="p-4 md:p-6 space-y-4">
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-base-content/40">
+    <ul>
+      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-base-content/70">Dashboard</a></li>
+      <li><a href="{% url 'equipe:lista' %}" class="hover:text-base-content/70">Equipes</a></li>
+      <li><span class="text-base-content/60">{{ equipe.nome_equipe }}</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
 
-  <!-- Cabeçalho da equipe -->
-  <div class="card bg-base-200 border border-base-300">
-    <div class="card-body p-4 flex flex-col sm:flex-row items-center sm:items-start gap-4">
+{% block conteudo %}
+{% url 'equipe:atleta_criar' equipe.pk as url_add_atleta %}
+<div class="space-y-5">
+
+  <!-- ── Hero Banner do clube ─────────────────────────────────────────── -->
+  <div class="relative overflow-hidden">
+
+    <!-- Banner com gradiente pitch -->
+    <div class="h-36 md:h-44 bg-gradient-to-br from-pitch via-pitch-light to-base-200
+                flex items-end px-6 pb-5">
+      <!-- Padrão geométrico decorativo sutil -->
+      <div class="absolute inset-0 opacity-10"
+           style="background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,.05) 10px, rgba(255,255,255,.05) 11px)">
+      </div>
+    </div>
+
+    <!-- Logo sobreposta ao banner (overlapping) -->
+    <div class="absolute bottom-0 left-6 translate-y-1/2">
       {% if equipe.escudo %}
-        <img src="{{ equipe.escudo.thumbnail.url }}" alt="{{ equipe.nome_equipe }}"
-             class="w-20 h-20 rounded-full object-cover border-2 border-base-300 shrink-0">
+        <img src="{{ equipe.escudo.url }}" alt="{{ equipe.nome_equipe }}"
+             class="w-24 h-24 rounded-full object-cover border-4 border-base-100 shadow-2xl">
       {% else %}
-        <div class="w-20 h-20 rounded-full bg-neutral-content/10 border-2 border-base-300 flex items-center justify-center shrink-0">
-          <span class="text-3xl font-black text-base-content/50">{{ equipe.nome_equipe|first|upper }}</span>
+        <div class="w-24 h-24 rounded-full bg-base-200 border-4 border-base-100 shadow-2xl
+                    flex items-center justify-center">
+          <span class="text-4xl font-black text-base-content/40">{{ equipe.nome_equipe|first|upper }}</span>
         </div>
       {% endif %}
-      <div class="flex-1 text-center sm:text-left">
-        <h1 class="text-2xl font-black">{{ equipe.nome_equipe }}</h1>
-        <p class="text-sm text-base-content/50 mt-0.5">
-          <i class="bi bi-people"></i>
-          {{ atletas.count }} atleta{{ atletas.count|pluralize }} cadastrado{{ atletas.count|pluralize }}
-        </p>
-      </div>
-      <div class="flex gap-2 flex-wrap justify-center sm:justify-end">
-        <a href="{% url 'equipe:atleta_criar' equipe.pk %}" class="btn btn-warning btn-sm gap-1.5">
-          <i class="bi bi-person-plus"></i> Adicionar Atleta
-        </a>
-        <a href="{% url 'equipe:editar' equipe.pk %}" class="btn btn-ghost btn-sm gap-1">
-          <i class="bi bi-pencil"></i> Editar
-        </a>
-        <a href="{% url 'equipe:lista' %}" class="btn btn-ghost btn-sm gap-1">
-          <i class="bi bi-arrow-left"></i> Voltar
-        </a>
-      </div>
+    </div>
+
+    <!-- Ações no canto superior direito do banner -->
+    <div class="absolute top-3 right-4 flex gap-2">
+      <a href="{% url 'equipe:editar' equipe.pk %}"
+         class="btn btn-sm bg-base-100/20 hover:bg-base-100/40 border-base-100/30 text-white
+                backdrop-blur-sm gap-1.5 font-medium">
+        <i class="bi bi-pencil text-xs"></i>
+        <span class="hidden sm:inline">Editar</span>
+      </a>
+      <a href="{% url 'equipe:lista' %}"
+         class="btn btn-sm bg-base-100/20 hover:bg-base-100/40 border-base-100/30 text-white
+                backdrop-blur-sm gap-1.5">
+        <i class="bi bi-arrow-left text-xs"></i>
+        <span class="hidden sm:inline">Voltar</span>
+      </a>
     </div>
   </div>
 
-  <!-- Elenco -->
-  <div class="card bg-base-200 border border-base-300">
-    <div class="px-4 py-3 border-b border-base-300 flex items-center gap-2">
-      <i class="bi bi-people-fill text-warning text-sm"></i>
-      <span class="font-semibold text-sm">Elenco</span>
+  <!-- ── Info do clube (offset pelo logo) ─────────────────────────────── -->
+  <div class="px-4 md:px-6 pt-12 pb-1 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+    <div>
+      <h1 class="section-heading text-3xl md:text-4xl leading-none">{{ equipe.nome_equipe }}</h1>
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs text-base-content/40">
+        {% if equipe.cidade %}
+        <span class="flex items-center gap-1">
+          <i class="bi bi-geo-alt-fill text-[10px]"></i>
+          {{ equipe.cidade }}{% if equipe.estado %}/{{ equipe.estado }}{% endif %}
+        </span>
+        {% endif %}
+        {% if equipe.tecnico %}
+        <span class="flex items-center gap-1">
+          <i class="bi bi-person-fill text-[10px]"></i>
+          Técnico: {{ equipe.tecnico }}
+        </span>
+        {% endif %}
+        {% if equipe.fundacao %}
+        <span class="flex items-center gap-1">
+          <i class="bi bi-calendar-fill text-[10px]"></i>
+          Fundado em {{ equipe.fundacao|date:"Y" }}
+        </span>
+        {% endif %}
+      </div>
     </div>
-    <div class="overflow-x-auto">
-      <table class="table table-sm">
-        <thead>
-          <tr class="bg-base-300/50 text-xs text-base-content/60 uppercase tracking-wider">
-            <th>Atleta</th>
-            <th>Posição</th>
-            <th>Nascimento</th>
-            <th class="text-center">Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for atleta in atletas %}
-          <tr class="hover:bg-base-300/30 transition-colors">
-            <td>
-              <div class="flex items-center gap-2">
-                {% if atleta.foto %}
-                  <img src="{{ atleta.foto.thumbnail.url }}" class="w-9 h-9 rounded-full object-cover border border-base-300">
-                {% else %}
-                  <div class="w-9 h-9 rounded-full bg-neutral-content/10 border border-base-300 flex items-center justify-center text-xs font-bold text-base-content/50">
-                    {{ atleta.nome|first|upper }}
-                  </div>
-                {% endif %}
-                <span class="font-medium text-sm">{{ atleta.nome }}</span>
-              </div>
-            </td>
-            <td>
-              <span class="badge badge-ghost badge-sm">{{ atleta.get_posicao_display }}</span>
-            </td>
-            <td class="text-sm text-base-content/60">
-              {% if atleta.data_nascimento %}
-                {{ atleta.data_nascimento|date:"d/m/Y" }}
-              {% else %}
-                <span class="text-base-content/30">—</span>
-              {% endif %}
-            </td>
-            <td class="text-center">
-              <a href="{% url 'equipe:atleta_editar' atleta.pk %}" class="btn btn-ghost btn-xs">
-                <i class="bi bi-pencil"></i>
-              </a>
-              <a href="{% url 'equipe:atleta_excluir' atleta.pk %}" class="btn btn-ghost btn-xs text-error">
-                <i class="bi bi-trash"></i>
-              </a>
-            </td>
-          </tr>
-          {% empty %}
-          <tr>
-            <td colspan="4" class="text-center py-10 text-base-content/40">
-              <i class="bi bi-person-x text-3xl block mb-2 opacity-30"></i>
-              <p class="text-sm">Nenhum atleta cadastrado.</p>
-              <a href="{% url 'equipe:atleta_criar' equipe.pk %}" class="btn btn-warning btn-xs mt-3 gap-1">
-                <i class="bi bi-person-plus"></i> Adicionar
-              </a>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+
+    <!-- Stats em linha -->
+    <div class="flex items-center gap-5 shrink-0">
+      <div class="text-center">
+        <p class="stat-number text-2xl text-base-content">{{ atletas.count }}</p>
+        <p class="text-[10px] text-base-content/40 uppercase tracking-wide">Atletas</p>
+      </div>
+      {% if equipe.estadio %}
+      <div class="text-center">
+        <i class="bi bi-building text-base-content/20 text-xl block mb-0.5"></i>
+        <p class="text-[10px] text-base-content/40 uppercase tracking-wide truncate max-w-[80px]">{{ equipe.estadio|truncatechars:12 }}</p>
+      </div>
+      {% endif %}
     </div>
+  </div>
+
+  <!-- ── Elenco ─────────────────────────────────────────────────────────── -->
+  <div class="px-4 md:px-6 pb-6">
+
+    <!-- Header do elenco -->
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center gap-2">
+        <i class="bi bi-people-fill text-warning text-sm"></i>
+        <span class="font-semibold text-sm">Elenco</span>
+        <span class="badge badge-ghost badge-sm">{{ atletas.count }}</span>
+      </div>
+      <a href="{{ url_add_atleta }}"
+         class="btn btn-warning btn-sm gap-1.5 shadow-lg shadow-warning/20">
+        <i class="bi bi-person-plus"></i>
+        <span class="hidden sm:inline">Adicionar Atleta</span>
+      </a>
+    </div>
+
+    <!-- Grid de cards de atleta -->
+    {% if atletas %}
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+      {% for atleta in atletas %}
+      {% url 'equipe:atleta_editar' atleta.pk as url_edit_atleta %}
+      {% url 'equipe:atleta_excluir' atleta.pk as url_del_atleta %}
+
+      <div class="card bg-base-200 border border-base-300 card-sport overflow-hidden group relative">
+
+        <!-- Foto / Avatar -->
+        <div class="pt-5 px-3 pb-2 flex flex-col items-center gap-2">
+
+          {% if atleta.situacao == 'SUSPENSO' %}
+          <div class="absolute top-2 left-2">
+            <span class="badge badge-error badge-xs text-[9px]">Sus</span>
+          </div>
+          {% elif atleta.situacao == 'LESIONADO' %}
+          <div class="absolute top-2 left-2">
+            <span class="badge badge-warning badge-xs text-[9px]">Les</span>
+          </div>
+          {% endif %}
+
+          {% if atleta.foto %}
+            <img src="{{ atleta.foto.thumbnail.url }}" alt="{{ atleta.nome }}"
+                 class="w-16 h-16 rounded-full object-cover border-2 border-base-300
+                        group-hover:border-warning/40 transition-colors">
+          {% else %}
+            <div class="w-16 h-16 rounded-full bg-neutral-content/10 border-2 border-base-300
+                        group-hover:border-warning/40 transition-colors
+                        flex items-center justify-center">
+              <span class="text-xl font-black text-base-content/40">{{ atleta.nome|first|upper }}</span>
+            </div>
+          {% endif %}
+
+          <div class="min-w-0 w-full text-center">
+            <p class="font-semibold text-xs truncate leading-snug" title="{{ atleta.nome }}">
+              {{ atleta.nome|truncatechars:18 }}
+            </p>
+            <span class="badge badge-ghost badge-sm text-[10px] mt-0.5">
+              {{ atleta.get_posicao_display }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Ações (hover) -->
+        <div class="border-t border-base-300 px-2 py-1.5 flex gap-1 justify-center bg-base-300/20
+                    opacity-0 group-hover:opacity-100 transition-opacity">
+          <a href="{{ url_edit_atleta }}"
+             class="btn btn-ghost btn-xs text-base-content/50 hover:text-base-content"
+             title="Editar">
+            <i class="bi bi-pencil text-xs"></i>
+          </a>
+          <a href="{{ url_del_atleta }}"
+             class="btn btn-ghost btn-xs text-error/50 hover:text-error"
+             title="Excluir">
+            <i class="bi bi-trash text-xs"></i>
+          </a>
+        </div>
+
+      </div>
+      {% endfor %}
+    </div>
+
+    {% else %}
+    {% include 'components/empty_state.html' with
+       icon="person-x"
+       title="Nenhum atleta cadastrado."
+       subtitle="Adicione atletas ao elenco desta equipe."
+       cta_url=url_add_atleta
+       cta_label="Adicionar Atleta" %}
+    {% endif %}
+
   </div>
 
 </div>

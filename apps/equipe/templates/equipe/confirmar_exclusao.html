@@ -2,28 +2,90 @@
 {% block titulo %}Excluir Equipe{% endblock %}
 
 {% block conteudo %}
-<div class="p-4 md:p-6 max-w-md mx-auto">
-  <div class="card bg-base-200 border border-error/40">
-    <div class="px-5 py-3 border-b border-error/40 bg-error/10 flex items-center gap-2">
-      <i class="bi bi-exclamation-triangle-fill text-error"></i>
-      <h1 class="font-bold text-sm text-error">Confirmar Exclusão</h1>
+<div class="p-4 md:p-6 flex items-center justify-center min-h-[60vh]">
+  <div class="w-full max-w-md animate-fade-up">
+
+    <div class="card bg-base-200 border border-error/30 overflow-hidden shadow-2xl">
+
+      <!-- Barra vermelha no topo -->
+      <div class="h-1 w-full bg-error"></div>
+
+      <div class="card-body p-6 space-y-5">
+
+        <!-- Ícone + título -->
+        <div class="flex flex-col items-center text-center gap-3 pt-2">
+          <div class="w-16 h-16 rounded-full bg-error/10 border-2 border-error/25
+                      flex items-center justify-center">
+            <i class="bi bi-exclamation-triangle-fill text-error text-2xl"></i>
+          </div>
+          <div>
+            <h1 class="section-heading text-2xl text-error leading-none">EXCLUIR EQUIPE</h1>
+            <p class="text-sm text-base-content/60 mt-2">
+              Você está prestes a excluir permanentemente
+            </p>
+            <p class="font-black text-base text-base-content mt-0.5">
+              {{ equipe.nome_equipe }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Aviso -->
+        <div class="bg-error/8 border border-error/20 rounded-xl p-3.5 flex items-start gap-2.5">
+          <i class="bi bi-shield-exclamation text-error/70 text-sm shrink-0 mt-0.5"></i>
+          <p class="text-xs text-error/80 leading-relaxed">
+            Esta ação é <strong>irreversível</strong>. Todos os atletas, inscrições e dados
+            associados a esta equipe serão removidos permanentemente.
+          </p>
+        </div>
+
+        <!-- Campo de confirmação -->
+        <div>
+          <label class="label py-0 mb-2">
+            <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">
+              Digite <span class="text-error font-black">EXCLUIR</span> para confirmar
+            </span>
+          </label>
+          <input type="text" id="confirm-input"
+                 placeholder="EXCLUIR"
+                 autocomplete="off"
+                 class="input input-bordered w-full bg-base-300/50 border-base-content/15
+                        focus:border-error/50 transition-colors font-mono tracking-widest text-center">
+        </div>
+
+        <!-- Botões -->
+        <form method="post" id="delete-form" class="space-y-2">
+          {% csrf_token %}
+          <button type="submit" id="btn-excluir"
+                  disabled
+                  class="btn btn-error w-full gap-2 font-semibold opacity-40 transition-all duration-200">
+            <i class="bi bi-trash3-fill"></i> Sim, excluir permanentemente
+          </button>
+          <a href="{% url 'equipe:lista' %}"
+             class="btn btn-ghost w-full border border-base-content/10 text-base-content/60">
+            <i class="bi bi-arrow-left text-sm"></i> Cancelar, manter equipe
+          </a>
+        </form>
+
+      </div>
     </div>
-    <div class="card-body p-5">
-      <p class="text-sm">
-        Tem certeza que deseja excluir a equipe <strong>{{ equipe.nome_equipe }}</strong>?
-      </p>
-      <p class="text-xs text-error/80 mt-2 flex items-center gap-1">
-        <i class="bi bi-exclamation-circle"></i>
-        Esta ação também removerá todos os atletas cadastrados e é irreversível.
-      </p>
-      <form method="post" class="flex gap-2 mt-5">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-error flex-1">
-          <i class="bi bi-trash"></i> Excluir
-        </button>
-        <a href="{% url 'equipe:lista' %}" class="btn btn-ghost">Cancelar</a>
-      </form>
-    </div>
+
   </div>
 </div>
+{% endblock %}
+
+{% block script %}
+<script>
+(function () {
+  var input  = document.getElementById('confirm-input');
+  var btn    = document.getElementById('btn-excluir');
+  if (!input || !btn) return;
+  input.addEventListener('input', function () {
+    var ok = this.value.trim().toUpperCase() === 'EXCLUIR';
+    btn.disabled = !ok;
+    btn.classList.toggle('opacity-40', !ok);
+    btn.classList.toggle('shadow-lg',  ok);
+    btn.classList.toggle('shadow-error/25', ok);
+  });
+})();
+</script>
 {% endblock %}

@@ -1,21 +1,44 @@
 {% extends 'base/indice.html' %}
 {% block titulo %}Árbitros{% endblock %}
 
-{% block conteudo %}
-<div class="p-4 md:p-6">
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-base-content/40">
+    <ul>
+      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-base-content/70">Dashboard</a></li>
+      <li><span class="text-base-content/60">Árbitros</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
 
-  <div class="flex items-center justify-between mb-5">
-    <h1 class="text-xl font-bold flex items-center gap-2">
-      <i class="bi bi-person-badge text-warning"></i> Árbitros
-    </h1>
-    <button class="btn btn-warning btn-sm gap-1.5"
+{% block conteudo %}
+<div class="p-4 md:p-6 space-y-5">
+
+  <!-- Cabeçalho -->
+  <div class="flex items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-warning/10 border border-warning/20
+                  flex items-center justify-center shrink-0">
+        <i class="bi bi-person-badge text-warning text-base"></i>
+      </div>
+      <div>
+        <h1 class="section-heading text-2xl text-base-content leading-none">Árbitros</h1>
+        <p class="text-xs text-base-content/40 mt-0.5">
+          {{ arbitros|length }} árbitro{{ arbitros|length|pluralize }} cadastrado{{ arbitros|length|pluralize }}
+        </p>
+      </div>
+    </div>
+    <button class="btn btn-warning btn-sm gap-1.5 shadow-lg shadow-warning/20"
             onclick="document.getElementById('form-novo-arbitro').classList.toggle('hidden')">
-      <i class="bi bi-plus-circle"></i> Novo Árbitro
+      <i class="bi bi-plus-circle"></i>
+      <span class="hidden sm:inline">Novo Árbitro</span>
+      <span class="sm:hidden">Novo</span>
     </button>
   </div>
 
-  <!-- Form criação (toggle) -->
-  <div id="form-novo-arbitro" class="hidden mb-5">
+  <!-- Formulário de criação (toggle) -->
+  <div id="form-novo-arbitro" class="hidden">
     <div class="card bg-base-200 border border-warning/30">
       <div class="px-4 py-3 border-b border-base-300 flex items-center gap-2">
         <i class="bi bi-person-plus text-warning text-sm"></i>
@@ -47,16 +70,20 @@
   </div>
 
   <!-- Busca -->
-  <form method="get" class="mb-4 flex gap-2 max-w-sm">
+  <form method="get" class="flex gap-2 max-w-sm">
     <label class="input input-sm flex-1 flex items-center gap-2 bg-base-200 border-base-300">
       <i class="bi bi-search text-base-content/30 text-xs"></i>
-      <input type="search" name="q" value="{{ q }}" class="grow bg-transparent text-sm outline-none" placeholder="Buscar árbitro...">
+      <input type="search" name="q" value="{{ q }}" class="grow bg-transparent text-sm outline-none"
+             placeholder="Buscar árbitro...">
     </label>
     <button type="submit" class="btn btn-sm btn-ghost">Buscar</button>
-    {% if q %}<a href="{% url 'competicao:arbitro_lista' %}" class="btn btn-sm btn-ghost text-error">Limpar</a>{% endif %}
+    {% if q %}
+    <a href="{% url 'competicao:arbitro_lista' %}" class="btn btn-sm btn-ghost text-error">Limpar</a>
+    {% endif %}
   </form>
 
-  <!-- Listagem -->
+  <!-- Listagem ou empty state -->
+  {% if arbitros %}
   <div class="card bg-base-200 border border-base-300 overflow-hidden">
     <div class="overflow-x-auto">
       <table class="table table-sm">
@@ -80,23 +107,17 @@
               <span class="badge badge-ghost badge-sm">{{ arbitro.jogos.count }}</span>
             </td>
             <td class="text-center">
-              <a href="{% url 'competicao:arbitro_editar' arbitro.pk %}" class="btn btn-ghost btn-xs">
+              <a href="{% url 'competicao:arbitro_editar' arbitro.pk %}" class="btn btn-ghost btn-xs"
+                 title="Editar">
                 <i class="bi bi-pencil"></i>
               </a>
               <form method="post" action="{% url 'competicao:arbitro_excluir' arbitro.pk %}" class="inline"
                     onsubmit="return confirm('Excluir árbitro {{ arbitro.nome }}?')">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-ghost btn-xs text-error">
+                <button type="submit" class="btn btn-ghost btn-xs text-error" title="Excluir">
                   <i class="bi bi-trash"></i>
                 </button>
               </form>
-            </td>
-          </tr>
-          {% empty %}
-          <tr>
-            <td colspan="4" class="text-center py-10 text-base-content/40">
-              <i class="bi bi-person-badge text-4xl block mb-2 opacity-30"></i>
-              <p class="text-sm">Nenhum árbitro cadastrado.</p>
             </td>
           </tr>
           {% endfor %}
@@ -104,6 +125,13 @@
       </table>
     </div>
   </div>
+
+  {% else %}
+  {% include 'components/empty_state.html' with
+     icon="person-badge"
+     title="Nenhum árbitro cadastrado."
+     subtitle="Cadastre árbitros para atribuí-los aos jogos da competição." %}
+  {% endif %}
 
 </div>
 {% endblock %}

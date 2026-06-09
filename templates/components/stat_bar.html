@@ -1,0 +1,33 @@
+{#
+  stat_bar.html — Barra comparativa de estatística entre dois times (H2H)
+  Uso: {% include 'components/stat_bar.html' with label="Vitórias" value_a=7 value_b=3 color_a="bg-warning" color_b="bg-base-content/20" %}
+  Parâmetros:
+    label   — nome da estatística
+    value_a — valor do time A (lado esquerdo)
+    value_b — valor do time B (lado direito)
+    color_a — classe Tailwind de cor do time A (ex: "bg-warning")
+    color_b — classe Tailwind de cor do time B (ex: "bg-base-content/20")
+#}
+{% with total=value_a|add:value_b %}
+<div class="flex items-center gap-3 text-sm">
+
+  <span class="stat-number w-6 text-right text-base-content/70 text-sm shrink-0">{{ value_a }}</span>
+
+  <!-- Barra -->
+  <div class="flex-1 flex items-center gap-0.5 h-2">
+    {% if total > 0 %}
+      {# Django não tem filtro de divisão nativa; usa width inline #}
+      <div class="h-full rounded-l-full {{ color_a }}"
+           style="width: {% widthratio value_a total 100 %}%"></div>
+      <div class="h-full rounded-r-full {{ color_b }}"
+           style="width: {% widthratio value_b total 100 %}%"></div>
+    {% else %}
+      <div class="h-full w-full rounded-full bg-base-300/50"></div>
+    {% endif %}
+  </div>
+
+  <span class="stat-number w-6 text-base-content/70 text-sm shrink-0">{{ value_b }}</span>
+
+</div>
+<p class="text-center text-xs text-base-content/40 mt-0.5">{{ label }}</p>
+{% endwith %}

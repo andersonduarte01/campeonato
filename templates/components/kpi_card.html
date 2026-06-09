@@ -1,0 +1,45 @@
+{#
+  kpi_card.html — Card de KPI para dashboard
+  Uso:
+    {% include 'components/kpi_card.html' with
+        title="Competições" value=12 icon="trophy-fill"
+        icon_cls="bg-warning/10 border-warning/20 text-warning"
+        bar_cls="from-warning/30 via-warning/60"
+        trend="up" trend_val="+2 este mês" %}
+  Parâmetros:
+    title     — label do KPI
+    value     — valor numérico principal
+    icon      — nome do bootstrap-icon
+    icon_cls  — classes Tailwind do container do ícone (bg + border + text color)
+    bar_cls   — classes do gradiente na borda inferior (from-X via-X)
+    trend     — "up" | "down" | "" (sem indicador)
+    trend_val — texto do indicador de variação (ex: "+2 este mês")
+#}
+<div class="card bg-base-200 border border-base-300 card-sport overflow-hidden">
+  <div class="card-body p-5">
+    <div class="flex items-start justify-between gap-3">
+
+      <div class="min-w-0 flex-1">
+        <p class="text-[11px] font-bold text-base-content/40 uppercase tracking-wider mb-2">{{ title }}</p>
+        <p class="stat-number text-3xl text-base-content leading-none">{{ value }}</p>
+        {% if trend_val %}
+        <p class="text-xs mt-2
+          {% if trend == 'up' %}text-success
+          {% elif trend == 'down' %}text-error
+          {% else %}text-base-content/40{% endif %}">
+          {% if trend == 'up' %}▲{% elif trend == 'down' %}▼{% endif %}
+          {{ trend_val }}
+        </p>
+        {% endif %}
+      </div>
+
+      <div class="w-12 h-12 rounded-xl border flex items-center justify-center shrink-0 {{ icon_cls }}">
+        <i class="bi bi-{{ icon }} text-xl"></i>
+      </div>
+
+    </div>
+  </div>
+  {% if bar_cls %}
+  <div class="h-0.5 bg-gradient-to-r {{ bar_cls }} to-transparent"></div>
+  {% endif %}
+</div>

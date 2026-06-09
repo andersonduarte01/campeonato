@@ -1,8 +1,22 @@
 {% extends 'base/indice.html' %}
 {% block titulo %}Escalação — {{ jogo.equipe_casa }} x {{ jogo.equipe_fora }}{% endblock %}
 
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-base-content/40">
+    <ul>
+      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-base-content/70">Dashboard</a></li>
+      <li><a href="{% url 'competicao:jogo_detalhe' jogo.pk %}" class="hover:text-base-content/70">
+        {{ jogo.equipe_casa.nome_equipe }} × {{ jogo.equipe_fora.nome_equipe }}
+      </a></li>
+      <li><span class="text-base-content/60">Escalação</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
 {% block conteudo %}
-<div class="p-4 md:p-6">
+<div class="p-4 md:p-6 space-y-5">
 
   {% if suspensos %}
   <div class="alert alert-error text-sm mb-4">
@@ -22,19 +36,197 @@
   </div>
   {% endif %}
 
-  <div class="flex items-center justify-between mb-5 flex-wrap gap-2">
-    <h1 class="font-bold flex items-center gap-2 text-base">
-      <i class="bi bi-people-fill text-warning"></i>
-      Escalação: <span class="text-warning">{{ jogo.equipe_casa.nome_equipe }}</span>
-      <span class="text-base-content/40">×</span>
-      <span class="text-warning">{{ jogo.equipe_fora.nome_equipe }}</span>
-    </h1>
-    <a href="{% url 'competicao:jogo_detalhe' jogo.pk %}" class="btn btn-ghost btn-sm gap-1">
-      <i class="bi bi-arrow-left"></i> Voltar ao Jogo
+  <!-- Cabeçalho -->
+  <div class="flex items-center justify-between flex-wrap gap-3">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-warning/10 border border-warning/20
+                  flex items-center justify-center shrink-0">
+        <i class="bi bi-people-fill text-warning text-base"></i>
+      </div>
+      <div>
+        <h1 class="section-heading text-2xl text-base-content leading-none">ESCALAÇÃO</h1>
+        <p class="text-xs text-base-content/40 mt-0.5">
+          <span class="text-warning">{{ jogo.equipe_casa.nome_equipe }}</span>
+          <span class="text-base-content/20 mx-1">×</span>
+          <span class="text-warning">{{ jogo.equipe_fora.nome_equipe }}</span>
+        </p>
+      </div>
+    </div>
+    <a href="{% url 'competicao:jogo_detalhe' jogo.pk %}"
+       class="btn btn-ghost btn-sm gap-1.5 border border-base-content/10">
+      <i class="bi bi-arrow-left text-sm"></i> Voltar ao Jogo
     </a>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+  <!-- ══ Campo Visual de Futebol ════════════════════════════════════ -->
+  <div class="card bg-base-200 border border-base-300 overflow-hidden">
+    <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/20">
+      <i class="bi bi-grid-3x3-gap text-warning/50 text-sm"></i>
+      <span class="section-heading text-sm text-base-content/60 tracking-widest">CAMPO</span>
+      <span class="text-xs text-base-content/30 ml-auto">Titulares por posição</span>
+    </div>
+    <div class="relative overflow-hidden" style="background: #1a4a28;">
+      <!-- Linhas do campo -->
+      <div class="absolute inset-0 opacity-20" aria-hidden="true">
+        <!-- Linha central -->
+        <div class="absolute left-0 right-0 top-1/2 h-px bg-white/60"></div>
+        <!-- Círculo central -->
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
+                    w-24 h-24 rounded-full border border-white/60"></div>
+        <!-- Ponto central -->
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white/80"></div>
+        <!-- Área esq -->
+        <div class="absolute top-1/2 left-0 -translate-y-1/2 w-14 h-28 border-r border-t border-b border-white/50 rounded-r-sm"></div>
+        <!-- Área dir -->
+        <div class="absolute top-1/2 right-0 -translate-y-1/2 w-14 h-28 border-l border-t border-b border-white/50 rounded-l-sm"></div>
+      </div>
+
+      <!-- Campo dividido: casa (esquerda) / fora (direita) -->
+      <div class="relative z-10 grid grid-cols-2 gap-0 min-h-[280px] md:min-h-[340px]">
+
+        <!-- Equipe Casa (esquerda → ataque à direita) -->
+        <div class="flex flex-col justify-around px-3 py-4 border-r border-white/10">
+          {% if jogo.equipe_casa.escudo %}
+          <div class="absolute top-3 left-3 opacity-20">
+            <img src="{{ jogo.equipe_casa.escudo.thumbnail.url }}" class="w-10 h-10 rounded-full object-cover">
+          </div>
+          {% endif %}
+
+          <!-- Posições: GR, DEF, MEI, ATA -->
+          <div class="space-y-3">
+            <!-- GR -->
+            <div class="flex flex-wrap gap-1.5 justify-start">
+              {% for esc in escalacao_casa %}{% if esc.titular %}
+              {% if esc.atleta.posicao == 'GR' %}
+              <div class="px-2 py-0.5 rounded-full bg-info/20 border border-info/40 text-[10px] font-semibold text-info truncate max-w-[90px]"
+                   title="{{ esc.atleta.nome }}">
+                {% if esc.numero_camisa %}<span class="font-black text-info/60 mr-0.5">{{ esc.numero_camisa }}</span>{% endif %}
+                {{ esc.atleta.nome|truncatechars:12 }}
+              </div>
+              {% endif %}{% endif %}{% endfor %}
+            </div>
+            <!-- DEF -->
+            <div class="flex flex-wrap gap-1.5 justify-start">
+              {% for esc in escalacao_casa %}{% if esc.titular %}
+              {% if esc.atleta.posicao == 'ZAG' or esc.atleta.posicao == 'LAT' %}
+              <div class="px-2 py-0.5 rounded-full bg-success/20 border border-success/40 text-[10px] font-semibold text-success truncate max-w-[90px]"
+                   title="{{ esc.atleta.nome }}">
+                {% if esc.numero_camisa %}<span class="font-black text-success/60 mr-0.5">{{ esc.numero_camisa }}</span>{% endif %}
+                {{ esc.atleta.nome|truncatechars:12 }}
+              </div>
+              {% endif %}{% endif %}{% endfor %}
+            </div>
+            <!-- MEI -->
+            <div class="flex flex-wrap gap-1.5 justify-start">
+              {% for esc in escalacao_casa %}{% if esc.titular %}
+              {% if esc.atleta.posicao == 'MEI' or esc.atleta.posicao == 'MO' or esc.atleta.posicao == 'VOL' %}
+              <div class="px-2 py-0.5 rounded-full bg-warning/20 border border-warning/40 text-[10px] font-semibold text-warning truncate max-w-[90px]"
+                   title="{{ esc.atleta.nome }}">
+                {% if esc.numero_camisa %}<span class="font-black text-warning/60 mr-0.5">{{ esc.numero_camisa }}</span>{% endif %}
+                {{ esc.atleta.nome|truncatechars:12 }}
+              </div>
+              {% endif %}{% endif %}{% endfor %}
+            </div>
+            <!-- ATA -->
+            <div class="flex flex-wrap gap-1.5 justify-start">
+              {% for esc in escalacao_casa %}{% if esc.titular %}
+              {% if esc.atleta.posicao == 'ATA' or esc.atleta.posicao == 'PO' %}
+              <div class="px-2 py-0.5 rounded-full bg-error/20 border border-error/40 text-[10px] font-semibold text-error truncate max-w-[90px]"
+                   title="{{ esc.atleta.nome }}">
+                {% if esc.numero_camisa %}<span class="font-black text-error/60 mr-0.5">{{ esc.numero_camisa }}</span>{% endif %}
+                {{ esc.atleta.nome|truncatechars:12 }}
+              </div>
+              {% endif %}{% endif %}{% endfor %}
+            </div>
+          </div>
+
+          <p class="text-[10px] font-bold text-white/40 uppercase tracking-wider mt-2 text-center">
+            {{ jogo.equipe_casa.nome_equipe|truncatechars:16 }}
+          </p>
+        </div>
+
+        <!-- Equipe Fora (direita → posições espelhadas) -->
+        <div class="flex flex-col justify-around px-3 py-4">
+          {% if jogo.equipe_fora.escudo %}
+          <div class="absolute top-3 right-3 opacity-20">
+            <img src="{{ jogo.equipe_fora.escudo.thumbnail.url }}" class="w-10 h-10 rounded-full object-cover">
+          </div>
+          {% endif %}
+
+          <div class="space-y-3">
+            <!-- ATA (espelhado: inicia pelo ataque) -->
+            <div class="flex flex-wrap gap-1.5 justify-end">
+              {% for esc in escalacao_fora %}{% if esc.titular %}
+              {% if esc.atleta.posicao == 'ATA' or esc.atleta.posicao == 'PO' %}
+              <div class="px-2 py-0.5 rounded-full bg-error/20 border border-error/40 text-[10px] font-semibold text-error truncate max-w-[90px]"
+                   title="{{ esc.atleta.nome }}">
+                {{ esc.atleta.nome|truncatechars:12 }}{% if esc.numero_camisa %}<span class="font-black text-error/60 ml-0.5">{{ esc.numero_camisa }}</span>{% endif %}
+              </div>
+              {% endif %}{% endif %}{% endfor %}
+            </div>
+            <!-- MEI -->
+            <div class="flex flex-wrap gap-1.5 justify-end">
+              {% for esc in escalacao_fora %}{% if esc.titular %}
+              {% if esc.atleta.posicao == 'MEI' or esc.atleta.posicao == 'MO' or esc.atleta.posicao == 'VOL' %}
+              <div class="px-2 py-0.5 rounded-full bg-warning/20 border border-warning/40 text-[10px] font-semibold text-warning truncate max-w-[90px]"
+                   title="{{ esc.atleta.nome }}">
+                {{ esc.atleta.nome|truncatechars:12 }}{% if esc.numero_camisa %}<span class="font-black text-warning/60 ml-0.5">{{ esc.numero_camisa }}</span>{% endif %}
+              </div>
+              {% endif %}{% endif %}{% endfor %}
+            </div>
+            <!-- DEF -->
+            <div class="flex flex-wrap gap-1.5 justify-end">
+              {% for esc in escalacao_fora %}{% if esc.titular %}
+              {% if esc.atleta.posicao == 'ZAG' or esc.atleta.posicao == 'LAT' %}
+              <div class="px-2 py-0.5 rounded-full bg-success/20 border border-success/40 text-[10px] font-semibold text-success truncate max-w-[90px]"
+                   title="{{ esc.atleta.nome }}">
+                {{ esc.atleta.nome|truncatechars:12 }}{% if esc.numero_camisa %}<span class="font-black text-success/60 ml-0.5">{{ esc.numero_camisa }}</span>{% endif %}
+              </div>
+              {% endif %}{% endif %}{% endfor %}
+            </div>
+            <!-- GR -->
+            <div class="flex flex-wrap gap-1.5 justify-end">
+              {% for esc in escalacao_fora %}{% if esc.titular %}
+              {% if esc.atleta.posicao == 'GR' %}
+              <div class="px-2 py-0.5 rounded-full bg-info/20 border border-info/40 text-[10px] font-semibold text-info truncate max-w-[90px]"
+                   title="{{ esc.atleta.nome }}">
+                {{ esc.atleta.nome|truncatechars:12 }}{% if esc.numero_camisa %}<span class="font-black text-info/60 ml-0.5">{{ esc.numero_camisa }}</span>{% endif %}
+              </div>
+              {% endif %}{% endif %}{% endfor %}
+            </div>
+          </div>
+
+          <p class="text-[10px] font-bold text-white/40 uppercase tracking-wider mt-2 text-center">
+            {{ jogo.equipe_fora.nome_equipe|truncatechars:16 }}
+          </p>
+        </div>
+
+      </div>
+
+      <!-- Legenda de cores -->
+      <div class="flex gap-4 flex-wrap justify-center py-2 border-t border-white/10">
+        <div class="flex items-center gap-1">
+          <div class="w-2.5 h-2.5 rounded-full bg-info/60"></div>
+          <span class="text-[9px] text-white/40 font-semibold uppercase">GR</span>
+        </div>
+        <div class="flex items-center gap-1">
+          <div class="w-2.5 h-2.5 rounded-full bg-success/60"></div>
+          <span class="text-[9px] text-white/40 font-semibold uppercase">DEF</span>
+        </div>
+        <div class="flex items-center gap-1">
+          <div class="w-2.5 h-2.5 rounded-full bg-warning/60"></div>
+          <span class="text-[9px] text-white/40 font-semibold uppercase">MEI</span>
+        </div>
+        <div class="flex items-center gap-1">
+          <div class="w-2.5 h-2.5 rounded-full bg-error/60"></div>
+          <span class="text-[9px] text-white/40 font-semibold uppercase">ATA</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- /Campo Visual -->
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
     {% for label, escalacao, form_esc, equipe, cor in equipes_template %}
     <div class="card bg-base-200 border border-base-300">

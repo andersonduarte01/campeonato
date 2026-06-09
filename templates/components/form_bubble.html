@@ -1,0 +1,18 @@
+{#
+  form_bubble.html — Bolhas de forma recente (últimos N jogos)
+  Uso: {% include 'components/form_bubble.html' with results=forma_list %}
+  Parâmetros:
+    results — lista de strings: "V" (vitória), "E" (empate), "D" (derrota)
+  Exemplo de contexto: results=["V","V","E","D","V"]
+#}
+<div class="flex items-center gap-1">
+  {% for r in results %}
+  <span title="{% if r == 'V' %}Vitória{% elif r == 'E' %}Empate{% else %}Derrota{% endif %}"
+        class="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold
+               {% if r == 'V' %}result-win{% elif r == 'E' %}result-draw{% else %}result-loss{% endif %}">
+    {{ r }}
+  </span>
+  {% empty %}
+  <span class="text-xs text-base-content/30">—</span>
+  {% endfor %}
+</div>

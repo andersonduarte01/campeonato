@@ -2,60 +2,126 @@
 {% load static %}
 {% block titulo %}Equipes{% endblock %}
 
-{% block conteudo %}
-<div class="p-4 md:p-6">
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-base-content/40">
+    <ul>
+      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-base-content/70">Dashboard</a></li>
+      <li><span class="text-base-content/60">Equipes</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
 
-  <div class="flex items-center justify-between mb-6">
-    <h1 class="text-xl font-bold flex items-center gap-2">
-      <i class="bi bi-shield-fill text-warning"></i> Equipes Cadastradas
-    </h1>
-    <a href="{% url 'equipe:criar' %}" class="btn btn-warning btn-sm gap-1.5 shadow-lg shadow-warning/20">
-      <i class="bi bi-plus-lg"></i> Nova Equipe
+{% block conteudo %}
+{% url 'equipe:criar' as url_criar_equipe %}
+<div class="p-4 md:p-6 space-y-5">
+
+  <!-- Cabeçalho -->
+  <div class="flex items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-warning/10 border border-warning/20
+                  flex items-center justify-center shrink-0">
+        <i class="bi bi-shield-fill text-warning text-base"></i>
+      </div>
+      <div>
+        <h1 class="section-heading text-2xl text-base-content leading-none">Equipes</h1>
+        <p class="text-xs text-base-content/40 mt-0.5">
+          {{ equipes.count }} equipe{{ equipes.count|pluralize }} cadastrada{{ equipes.count|pluralize }}
+        </p>
+      </div>
+    </div>
+    <a href="{% url 'equipe:criar' %}"
+       class="btn btn-warning btn-sm gap-1.5 shadow-lg shadow-warning/20 shrink-0">
+      <i class="bi bi-plus-lg"></i>
+      <span class="hidden sm:inline">Nova Equipe</span>
     </a>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+  <!-- Grid de equipes -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
     {% for equipe in equipes %}
-    <div class="card bg-base-200 border border-base-300 hover:border-warning/40 hover:shadow-xl transition-all duration-200 hover:-translate-y-0.5">
-      <div class="card-body p-4 flex flex-row items-center gap-4">
-        {% if equipe.escudo %}
-          <img src="{{ equipe.escudo.thumbnail.url }}" alt="{{ equipe.nome_equipe }}"
-               class="w-14 h-14 rounded-full object-cover border-2 border-base-300 shrink-0">
-        {% else %}
-          <div class="w-14 h-14 rounded-full bg-neutral-content/10 border-2 border-base-300 flex items-center justify-center shrink-0">
-            <span class="text-xl font-black text-base-content/50">{{ equipe.nome_equipe|first|upper }}</span>
+
+    <div class="card bg-base-200 border border-base-300 card-sport overflow-hidden group">
+
+      <!-- Banner colorido no topo -->
+      <div class="h-2 bg-gradient-to-r from-warning/60 via-warning/30 to-transparent"></div>
+
+      <div class="card-body p-5">
+        <div class="flex items-start gap-4">
+
+          <!-- Logo 72px -->
+          {% if equipe.escudo %}
+            <img src="{{ equipe.escudo.thumbnail.url }}" alt="{{ equipe.nome_equipe }}"
+                 class="w-[4.5rem] h-[4.5rem] rounded-full object-cover border-2 border-base-300
+                        group-hover:border-warning/40 transition-colors shrink-0 shadow-md">
+          {% else %}
+            <div class="w-[4.5rem] h-[4.5rem] rounded-full bg-neutral-content/10 border-2 border-base-300
+                        group-hover:border-warning/40 transition-colors shrink-0 shadow-md
+                        flex items-center justify-center">
+              <span class="text-2xl font-black text-base-content/40">{{ equipe.nome_equipe|first|upper }}</span>
+            </div>
+          {% endif %}
+
+          <!-- Info -->
+          <div class="min-w-0 flex-1">
+            <h2 class="font-bold text-base truncate leading-snug">{{ equipe.nome_equipe }}</h2>
+            {% if equipe.cidade %}
+            <p class="text-xs text-base-content/40 mt-0.5 flex items-center gap-1">
+              <i class="bi bi-geo-alt-fill text-[10px]"></i>
+              {{ equipe.cidade }}{% if equipe.estado %}/{{ equipe.estado }}{% endif %}
+            </p>
+            {% endif %}
+
+            <!-- Stats rápidas -->
+            <div class="flex items-center gap-3 mt-3">
+              <span class="flex items-center gap-1 text-xs text-base-content/50">
+                <i class="bi bi-people-fill text-warning/60 text-[10px]"></i>
+                <span class="stat-number text-sm text-base-content/70">{{ equipe.equipe_jogador.count }}</span>
+                atleta{{ equipe.equipe_jogador.count|pluralize }}
+              </span>
+              {% if equipe.tecnico %}
+              <span class="flex items-center gap-1 text-xs text-base-content/40 truncate">
+                <i class="bi bi-person-fill text-[10px]"></i>
+                {{ equipe.tecnico|truncatechars:15 }}
+              </span>
+              {% endif %}
+            </div>
           </div>
-        {% endif %}
-        <div class="min-w-0 flex-1">
-          <h2 class="font-bold text-base truncate">{{ equipe.nome_equipe }}</h2>
-          <p class="text-xs text-base-content/50 mt-0.5">
-            <i class="bi bi-people"></i>
-            {{ equipe.equipe_jogador.count }} atleta{{ equipe.equipe_jogador.count|pluralize }}
-          </p>
         </div>
       </div>
-      <div class="border-t border-base-300 px-4 py-2.5 flex gap-2 justify-end">
-        <a href="{% url 'equipe:detalhe' equipe.pk %}" class="btn btn-xs btn-ghost gap-1">
-          <i class="bi bi-people"></i> Elenco
+
+      <!-- Rodapé com ações -->
+      <div class="border-t border-base-300 px-4 py-2.5 flex gap-2 items-center justify-between
+                  bg-base-300/20">
+        <a href="{% url 'equipe:detalhe' equipe.pk %}"
+           class="btn btn-sm btn-ghost gap-1.5 text-xs font-medium text-base-content/60
+                  hover:text-base-content flex-1">
+          <i class="bi bi-people text-sm"></i> Ver Elenco
         </a>
-        <a href="{% url 'equipe:editar' equipe.pk %}" class="btn btn-xs btn-ghost gap-1">
-          <i class="bi bi-pencil"></i>
-        </a>
-        <a href="{% url 'equipe:excluir' equipe.pk %}" class="btn btn-xs btn-ghost text-error gap-1">
-          <i class="bi bi-trash"></i>
-        </a>
+        <div class="flex gap-1">
+          <a href="{% url 'equipe:editar' equipe.pk %}"
+             class="btn btn-ghost btn-xs text-base-content/40 hover:text-base-content"
+             title="Editar equipe">
+            <i class="bi bi-pencil text-xs"></i>
+          </a>
+          <a href="{% url 'equipe:excluir' equipe.pk %}"
+             class="btn btn-ghost btn-xs text-error/50 hover:text-error hover:bg-error/10"
+             title="Excluir equipe">
+            <i class="bi bi-trash text-xs"></i>
+          </a>
+        </div>
       </div>
     </div>
+
     {% empty %}
     <div class="col-span-full">
-      <div class="text-center py-16 text-base-content/40">
-        <i class="bi bi-shield-x text-5xl block mb-3 opacity-30"></i>
-        <p class="font-semibold">Nenhuma equipe cadastrada ainda.</p>
-        <p class="text-sm mt-1">Crie a primeira equipe para começar.</p>
-        <a href="{% url 'equipe:criar' %}" class="btn btn-warning btn-sm mt-4 gap-1.5">
-          <i class="bi bi-plus-lg"></i> Nova Equipe
-        </a>
-      </div>
+      {% include 'components/empty_state.html' with
+         icon="shield-x"
+         title="Nenhuma equipe cadastrada ainda."
+         subtitle="Crie a primeira equipe para começar a organizar o campeonato."
+         cta_url=url_criar_equipe
+         cta_label="Nova Equipe" %}
     </div>
     {% endfor %}
   </div>

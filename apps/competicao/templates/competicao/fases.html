@@ -1,54 +1,131 @@
 {% extends 'base/indice.html' %}
 {% block titulo %}Fases — {{ competicao.nome }}{% endblock %}
 
-{% block conteudo %}
-<div class="p-4 md:p-6">
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-base-content/40">
+    <ul>
+      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-base-content/70">Dashboard</a></li>
+      <li><a href="{% url 'competicao:competicao_lista' %}" class="hover:text-base-content/70">Competições</a></li>
+      <li><a href="{% url 'competicao:classificacao' competicao.pk %}" class="hover:text-base-content/70">{{ competicao.nome }}</a></li>
+      <li><span class="text-base-content/60">Fases</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
 
-  <div class="flex items-center justify-between mb-5">
-    <h1 class="text-lg font-bold flex items-center gap-2">
-      <i class="bi bi-layers text-warning"></i> {{ competicao.nome }} — Fases
-    </h1>
-    <div class="flex gap-2">
-      <a href="{% url 'competicao:classificacao' competicao.pk %}" class="btn btn-ghost btn-sm gap-1">
-        <i class="bi bi-trophy"></i> Classificação
-      </a>
-      <a href="{% url 'competicao:competicao_lista' %}" class="btn btn-ghost btn-sm gap-1">
-        <i class="bi bi-arrow-left"></i> Voltar
+{% block conteudo %}
+<div class="p-4 md:p-6 max-w-[1100px] mx-auto space-y-6">
+
+  <!-- Cabeçalho -->
+  <div class="flex items-end justify-between gap-4">
+    <div>
+      <h1 class="section-heading text-4xl text-base-content leading-none">FASES</h1>
+      <p class="text-sm text-base-content/40 mt-1">{{ competicao.nome }}</p>
+    </div>
+    <div class="flex gap-2 shrink-0">
+      <a href="{% url 'competicao:classificacao' competicao.pk %}"
+         class="btn btn-ghost btn-sm gap-1 border border-base-content/10 text-base-content/50">
+        <i class="bi bi-trophy text-xs"></i>
+        <span class="hidden sm:inline">Classificação</span>
       </a>
     </div>
   </div>
 
+  <!-- Stepper visual (se houver fases) -->
+  {% if fases %}
+  <div class="card bg-base-200 border border-base-300 overflow-hidden">
+    <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
+      <i class="bi bi-diagram-3 text-warning text-sm"></i>
+      <span class="section-heading text-base text-base-content/70 tracking-widest">SEQUÊNCIA DE FASES</span>
+    </div>
+    <div class="px-4 py-5 overflow-x-auto">
+      <div class="flex items-center gap-0 min-w-max">
+        {% for fase in fases %}
+
+        <!-- Fase -->
+        <div class="flex flex-col items-center gap-2 px-2">
+          <!-- Círculo numerado -->
+          <div class="w-11 h-11 rounded-full flex items-center justify-center shrink-0
+                      border-2 font-black text-base
+                      {% if fase.tipo == 'liga' %}border-info/40 bg-info/10 text-info
+                      {% elif fase.tipo == 'grupos' %}border-success/40 bg-success/10 text-success
+                      {% else %}border-warning/40 bg-warning/10 text-warning{% endif %}">
+            {{ forloop.counter }}
+          </div>
+          <!-- Ícone do tipo -->
+          <div class="text-base text-center leading-none">
+            {% if fase.tipo == 'liga' %}📋
+            {% elif fase.tipo == 'grupos' %}👥
+            {% else %}⚔️{% endif %}
+          </div>
+          <!-- Nome -->
+          <div class="text-center max-w-[80px]">
+            <p class="text-xs font-bold text-base-content/70 leading-snug text-center">{{ fase.nome }}</p>
+            <p class="text-[10px] text-base-content/30 mt-0.5">
+              {% if fase.tipo == 'liga' %}Liga
+              {% elif fase.tipo == 'grupos' %}Grupos
+              {% else %}Mata-Mata{% endif %}
+            </p>
+          </div>
+          {% if fase.ida_e_volta %}
+          <span class="badge badge-ghost badge-xs text-[9px]">Ida e volta</span>
+          {% endif %}
+        </div>
+
+        <!-- Conectores entre fases -->
+        {% if not forloop.last %}
+        <div class="flex flex-col items-center gap-1 shrink-0 w-12">
+          <div class="h-0.5 w-full bg-gradient-to-r from-base-content/15 to-base-content/15 via-warning/30 rounded-full"></div>
+          <i class="bi bi-chevron-right text-[10px] text-base-content/20 -mt-0.5"></i>
+        </div>
+        {% endif %}
+
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Grid: formulário + lista -->
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
-    <!-- Nova fase -->
+    <!-- Formulário nova fase -->
     <div class="lg:col-span-1">
       <div class="card bg-base-200 border border-base-300 sticky top-20">
-        <div class="px-4 py-3 border-b border-base-300 flex items-center gap-2">
+        <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
           <i class="bi bi-plus-circle text-warning text-sm"></i>
-          <span class="font-semibold text-sm">Nova Fase</span>
+          <span class="section-heading text-base text-base-content/70 tracking-widest">NOVA FASE</span>
         </div>
         <div class="card-body p-4">
           <form method="post" action="{% url 'competicao:fase_criar' competicao_pk=competicao.pk %}" class="space-y-3">
             {% csrf_token %}
             {% for field in form %}
             {% if field.field.widget.input_type == 'checkbox' %}
-            <label class="flex items-center gap-3 cursor-pointer px-2 py-1.5 rounded-lg hover:bg-base-300/40 transition-colors">
+            <label class="flex items-center gap-3 cursor-pointer px-2 py-2 rounded-xl
+                          border border-base-content/8 hover:bg-base-300/40 transition-colors">
               {{ field }}
-              <span class="text-sm font-medium">{{ field.label }}</span>
+              <span class="text-sm font-medium text-base-content/70">{{ field.label }}</span>
             </label>
             {% else %}
             <div>
-              <label class="label py-0 mb-1" for="{{ field.id_for_label }}">
-                <span class="label-text font-semibold text-xs">{{ field.label }}{% if field.field.required %}<span class="text-error ml-1">*</span>{% endif %}</span>
+              <label class="label py-0 mb-1.5" for="{{ field.id_for_label }}">
+                <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">
+                  {{ field.label }}{% if field.field.required %}<span class="text-error ml-1">*</span>{% endif %}
+                </span>
               </label>
               {{ field }}
               {% if field.errors %}
-                {% for error in field.errors %}<p class="text-error text-xs mt-1">{{ error }}</p>{% endfor %}
+                {% for error in field.errors %}
+                <p class="text-error text-xs mt-1 flex items-center gap-1">
+                  <i class="bi bi-exclamation-circle-fill text-xs"></i> {{ error }}
+                </p>
+                {% endfor %}
               {% endif %}
             </div>
             {% endif %}
             {% endfor %}
-            <button type="submit" class="btn btn-warning btn-sm w-full mt-1">
+            <button type="submit" class="btn btn-warning btn-sm w-full gap-1 font-semibold mt-1">
               <i class="bi bi-check-lg"></i> Criar Fase
             </button>
           </form>
@@ -60,61 +137,113 @@
     <div class="lg:col-span-2 space-y-3">
 
       {% for fase in fases %}
-      <div class="card bg-base-200 border border-base-300 hover:border-warning/30 transition-colors">
-        <div class="px-4 py-3 border-b border-base-300 flex items-center justify-between">
-          <span class="font-semibold text-sm">{{ fase.nome }}</span>
+      <div class="card bg-base-200 border border-base-300 hover:border-warning/25 transition-all overflow-hidden card-sport">
+
+        <!-- Header da fase -->
+        <div class="flex items-center gap-3 px-4 py-3 border-b border-base-300 bg-base-300/30">
+          <div class="text-lg leading-none shrink-0">
+            {% if fase.tipo == 'liga' %}📋
+            {% elif fase.tipo == 'grupos' %}👥
+            {% else %}⚔️{% endif %}
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="font-black text-sm text-base-content truncate">{{ fase.nome }}</p>
+            <p class="text-[10px] text-base-content/35 uppercase tracking-wider mt-0.5">
+              Fase {{ fase.ordem }}
+              {% if fase.tipo == 'liga' %} · Liga / Pontos Corridos
+              {% elif fase.tipo == 'grupos' %} · Fase de Grupos
+              {% else %} · Eliminatório{% endif %}
+            </p>
+          </div>
+          <!-- Badge de tipo -->
           {% if fase.tipo == 'liga' %}
-            <span class="badge badge-info badge-sm">Liga / Pontos Corridos</span>
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold
+                         bg-info/15 text-info border border-info/20 shrink-0">Liga</span>
           {% elif fase.tipo == 'grupos' %}
-            <span class="badge badge-success badge-sm">Fase de Grupos</span>
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold
+                         bg-success/15 text-success border border-success/20 shrink-0">Grupos</span>
           {% else %}
-            <span class="badge badge-warning badge-sm">Mata-Mata</span>
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold
+                         bg-warning/15 text-warning border border-warning/20 shrink-0">Mata-Mata</span>
           {% endif %}
         </div>
-        <div class="card-body p-4">
-          <div class="flex flex-wrap gap-2 mb-3">
 
+        <!-- Corpo -->
+        <div class="p-4 space-y-3">
+
+          <!-- Detalhes compactos -->
+          <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-base-content/40">
+            <span class="flex items-center gap-1">
+              <i class="bi bi-hash text-warning/40 text-xs"></i>
+              Ordem {{ fase.ordem }}
+            </span>
+            {% if fase.ida_e_volta %}
+            <span class="flex items-center gap-1">
+              <i class="bi bi-arrow-left-right text-info/50"></i> Ida e volta
+            </span>
+            {% endif %}
             {% if fase.tipo == 'grupos' %}
-              <a href="{% url 'competicao:grupos_fase' pk=fase.pk %}" class="btn btn-ghost btn-xs gap-1">
-                <i class="bi bi-grid-3x3-gap"></i> Gerenciar Grupos
-              </a>
+            <span class="flex items-center gap-1">
+              <i class="bi bi-trophy text-success/50"></i>
+              {{ fase.qtd_classificados_por_grupo }} classificado{{ fase.qtd_classificados_por_grupo|pluralize:"s" }} / grupo
+            </span>
+            {% endif %}
+          </div>
+
+          <!-- Ações -->
+          <div class="flex flex-wrap gap-2">
+            {% if fase.tipo == 'grupos' %}
+            <a href="{% url 'competicao:grupos_fase' pk=fase.pk %}"
+               class="btn btn-ghost btn-xs gap-1 border border-base-content/10 text-base-content/60">
+              <i class="bi bi-grid-3x3-gap text-xs"></i> Grupos
+            </a>
             {% elif fase.tipo == 'mata_mata' %}
-              <a href="{% url 'competicao:chaveamento' pk=fase.pk %}" class="btn btn-ghost btn-xs gap-1 text-warning">
-                <i class="bi bi-diagram-3"></i> Chaveamento
-              </a>
+            <a href="{% url 'competicao:chaveamento' pk=fase.pk %}"
+               class="btn btn-ghost btn-xs gap-1 border border-warning/20 text-warning/70
+                      hover:text-warning hover:border-warning/40">
+              <i class="bi bi-diagram-3 text-xs"></i> Chaveamento
+            </a>
             {% endif %}
 
-            <a href="{% url 'competicao:rodadas' pk=competicao.pk %}" class="btn btn-ghost btn-xs gap-1">
-              <i class="bi bi-calendar3"></i> Rodadas
+            <a href="{% url 'competicao:rodadas' pk=competicao.pk %}"
+               class="btn btn-ghost btn-xs gap-1 border border-base-content/10 text-base-content/50">
+              <i class="bi bi-calendar3 text-xs"></i> Rodadas
             </a>
 
             <form method="post" action="{% url 'competicao:fase_excluir' pk=fase.pk %}"
-                  class="inline" onsubmit="return confirm('Excluir a fase \'{{ fase.nome }}\'? Todos os dados serão removidos.')">
+                  class="inline ml-auto"
+                  onsubmit="return confirm('Excluir a fase \'{{ fase.nome }}\'? Esta ação é irreversível.')">
               {% csrf_token %}
-              <button type="submit" class="btn btn-ghost btn-xs text-error gap-1">
-                <i class="bi bi-trash"></i> Excluir
+              <button type="submit"
+                      class="btn btn-ghost btn-xs gap-1 border border-error/15 text-error/50
+                             hover:text-error hover:bg-error/10 hover:border-error/30">
+                <i class="bi bi-trash text-xs"></i> Excluir
               </button>
             </form>
+          </div>
 
-          </div>
-          <div class="text-xs text-base-content/40 flex flex-wrap gap-3">
-            <span>Ordem: {{ fase.ordem }}</span>
-            {% if fase.ida_e_volta %}<span><i class="bi bi-arrow-left-right"></i> Ida e volta</span>{% endif %}
-            {% if fase.tipo == 'grupos' %}<span>{{ fase.qtd_classificados_por_grupo }} classificado(s) por grupo</span>{% endif %}
-          </div>
         </div>
       </div>
+
       {% empty %}
       <div class="card bg-base-200 border border-base-300">
-        <div class="card-body text-center py-12 text-base-content/40">
-          <i class="bi bi-layers text-4xl block mb-3 opacity-30"></i>
-          <p class="font-semibold">Nenhuma fase cadastrada.</p>
-          <p class="text-sm mt-1">Crie uma fase ao lado para começar.</p>
+        <div class="flex flex-col items-center justify-center py-16 gap-4 text-center">
+          <div class="w-14 h-14 rounded-full bg-base-300 border border-base-content/10
+                      flex items-center justify-center">
+            <i class="bi bi-layers text-2xl text-base-content/20"></i>
+          </div>
+          <div>
+            <p class="section-heading text-xl text-base-content/40">SEM FASES</p>
+            <p class="text-sm text-base-content/30 mt-1.5">
+              Crie a primeira fase usando o formulário ao lado.
+            </p>
+          </div>
         </div>
       </div>
       {% endfor %}
 
     </div>
   </div>
+
 </div>
 {% endblock %}

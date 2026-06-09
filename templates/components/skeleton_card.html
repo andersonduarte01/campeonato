@@ -1,0 +1,70 @@
+{#
+  skeleton_card.html — Placeholder de carregamento
+  Uso: {% include 'components/skeleton_card.html' with type="card" %}
+  Parâmetros:
+    type — "card" (padrão) | "table" | "kpi" | "player"
+#}
+{% if type == "kpi" %}
+<div class="card bg-base-200 border border-base-300 overflow-hidden">
+  <div class="card-body p-5 flex items-start justify-between gap-3">
+    <div class="flex-1 space-y-2">
+      <div class="skeleton h-3 w-20 rounded"></div>
+      <div class="skeleton h-8 w-16 rounded"></div>
+      <div class="skeleton h-3 w-24 rounded"></div>
+    </div>
+    <div class="skeleton w-12 h-12 rounded-xl shrink-0"></div>
+  </div>
+</div>
+
+{% elif type == "table" %}
+<div class="card bg-base-200 border border-base-300 overflow-hidden">
+  <div class="p-4 space-y-3">
+    {% for i in "12345" %}
+    <div class="flex items-center gap-3">
+      <div class="skeleton w-7 h-7 rounded-lg shrink-0"></div>
+      <div class="skeleton w-10 h-10 rounded-full shrink-0"></div>
+      <div class="flex-1 space-y-1.5">
+        <div class="skeleton h-3.5 rounded w-3/4"></div>
+        <div class="skeleton h-2.5 rounded w-1/2"></div>
+      </div>
+      <div class="flex gap-2 shrink-0">
+        <div class="skeleton h-3.5 w-6 rounded"></div>
+        <div class="skeleton h-3.5 w-6 rounded"></div>
+        <div class="skeleton h-3.5 w-8 rounded"></div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+{% elif type == "player" %}
+<div class="card bg-base-200 border border-base-300 overflow-hidden text-center">
+  <div class="p-5 flex flex-col items-center gap-2">
+    <div class="skeleton w-16 h-16 rounded-full"></div>
+    <div class="skeleton h-3.5 w-24 rounded"></div>
+    <div class="skeleton h-5 w-16 rounded-full"></div>
+  </div>
+</div>
+
+{% else %}{# card (padrão) #}
+<div class="card bg-base-200 border border-base-300 overflow-hidden">
+  <div class="card-body p-4 space-y-3">
+    <div class="flex items-center gap-3">
+      <div class="skeleton w-12 h-12 rounded-full shrink-0"></div>
+      <div class="flex-1 space-y-2">
+        <div class="skeleton h-4 rounded-lg w-3/4"></div>
+        <div class="skeleton h-3 rounded-lg w-1/2"></div>
+      </div>
+    </div>
+    <div class="space-y-2">
+      <div class="skeleton h-3 rounded-lg"></div>
+      <div class="skeleton h-3 rounded-lg w-5/6"></div>
+      <div class="skeleton h-3 rounded-lg w-4/6"></div>
+    </div>
+    <div class="flex gap-2 pt-1">
+      <div class="skeleton h-7 rounded-lg w-20"></div>
+      <div class="skeleton h-7 rounded-lg w-16"></div>
+    </div>
+  </div>
+</div>
+{% endif %}

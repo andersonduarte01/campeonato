@@ -1,0 +1,93 @@
+{% extends 'base/indice.html' %}
+{% block titulo %}Janelas de Transferência{% endblock %}
+
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-base-content/40">
+    <ul>
+      <li><a href="{% url 'federacao:dashboard' %}" class="hover:text-base-content/70">Federação</a></li>
+      <li><a href="{% url 'federacao:transferencia_lista' %}" class="hover:text-base-content/70">Transferências</a></li>
+      <li><span class="text-base-content/60">Janelas</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block conteudo %}
+<div class="p-4 md:p-6 max-w-[1000px] mx-auto space-y-5">
+
+  <h1 class="section-heading text-4xl text-base-content leading-none">JANELAS DE TRANSFERÊNCIA</h1>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+    <!-- Formulário -->
+    <div class="lg:col-span-1">
+      <div class="card bg-base-200 border border-base-300 sticky top-20">
+        <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
+          <i class="bi bi-plus-circle text-warning text-sm"></i>
+          <span class="section-heading text-base text-base-content/70 tracking-widest">NOVA JANELA</span>
+        </div>
+        <div class="card-body p-4">
+          <form method="post" class="space-y-3">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+            <div class="alert alert-error text-sm py-2">{{ form.non_field_errors }}</div>
+            {% endif %}
+            {% for field in form %}
+            <div>
+              <label class="label py-0 mb-1" for="{{ field.id_for_label }}">
+                <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">{{ field.label }}</span>
+              </label>
+              {{ field }}
+              {% for e in field.errors %}<p class="text-error text-xs mt-1">{{ e }}</p>{% endfor %}
+            </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-warning btn-sm w-full font-semibold gap-1">
+              <i class="bi bi-check-lg"></i> Criar Janela
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista -->
+    <div class="lg:col-span-2 space-y-3">
+      {% for j in janelas %}
+      <div class="card bg-base-200 border overflow-hidden card-sport
+        {% if j.is_aberta %}border-success/30{% else %}border-base-300{% endif %}">
+        {% if j.is_aberta %}<div class="h-0.5 w-full bg-success animate-pulse"></div>{% endif %}
+        <div class="p-4 flex items-center gap-4">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-1">
+              <p class="font-black text-sm text-base-content">{{ j.nome }}</p>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border
+                {% if j.is_aberta %}bg-success/15 text-success border-success/20
+                {% elif j.status_display == 'Futura' %}bg-info/15 text-info border-info/20
+                {% else %}bg-base-300 text-base-content/40 border-base-content/10{% endif %}">
+                {{ j.status_display }}
+              </span>
+            </div>
+            <p class="text-xs text-base-content/40 flex items-center gap-1">
+              <i class="bi bi-calendar-range text-warning/40"></i>
+              {{ j.data_inicio|date:"d/m/Y" }} — {{ j.data_fim|date:"d/m/Y" }}
+            </p>
+          </div>
+          <a href="{% url 'federacao:janela_editar' j.pk %}"
+             class="btn btn-ghost btn-xs border border-base-content/10 shrink-0">
+            <i class="bi bi-pencil text-xs"></i>
+          </a>
+        </div>
+      </div>
+      {% empty %}
+      <div class="card bg-base-200 border border-base-300">
+        <div class="flex flex-col items-center justify-center py-12 gap-3 text-base-content/30">
+          <i class="bi bi-calendar-range text-4xl opacity-30"></i>
+          <p class="text-sm">Nenhuma janela cadastrada.</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}

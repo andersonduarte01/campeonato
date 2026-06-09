@@ -1,0 +1,56 @@
+{#
+  team_badge.html
+  Uso: {% include 'components/team_badge.html' with equipe=equipe size="md" show_name=True %}
+  Parâmetros:
+    equipe    — objeto Equipe (obrigatório)
+    size      — "sm" (32px) | "md" (44px, padrão) | "lg" (72px)
+    show_name — True/False (padrão False)
+#}
+{% if size == "sm" %}
+  {% with dim="w-8 h-8" txt_size="text-[10px]" name_size="text-xs" %}
+  <div class="flex items-center gap-2 shrink-0">
+    {% if equipe.escudo %}
+      <img src="{{ equipe.escudo.thumbnail.url }}" alt="{{ equipe.nome_equipe }}"
+           class="{{ dim }} rounded-full object-cover border border-base-300 shrink-0">
+    {% else %}
+      <div class="{{ dim }} rounded-full bg-neutral-content/10 border border-base-300
+                  flex items-center justify-center shrink-0">
+        <span class="{{ txt_size }} font-black text-base-content/50">{{ equipe.nome_equipe|first|upper }}</span>
+      </div>
+    {% endif %}
+    {% if show_name %}<span class="{{ name_size }} font-semibold truncate">{{ equipe.nome_equipe }}</span>{% endif %}
+  </div>
+  {% endwith %}
+
+{% elif size == "lg" %}
+  {% with dim="w-[4.5rem] h-[4.5rem]" txt_size="text-2xl" name_size="text-lg" %}
+  <div class="flex items-center gap-3 shrink-0">
+    {% if equipe.escudo %}
+      <img src="{{ equipe.escudo.thumbnail.url }}" alt="{{ equipe.nome_equipe }}"
+           class="{{ dim }} rounded-full object-cover border-2 border-base-300 shadow-lg shrink-0">
+    {% else %}
+      <div class="{{ dim }} rounded-full bg-neutral-content/10 border-2 border-base-300
+                  flex items-center justify-center shadow-lg shrink-0">
+        <span class="{{ txt_size }} font-black text-base-content/50">{{ equipe.nome_equipe|first|upper }}</span>
+      </div>
+    {% endif %}
+    {% if show_name %}<span class="{{ name_size }} font-bold truncate">{{ equipe.nome_equipe }}</span>{% endif %}
+  </div>
+  {% endwith %}
+
+{% else %}{# md (padrão) #}
+  {% with dim="w-11 h-11" txt_size="text-sm" name_size="text-sm" %}
+  <div class="flex items-center gap-2.5 shrink-0">
+    {% if equipe.escudo %}
+      <img src="{{ equipe.escudo.thumbnail.url }}" alt="{{ equipe.nome_equipe }}"
+           class="{{ dim }} rounded-full object-cover border-2 border-base-300 shrink-0">
+    {% else %}
+      <div class="{{ dim }} rounded-full bg-neutral-content/10 border-2 border-base-300
+                  flex items-center justify-center shrink-0">
+        <span class="{{ txt_size }} font-black text-base-content/50">{{ equipe.nome_equipe|first|upper }}</span>
+      </div>
+    {% endif %}
+    {% if show_name %}<span class="{{ name_size }} font-semibold truncate">{{ equipe.nome_equipe }}</span>{% endif %}
+  </div>
+  {% endwith %}
+{% endif %}

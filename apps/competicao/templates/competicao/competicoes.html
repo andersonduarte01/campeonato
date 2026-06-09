@@ -1,16 +1,27 @@
 {% extends 'base/indice.html' %}
 {% block titulo %}Competições{% endblock %}
 
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-base-content/40">
+    <ul>
+      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-base-content/70">Dashboard</a></li>
+      <li><span class="text-base-content/60">Competições</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
 {% block conteudo %}
 <div class="p-4 md:p-6 max-w-[1400px] mx-auto">
 
   <!-- ── Cabeçalho ──────────────────────────────────────────────────── -->
-  <div class="flex items-end justify-between gap-4 mb-8">
+  <div class="flex items-end justify-between gap-4 mb-5">
     <div>
       <h1 class="section-heading text-4xl text-base-content leading-none">COMPETIÇÕES</h1>
-      <p class="text-sm text-base-content/40 mt-1">
+      <p class="text-sm text-base-content/40 mt-1" id="comp-counter">
         {% if competicoes %}
-          {{ competicoes|length }} competiç{{ competicoes|length|pluralize:"ão,ões" }} cadastrada{{ competicoes|length|pluralize:"s" }}
+          {{ competicoes|length }} competiç{{ competicoes|length|pluralize:"ão,ões" }}
         {% else %}
           Nenhuma competição cadastrada ainda
         {% endif %}
@@ -24,13 +35,44 @@
     </a>
   </div>
 
+  <!-- ── Filtro de tabs ─────────────────────────────────────────────── -->
+  {% if competicoes %}
+  <div class="flex gap-1 border-b border-base-300 mb-6 overflow-x-auto -mx-4 px-4 md:-mx-0 md:px-0">
+    <button class="comp-filter-tab shrink-0 px-4 py-2.5 text-xs font-bold border-b-2 border-warning
+                   text-warning bg-warning/5 rounded-t-lg transition-all duration-150"
+            data-filter="all">
+      Todas
+      <span class="badge badge-ghost badge-xs ml-1" id="count-all">{{ competicoes|length }}</span>
+    </button>
+    <button class="comp-filter-tab shrink-0 px-4 py-2.5 text-xs font-bold border-b-2 border-transparent
+                   text-base-content/40 hover:text-base-content/70 rounded-t-lg transition-all duration-150"
+            data-filter="andamento">
+      Em Andamento
+      <span class="badge badge-ghost badge-xs ml-1" id="count-andamento">0</span>
+    </button>
+    <button class="comp-filter-tab shrink-0 px-4 py-2.5 text-xs font-bold border-b-2 border-transparent
+                   text-base-content/40 hover:text-base-content/70 rounded-t-lg transition-all duration-150"
+            data-filter="aberto">
+      Abertas / Futuras
+      <span class="badge badge-ghost badge-xs ml-1" id="count-aberto">0</span>
+    </button>
+    <button class="comp-filter-tab shrink-0 px-4 py-2.5 text-xs font-bold border-b-2 border-transparent
+                   text-base-content/40 hover:text-base-content/70 rounded-t-lg transition-all duration-150"
+            data-filter="finalizado">
+      Encerradas
+      <span class="badge badge-ghost badge-xs ml-1" id="count-finalizado">0</span>
+    </button>
+  </div>
+  {% endif %}
+
   {% if competicoes %}
   <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
 
     {% for comp in competicoes %}
 
     <!-- ── Card da Competição ──────────────────────────────────────── -->
-    <div class="card bg-base-200 border border-base-300 overflow-hidden card-sport group flex flex-col">
+    <div class="card bg-base-200 border border-base-300 overflow-hidden card-sport group flex flex-col comp-card"
+         data-status="{{ comp.status }}">
 
       <!-- Barra de status colorida no topo -->
       <div class="h-1 w-full shrink-0
@@ -170,9 +212,29 @@
 
         </ul>
 
-        <!-- Separador + Ações (empurrado para o rodapé do card) -->
-        <div class="mt-auto">
-          <div class="h-px bg-base-content/8 mb-3"></div>
+        <!-- Progresso visual baseado em status -->
+        <div class="mt-auto space-y-2">
+          <div>
+            <div class="flex items-center justify-between text-[10px] text-base-content/35 mb-1.5">
+              <span class="font-medium">Andamento</span>
+              <span class="font-semibold
+                {% if comp.status == 'finalizado' %}text-success
+                {% elif comp.status == 'andamento' %}text-warning
+                {% elif comp.status == 'cancelado' %}text-error
+                {% else %}text-info{% endif %}">
+                {{ comp.get_status_display }}
+              </span>
+            </div>
+            <div class="h-1 bg-base-300/60 rounded-full overflow-hidden">
+              <div class="h-full rounded-full transition-all duration-700
+                {% if comp.status == 'finalizado' %}bg-success w-full
+                {% elif comp.status == 'andamento' %}bg-warning w-1/2
+                {% elif comp.status == 'cancelado' %}bg-error w-1/4
+                {% else %}bg-info w-1/12{% endif %}">
+              </div>
+            </div>
+          </div>
+          <div class="h-px bg-base-content/8"></div>
           <div class="flex gap-2">
             <a href="{% url 'competicao:classificacao' pk=comp.pk %}"
                class="btn btn-warning btn-sm flex-1 font-semibold shadow-sm shadow-warning/10 gap-1">
@@ -255,4 +317,70 @@
   {% endif %}
 
 </div>
+{% endblock %}
+
+{% block script %}
+<script>
+(function () {
+  'use strict';
+
+  var tabs    = document.querySelectorAll('.comp-filter-tab');
+  var cards   = document.querySelectorAll('.comp-card');
+  var counter = document.getElementById('comp-counter');
+
+  // Conta cards por status
+  var counts = { all: 0, andamento: 0, aberto: 0, finalizado: 0 };
+  cards.forEach(function (c) {
+    var s = c.dataset.status || '';
+    counts.all++;
+    if (s === 'andamento')  counts.andamento++;
+    if (s === 'aberto')     counts.aberto++;
+    if (s === 'finalizado') counts.finalizado++;
+  });
+
+  // Atualiza badges
+  ['all', 'andamento', 'aberto', 'finalizado'].forEach(function (key) {
+    var el = document.getElementById('count-' + key);
+    if (el) el.textContent = counts[key];
+  });
+
+  function activateFilter(tab) {
+    var filter = tab.dataset.filter;
+
+    // Estilo dos tabs
+    tabs.forEach(function (t) {
+      var active = t === tab;
+      t.classList.toggle('border-warning',       active);
+      t.classList.toggle('text-warning',         active);
+      t.classList.toggle('bg-warning/5',         active);
+      t.classList.toggle('border-transparent',   !active);
+      t.classList.toggle('text-base-content/40', !active);
+    });
+
+    // Exibe/oculta cards
+    var visible = 0;
+    cards.forEach(function (c) {
+      var show = filter === 'all' || c.dataset.status === filter;
+      c.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+
+    // Atualiza contador de texto
+    if (counter) {
+      if (visible === 0) {
+        counter.textContent = 'Nenhuma competição neste filtro';
+      } else {
+        counter.textContent = visible + ' competiç' + (visible === 1 ? 'ão' : 'ões');
+      }
+    }
+  }
+
+  tabs.forEach(function (tab) {
+    tab.addEventListener('click', function () { activateFilter(this); });
+  });
+
+  // Ativa "Todas" no carregamento
+  if (tabs.length) activateFilter(tabs[0]);
+})();
+</script>
 {% endblock %}

@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'apps.equipe',
     'apps.competicao',
     'apps.criterios',
+    'apps.federacao',
 ]
 
 TAILWIND_APP_NAME = 'theme'

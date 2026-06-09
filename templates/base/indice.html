@@ -7,7 +7,7 @@
   <title>{% block titulo %}Campeonato{% endblock %} — Champs</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   {% tailwind_css %}
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
   {% block estatico %}{% endblock %}
@@ -34,6 +34,20 @@
     {% endfor %}
   </div>
   {% endif %}
+
+  <!-- ── Resolução de URLs — disponíveis em todo o template ─────── -->
+  {% url 'competicao:dashboard'        as url_dash %}
+  {% url 'equipe:lista'                as url_equipes %}
+  {% url 'competicao:competicao_lista' as url_comp %}
+  {% url 'competicao:calendario'       as url_cal %}
+  {% url 'competicao:notificacoes'     as url_notif %}
+  {% url 'competicao:local_lista'      as url_local %}
+  {% url 'competicao:arbitro_lista'    as url_arb %}
+  {% url 'federacao:dashboard'         as url_fed %}
+  {% url 'federacao:registro_lista'    as url_fed_reg %}
+  {% url 'federacao:transferencia_lista' as url_fed_transf %}
+  {% url 'federacao:clube_lista'       as url_fed_clubes %}
+  {% url 'federacao:documento_lista'   as url_fed_docs %}
 
   <!-- ─────────────────────────────────────────────────────────────────
        DRAWER — lg:drawer-open torna a sidebar permanente no desktop
@@ -68,16 +82,17 @@
         <!-- End: busca + usuário -->
         <div class="navbar-end gap-2">
 
-          <!-- Busca global (desktop) -->
-          <form method="get" action="{% url 'competicao:busca_global' %}" class="hidden md:flex" role="search">
-            <label class="input input-sm bg-neutral-content/5 border-neutral-content/15 text-neutral-content
-                          flex items-center gap-2 rounded-lg focus-within:border-neutral-content/40
-                          focus-within:bg-neutral-content/10 transition-all duration-150">
-              <i class="bi bi-search text-neutral-content/30 text-xs shrink-0"></i>
-              <input type="search" name="q" placeholder="Buscar..."
-                     class="grow bg-transparent w-28 text-sm placeholder:text-neutral-content/30 outline-none">
-            </label>
-          </form>
+          <!-- Busca global (desktop) — abre modal -->
+          <button type="button"
+                  onclick="document.getElementById('search-modal').showModal();setTimeout(()=>document.getElementById('search-modal-input').focus(),50)"
+                  class="hidden md:flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-lg text-sm
+                         bg-neutral-content/5 border border-neutral-content/10
+                         text-neutral-content/35 hover:text-neutral-content/60
+                         hover:bg-neutral-content/10 transition-all duration-150 cursor-pointer">
+            <i class="bi bi-search text-xs shrink-0"></i>
+            <span class="w-32 text-left">Buscar...</span>
+            <kbd class="kbd kbd-xs text-neutral-content/25">Ctrl K</kbd>
+          </button>
 
           {% if user.is_authenticated %}
           <!-- Dropdown usuário — padrão <details> do DaisyUI v5 -->
@@ -143,7 +158,8 @@
       <div class="h-px bg-gradient-to-r from-transparent via-warning/25 to-transparent shrink-0"></div>
 
       <!-- Conteúdo da página -->
-      <main class="flex-1">
+      <main class="flex-1 pb-16 lg:pb-0">
+        {% block breadcrumbs %}{% endblock %}
         {% block conteudo %}{% endblock %}
       </main>
 
@@ -186,31 +202,17 @@
         </a>
 
         <!-- ── Navegação principal ────────────────────────────────── -->
-        {% url 'competicao:dashboard'       as url_dash %}
-        {% url 'equipe:lista'               as url_equipes %}
-        {% url 'competicao:competicao_lista' as url_comp %}
-        {% url 'competicao:calendario'       as url_cal %}
-        {% url 'competicao:local_lista'      as url_local %}
-        {% url 'competicao:arbitro_lista'    as url_arb %}
-
         <nav class="flex-1 px-3 py-4 flex flex-col gap-0.5 overflow-y-auto">
+
+          <!-- PRINCIPAL -->
+          <div class="sidebar-section">
+            <span class="sidebar-section-label">Principal</span>
+          </div>
 
           <a href="{{ url_dash }}"
              class="sidebar-link {% if request.path == url_dash %}sidebar-link-active{% endif %}">
             <i class="bi bi-speedometer2 text-base shrink-0"></i>
             Dashboard
-          </a>
-
-          <a href="{{ url_equipes }}"
-             class="sidebar-link {% if url_equipes in request.path %}sidebar-link-active{% endif %}">
-            <i class="bi bi-shield-fill text-base shrink-0"></i>
-            Equipes
-          </a>
-
-          <a href="{{ url_comp }}"
-             class="sidebar-link {% if url_comp in request.path %}sidebar-link-active{% endif %}">
-            <i class="bi bi-trophy text-base shrink-0"></i>
-            Competições
           </a>
 
           <a href="{{ url_cal }}"
@@ -219,7 +221,33 @@
             Calendário
           </a>
 
-          <!-- Seção: Cadastros -->
+          <a href="{{ url_notif }}"
+             class="sidebar-link {% if request.path == url_notif %}sidebar-link-active{% endif %}">
+            <i class="bi bi-bell-fill text-base shrink-0"></i>
+            Notificações
+            {% if notificacoes_count > 0 %}
+            <span class="badge badge-error badge-xs ml-auto">{{ notificacoes_count }}</span>
+            {% endif %}
+          </a>
+
+          <!-- TORNEIOS -->
+          <div class="sidebar-section">
+            <span class="sidebar-section-label">Torneios</span>
+          </div>
+
+          <a href="{{ url_comp }}"
+             class="sidebar-link {% if url_comp in request.path %}sidebar-link-active{% endif %}">
+            <i class="bi bi-trophy text-base shrink-0"></i>
+            Competições
+          </a>
+
+          <a href="{{ url_equipes }}"
+             class="sidebar-link {% if url_equipes in request.path %}sidebar-link-active{% endif %}">
+            <i class="bi bi-shield-fill text-base shrink-0"></i>
+            Equipes
+          </a>
+
+          <!-- CADASTROS -->
           <div class="sidebar-section">
             <span class="sidebar-section-label">Cadastros</span>
           </div>
@@ -236,8 +264,43 @@
             Árbitros
           </a>
 
+          <!-- FEDERAÇÃO -->
+          <div class="sidebar-section">
+            <span class="sidebar-section-label">Federação</span>
+          </div>
+
+          <a href="{{ url_fed }}"
+             class="sidebar-link {% if request.path == url_fed %}sidebar-link-active{% endif %}">
+            <i class="bi bi-award-fill text-base shrink-0 text-warning/50"></i>
+            Dashboard Federativo
+          </a>
+
+          <a href="{{ url_fed_reg }}"
+             class="sidebar-link {% if url_fed_reg in request.path %}sidebar-link-active{% endif %}">
+            <i class="bi bi-card-text text-base shrink-0 text-warning/50"></i>
+            Registros
+          </a>
+
+          <a href="{{ url_fed_transf }}"
+             class="sidebar-link {% if url_fed_transf in request.path %}sidebar-link-active{% endif %}">
+            <i class="bi bi-arrow-left-right text-base shrink-0 text-warning/50"></i>
+            Transferências
+          </a>
+
+          <a href="{{ url_fed_clubes }}"
+             class="sidebar-link {% if url_fed_clubes in request.path %}sidebar-link-active{% endif %}">
+            <i class="bi bi-building-fill text-base shrink-0 text-warning/50"></i>
+            Clubes Federados
+          </a>
+
+          <a href="{{ url_fed_docs }}"
+             class="sidebar-link {% if url_fed_docs in request.path %}sidebar-link-active{% endif %}">
+            <i class="bi bi-folder2-open text-base shrink-0 text-warning/50"></i>
+            Documentos
+          </a>
+
           {% if user.is_authenticated and user.is_admin or user.is_authenticated and user.perfil == 'admin' %}
-          <!-- Seção: Administração -->
+          <!-- ADMINISTRAÇÃO -->
           <div class="sidebar-section">
             <span class="sidebar-section-label">Administração</span>
           </div>
@@ -323,12 +386,130 @@
   </div>
   <!-- /drawer -->
 
+  <!-- ── Mobile Bottom Tab Bar (somente mobile) ──────────────────────── -->
+  <nav class="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-base-200/95 backdrop-blur-md
+              border-t border-base-300 h-16 flex items-stretch safe-area-inset-bottom">
+    <a href="{{ url_dash }}"
+       class="flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors
+              {% if request.path == url_dash %}text-warning{% else %}text-base-content/40 hover:text-base-content/70{% endif %}">
+      <i class="bi bi-speedometer2 text-xl leading-none"></i>
+      <span class="text-[10px] font-medium tracking-tight">Dashboard</span>
+    </a>
+    <a href="{{ url_comp }}"
+       class="flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors
+              {% if url_comp in request.path %}text-warning{% else %}text-base-content/40 hover:text-base-content/70{% endif %}">
+      <i class="bi bi-trophy text-xl leading-none"></i>
+      <span class="text-[10px] font-medium tracking-tight">Competições</span>
+    </a>
+    <a href="{{ url_cal }}"
+       class="flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors
+              {% if request.path == url_cal %}text-warning{% else %}text-base-content/40 hover:text-base-content/70{% endif %}">
+      <i class="bi bi-calendar3 text-xl leading-none"></i>
+      <span class="text-[10px] font-medium tracking-tight">Calendário</span>
+    </a>
+    <a href="{{ url_equipes }}"
+       class="flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors
+              {% if url_equipes in request.path %}text-warning{% else %}text-base-content/40 hover:text-base-content/70{% endif %}">
+      <i class="bi bi-shield-fill text-xl leading-none"></i>
+      <span class="text-[10px] font-medium tracking-tight">Equipes</span>
+    </a>
+    <a href="{{ url_notif }}"
+       class="flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors relative
+              {% if request.path == url_notif %}text-warning{% else %}text-base-content/40 hover:text-base-content/70{% endif %}">
+      <span class="relative inline-flex">
+        <i class="bi bi-bell-fill text-xl leading-none"></i>
+        {% if notificacoes_count > 0 %}
+        <span class="absolute -top-1 -right-2 badge badge-error badge-xs text-[9px] px-1 min-w-[1rem]">
+          {{ notificacoes_count }}
+        </span>
+        {% endif %}
+      </span>
+      <span class="text-[10px] font-medium tracking-tight">Avisos</span>
+    </a>
+  </nav>
+  <!-- /Mobile Bottom Tab Bar -->
+
+  <!-- ── Modal de Busca Global (Ctrl+K) ─────────────────────────────── -->
+  <dialog id="search-modal" class="modal modal-top sm:modal-middle">
+    <div class="modal-box bg-base-200 border border-base-300 sm:max-w-xl rounded-2xl p-0 overflow-hidden
+                shadow-2xl shadow-black/60">
+
+      <!-- Input principal -->
+      <form method="get" action="{% url 'competicao:busca_global' %}" id="search-modal-form">
+        <div class="flex items-center gap-3 px-4 py-3.5 border-b border-base-300">
+          <i class="bi bi-search text-warning/50 text-base shrink-0"></i>
+          <input type="search" name="q" id="search-modal-input"
+                 placeholder="Buscar competições, equipes, atletas..."
+                 autocomplete="off"
+                 class="flex-1 bg-transparent text-base outline-none text-base-content
+                        placeholder:text-base-content/30 min-w-0">
+          <kbd class="kbd kbd-sm hidden sm:inline text-base-content/20">Esc</kbd>
+        </div>
+      </form>
+
+      <!-- Links rápidos -->
+      <div class="p-3">
+        <p class="text-[10px] font-bold text-base-content/25 uppercase tracking-widest px-2 mb-2">
+          Acesso rápido
+        </p>
+        <div class="space-y-0.5">
+          <a href="{{ url_comp }}"
+             class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-base-300/70 transition-colors group">
+            <i class="bi bi-trophy text-warning/50 text-sm shrink-0"></i>
+            <span class="text-sm text-base-content/60 group-hover:text-base-content">Competições</span>
+          </a>
+          <a href="{{ url_equipes }}"
+             class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-base-300/70 transition-colors group">
+            <i class="bi bi-shield-fill text-warning/50 text-sm shrink-0"></i>
+            <span class="text-sm text-base-content/60 group-hover:text-base-content">Equipes</span>
+          </a>
+          <a href="{{ url_cal }}"
+             class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-base-300/70 transition-colors group">
+            <i class="bi bi-calendar3 text-warning/50 text-sm shrink-0"></i>
+            <span class="text-sm text-base-content/60 group-hover:text-base-content">Calendário</span>
+          </a>
+          <a href="{{ url_dash }}"
+             class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-base-300/70 transition-colors group">
+            <i class="bi bi-speedometer2 text-warning/50 text-sm shrink-0"></i>
+            <span class="text-sm text-base-content/60 group-hover:text-base-content">Dashboard</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Footer de atalhos -->
+      <div class="px-4 py-2 border-t border-base-300 flex items-center gap-4 text-[10px] text-base-content/25">
+        <span><kbd class="kbd kbd-xs">Enter</kbd> buscar</span>
+        <span><kbd class="kbd kbd-xs">Esc</kbd> fechar</span>
+      </div>
+    </div>
+    <!-- Backdrop fecha modal -->
+    <form method="dialog" class="modal-backdrop">
+      <button>fechar</button>
+    </form>
+  </dialog>
+  <!-- /Modal de Busca -->
+
   <!-- ── Micro-interações globais ──────────────────────────────────── -->
   <script>
   (function () {
     'use strict';
 
     var noMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    /* ── 0a. Ctrl+K / Cmd+K → abre modal de busca ─────────────────── */
+    document.addEventListener('keydown', function (e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        var modal = document.getElementById('search-modal');
+        if (modal) {
+          modal.showModal();
+          setTimeout(function () {
+            var inp = document.getElementById('search-modal-input');
+            if (inp) inp.focus();
+          }, 50);
+        }
+      }
+    });
 
     /* ── 0. Fechar <details> dropdowns ao clicar fora ──────────────── */
     document.addEventListener('click', function (e) {

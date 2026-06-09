@@ -1,0 +1,117 @@
+{#
+  match_card.html — Card de jogo
+  Uso: {% include 'components/match_card.html' with jogo=jogo show_competition=True show_round=True compact=False %}
+  Parâmetros:
+    jogo             — objeto Jogo (obrigatório)
+    show_competition — exibir nome da competição (padrão True)
+    show_round       — exibir rodada (padrão True)
+    compact          — layout compacto sem data/local (padrão False)
+#}
+<div class="card bg-base-200 border border-base-300 card-sport overflow-hidden
+            {% if jogo.em_andamento %}border-l-4 border-l-error{% endif %}">
+  <div class="card-body p-4">
+
+    {% if not compact %}
+    <!-- Meta: data, local, competição -->
+    <div class="flex items-center gap-2 text-xs text-base-content/40 mb-3 flex-wrap">
+      {% if jogo.data_hora %}
+      <span class="flex items-center gap-1">
+        <i class="bi bi-calendar3 text-[10px]"></i>
+        {{ jogo.data_hora|date:"d/m/Y" }}
+        <span class="mx-0.5">·</span>
+        {{ jogo.data_hora|time:"H:i" }}
+      </span>
+      {% endif %}
+      {% if jogo.local %}
+      <span class="flex items-center gap-1">
+        <i class="bi bi-geo-alt-fill text-[10px]"></i>
+        {{ jogo.local.nome }}
+      </span>
+      {% endif %}
+      {% if show_competition and jogo.rodada.competicao %}
+      <span class="flex items-center gap-1 ml-auto">
+        <i class="bi bi-trophy-fill text-warning/50 text-[10px]"></i>
+        {{ jogo.rodada.competicao.nome }}
+      </span>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Placar / times -->
+    <div class="flex items-center gap-3">
+
+      <!-- Equipe casa -->
+      <div class="flex-1 flex items-center gap-2 justify-end">
+        <span class="font-semibold text-sm text-right leading-snug truncate">{{ jogo.equipe_casa.nome_equipe }}</span>
+        {% if jogo.equipe_casa.escudo %}
+        <img src="{{ jogo.equipe_casa.escudo.thumbnail.url }}" alt=""
+             class="w-9 h-9 rounded-full object-cover border border-base-300 shrink-0">
+        {% else %}
+        <div class="w-9 h-9 rounded-full bg-neutral-content/10 border border-base-300
+                    flex items-center justify-center shrink-0 text-xs font-bold text-base-content/50">
+          {{ jogo.equipe_casa.nome_equipe|first|upper }}
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Placar central -->
+      <div class="flex items-center gap-2 shrink-0 px-2">
+        {% if jogo.finalizado or jogo.em_andamento %}
+          <span class="stat-number text-xl">{{ jogo.gols_casa|default:"0" }}</span>
+          <span class="text-base-content/30 font-light">–</span>
+          <span class="stat-number text-xl">{{ jogo.gols_fora|default:"0" }}</span>
+        {% else %}
+          <span class="text-xs text-base-content/40 font-medium">
+            {% if jogo.data_hora %}{{ jogo.data_hora|time:"H:i" }}{% else %}–{% endif %}
+          </span>
+        {% endif %}
+      </div>
+
+      <!-- Equipe fora -->
+      <div class="flex-1 flex items-center gap-2">
+        {% if jogo.equipe_fora.escudo %}
+        <img src="{{ jogo.equipe_fora.escudo.thumbnail.url }}" alt=""
+             class="w-9 h-9 rounded-full object-cover border border-base-300 shrink-0">
+        {% else %}
+        <div class="w-9 h-9 rounded-full bg-neutral-content/10 border border-base-300
+                    flex items-center justify-center shrink-0 text-xs font-bold text-base-content/50">
+          {{ jogo.equipe_fora.nome_equipe|first|upper }}
+        </div>
+        {% endif %}
+        <span class="font-semibold text-sm leading-snug truncate">{{ jogo.equipe_fora.nome_equipe }}</span>
+      </div>
+
+    </div>
+
+    <!-- Status -->
+    <div class="flex items-center justify-between mt-3">
+      <div>
+        {% if show_round and jogo.rodada %}
+        <span class="text-xs text-base-content/30">Rodada {{ jogo.rodada.numero }}</span>
+        {% endif %}
+      </div>
+      <div class="flex items-center gap-2">
+        {% if jogo.em_andamento %}
+          {% include 'components/live_badge.html' %}
+        {% elif jogo.finalizado %}
+          <span class="badge badge-success badge-sm gap-1">
+            <i class="bi bi-check-circle-fill text-[10px]"></i> Finalizado
+          </span>
+        {% elif jogo.anulado %}
+          <span class="badge badge-error badge-sm">Anulado</span>
+        {% elif jogo.wo %}
+          <span class="badge badge-warning badge-sm">W.O.</span>
+        {% else %}
+          <span class="badge badge-ghost badge-sm">Agendado</span>
+        {% endif %}
+        {% if jogo.pk %}
+        <a href="{% url 'competicao:jogo_detalhe' jogo.pk %}"
+           class="btn btn-ghost btn-xs gap-1 text-base-content/50 hover:text-base-content">
+          <i class="bi bi-eye text-xs"></i>
+        </a>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+</div>

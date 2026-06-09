@@ -1,0 +1,253 @@
+{% extends 'base/indice.html' %}
+{% block titulo %}{{ info.equipe.nome_equipe }} — Perfil Federativo{% endblock %}
+
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-base-content/40">
+    <ul>
+      <li><a href="{% url 'federacao:dashboard' %}" class="hover:text-base-content/70">Federação</a></li>
+      <li><a href="{% url 'federacao:clube_lista' %}" class="hover:text-base-content/70">Clubes</a></li>
+      <li><span class="text-base-content/60">{{ info.equipe.nome_equipe }}</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block conteudo %}
+<div class="p-4 md:p-6 max-w-[1100px] mx-auto space-y-5">
+
+  <!-- Header do clube -->
+  <div class="card bg-gradient-to-br from-base-200 to-base-300 border border-warning/20 overflow-hidden shadow-xl shadow-warning/5">
+    <div class="h-1.5 w-full bg-gradient-to-r from-warning via-warning/50 to-transparent"></div>
+    <div class="p-5 md:p-6">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+
+        <!-- Escudo -->
+        <div class="shrink-0">
+          {% if info.equipe.escudo %}
+          <img src="{{ info.equipe.escudo.url }}"
+               class="w-20 h-20 rounded-2xl object-cover border-2 border-warning/30 shadow-lg">
+          {% else %}
+          <div class="w-20 h-20 rounded-2xl bg-warning/10 border-2 border-warning/25
+                      flex items-center justify-center">
+            <span class="section-heading text-4xl text-warning">{{ info.equipe.nome_equipe|first|upper }}</span>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Dados principais -->
+        <div class="flex-1 min-w-0 space-y-1.5">
+          <p class="section-heading text-3xl text-base-content leading-none">{{ info.equipe.nome_equipe|upper }}</p>
+          {% if info.nome_fantasia %}
+          <p class="text-sm text-base-content/45 font-medium">"{{ info.nome_fantasia }}"</p>
+          {% endif %}
+          <div class="flex flex-wrap gap-2 mt-2">
+            <span class="px-2.5 py-1 rounded-full text-xs font-bold border
+              {% if info.situacao == 'regular' %}bg-success/15 text-success border-success/20
+              {% elif info.situacao == 'irregular' %}bg-error/15 text-error border-error/20
+              {% elif info.situacao == 'suspenso' %}bg-warning/15 text-warning border-warning/20
+              {% else %}bg-base-300 text-base-content/40 border-base-content/10{% endif %}">
+              {{ info.get_situacao_display }}
+            </span>
+            {% if info.cnpj %}
+            <span class="px-2.5 py-1 rounded font-mono text-xs text-base-content/50 bg-base-300/60 border border-base-content/8">
+              CNPJ: {{ info.cnpj }}
+            </span>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Ações -->
+        <div class="shrink-0 flex flex-col gap-2 items-end">
+          <a href="{% url 'federacao:clube_editar' info.pk %}"
+             class="btn btn-warning btn-sm gap-1 font-semibold">
+            <i class="bi bi-pencil-fill text-xs"></i> Editar
+          </a>
+          <a href="{% url 'equipe:detalhe' info.equipe.pk %}"
+             class="btn btn-ghost btn-sm gap-1 border border-base-content/10 text-base-content/40">
+            <i class="bi bi-arrow-up-right-square text-xs"></i> Ver Equipe
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+    <!-- Informações institucionais -->
+    <div class="lg:col-span-2 space-y-5">
+
+      <!-- Dados gerais -->
+      <div class="card bg-base-200 border border-base-300 overflow-hidden">
+        <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
+          <i class="bi bi-info-circle-fill text-warning text-sm"></i>
+          <span class="section-heading text-base text-base-content/70 tracking-widest">INFORMAÇÕES INSTITUCIONAIS</span>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-3 divide-x divide-y divide-base-300">
+          {% if info.data_fundacao %}
+          <div class="p-4">
+            <p class="text-[10px] font-bold text-base-content/35 uppercase tracking-wider">Fundação</p>
+            <p class="text-sm font-semibold text-base-content mt-0.5">{{ info.data_fundacao|date:"d/m/Y" }}</p>
+          </div>
+          {% endif %}
+          {% if info.cidade %}
+          <div class="p-4">
+            <p class="text-[10px] font-bold text-base-content/35 uppercase tracking-wider">Cidade</p>
+            <p class="text-sm font-semibold text-base-content mt-0.5">{{ info.cidade }}{% if info.estado %}/{{ info.estado }}{% endif %}</p>
+          </div>
+          {% endif %}
+          {% if info.cep %}
+          <div class="p-4">
+            <p class="text-[10px] font-bold text-base-content/35 uppercase tracking-wider">CEP</p>
+            <p class="text-sm font-semibold text-base-content mt-0.5">{{ info.cep }}</p>
+          </div>
+          {% endif %}
+          {% if info.endereco %}
+          <div class="p-4 col-span-2 md:col-span-3">
+            <p class="text-[10px] font-bold text-base-content/35 uppercase tracking-wider">Endereço</p>
+            <p class="text-sm text-base-content/60 mt-0.5">{{ info.endereco }}</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Representante legal -->
+      {% if info.nome_presidente %}
+      <div class="card bg-base-200 border border-base-300 overflow-hidden">
+        <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
+          <i class="bi bi-person-badge-fill text-info text-sm"></i>
+          <span class="section-heading text-base text-base-content/70 tracking-widest">REPRESENTANTE LEGAL</span>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-3 divide-x divide-y divide-base-300">
+          <div class="p-4 md:col-span-2">
+            <p class="text-[10px] font-bold text-base-content/35 uppercase tracking-wider">Presidente</p>
+            <p class="text-sm font-semibold text-base-content mt-0.5">{{ info.nome_presidente }}</p>
+          </div>
+          {% if info.cpf_presidente %}
+          <div class="p-4">
+            <p class="text-[10px] font-bold text-base-content/35 uppercase tracking-wider">CPF</p>
+            <p class="text-sm font-mono text-base-content/60 mt-0.5">{{ info.cpf_presidente }}</p>
+          </div>
+          {% endif %}
+          {% if info.email_contato %}
+          <div class="p-4">
+            <p class="text-[10px] font-bold text-base-content/35 uppercase tracking-wider">E-mail</p>
+            <p class="text-sm text-base-content/60 mt-0.5">{{ info.email_contato }}</p>
+          </div>
+          {% endif %}
+          {% if info.telefone %}
+          <div class="p-4">
+            <p class="text-[10px] font-bold text-base-content/35 uppercase tracking-wider">Telefone</p>
+            <p class="text-sm text-base-content/60 mt-0.5">{{ info.telefone }}</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Atletas registrados -->
+      <div class="card bg-base-200 border border-base-300 overflow-hidden">
+        <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
+          <i class="bi bi-people-fill text-warning text-sm"></i>
+          <span class="section-heading text-base text-base-content/70 tracking-widest">ATLETAS FEDERADOS</span>
+          <span class="badge badge-ghost badge-sm ml-auto">{{ atletas|length }}</span>
+        </div>
+        {% if atletas %}
+        <div class="overflow-x-auto">
+          <table class="table table-xs">
+            <thead>
+              <tr class="bg-base-300/40 text-[10px] text-base-content/40 uppercase tracking-wider">
+                <th>Atleta</th>
+                <th>Nº Federativo</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for a in atletas %}
+              <tr class="hover:bg-base-300/30 transition-colors">
+                <td class="py-2 font-semibold text-sm">{{ a.nome }}</td>
+                <td>
+                  {% if a.registro_federativo %}
+                  <span class="font-mono text-xs text-warning/70">{{ a.registro_federativo.numero_federativo }}</span>
+                  {% else %}
+                  <span class="text-xs text-base-content/30">—</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if a.registro_federativo %}
+                  <span class="px-1.5 py-0.5 rounded text-[10px] font-bold border
+                    {% if a.registro_federativo.status == 'ativo' %}bg-success/12 text-success border-success/15
+                    {% else %}bg-base-300 text-base-content/40 border-base-content/10{% endif %}">
+                    {{ a.registro_federativo.get_status_display }}
+                  </span>
+                  {% else %}
+                  <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-error/10 text-error border border-error/15">
+                    Sem registro
+                  </span>
+                  {% endif %}
+                </td>
+                <td class="text-right">
+                  {% if a.registro_federativo %}
+                  <a href="{% url 'federacao:registro_detalhe' a.registro_federativo.pk %}"
+                     class="btn btn-ghost btn-xs border border-base-content/10">
+                    <i class="bi bi-eye text-xs"></i>
+                  </a>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="py-8 text-center text-base-content/25 text-sm">Nenhum atleta neste clube.</div>
+        {% endif %}
+      </div>
+
+    </div>
+
+    <!-- Documentos -->
+    <div class="space-y-4">
+      <div class="card bg-base-200 border border-base-300 overflow-hidden">
+        <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
+          <i class="bi bi-file-earmark-fill text-warning text-sm"></i>
+          <span class="section-heading text-base text-base-content/70 tracking-widest">DOCUMENTOS</span>
+          <a href="{% url 'federacao:documento_upload' %}?clube={{ info.pk }}"
+             class="ml-auto btn btn-ghost btn-xs border border-base-content/10">
+            <i class="bi bi-plus text-xs"></i>
+          </a>
+        </div>
+        {% if docs %}
+        <div class="divide-y divide-base-300">
+          {% for doc in docs %}
+          <div class="flex items-center gap-2.5 px-4 py-2.5">
+            <i class="bi bi-file-earmark-fill text-base-content/25 text-sm shrink-0"></i>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs font-semibold text-base-content truncate">{{ doc.tipo.nome }}</p>
+              {% if doc.data_vencimento %}
+              <p class="text-[10px] {% if doc.esta_vencido %}text-error{% else %}text-base-content/35{% endif %}">
+                vence {{ doc.data_vencimento|date:"d/m/Y" }}
+              </p>
+              {% endif %}
+            </div>
+            <span class="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded border
+              {% if doc.status == 'aprovado' %}bg-success/15 text-success border-success/20
+              {% elif doc.status == 'rejeitado' or doc.status == 'vencido' %}bg-error/15 text-error border-error/20
+              {% else %}bg-warning/15 text-warning border-warning/20{% endif %}">
+              {{ doc.get_status_display }}
+            </span>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="py-8 text-center text-base-content/25 text-sm">Sem documentos enviados.</div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

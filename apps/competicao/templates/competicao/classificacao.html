@@ -1,6 +1,18 @@
 {% extends 'base/indice.html' %}
 {% block titulo %}Classificação — {{ competicao.nome }}{% endblock %}
 
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-base-content/40">
+    <ul>
+      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-base-content/70">Dashboard</a></li>
+      <li><a href="{% url 'competicao:competicao_lista' %}" class="hover:text-base-content/70">Competições</a></li>
+      <li><span class="text-base-content/60">{{ competicao.nome }}</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
 {% block conteudo %}
 <div class="p-4 md:p-6 max-w-[1400px] mx-auto space-y-6">
 
@@ -86,6 +98,26 @@
     </div>
   </div>
 
+  <!-- ── Barra de Tabs ─────────────────────────────────────────────── -->
+  <div class="border-b border-base-300 flex gap-1 -mb-2">
+    <button class="cls-tab px-4 py-2.5 text-xs font-bold border-b-2 border-warning text-warning
+                   bg-warning/5 rounded-t-lg transition-all duration-150 shrink-0"
+            data-panel="panel-classificacao">
+      <i class="bi bi-table mr-1.5"></i>Classificação
+    </button>
+    <button class="cls-tab px-4 py-2.5 text-xs font-bold border-b-2 border-transparent text-base-content/40
+                   hover:text-base-content/70 rounded-t-lg transition-all duration-150 shrink-0"
+            data-panel="panel-artilheiros">
+      <i class="bi bi-bullseye mr-1.5"></i>Artilheiros
+      {% if artilharia %}<span class="badge badge-ghost badge-xs ml-1">{{ artilharia|length }}</span>{% endif %}
+    </button>
+    <button class="cls-tab px-4 py-2.5 text-xs font-bold border-b-2 border-transparent text-base-content/40
+                   hover:text-base-content/70 rounded-t-lg transition-all duration-150 shrink-0"
+            data-panel="panel-resultados">
+      <i class="bi bi-check2-circle mr-1.5"></i>Resultados
+    </button>
+  </div>
+
   <!-- ── Fases de Grupos ─────────────────────────────────────────── -->
   {% if fases_grupos_data %}
   {% for fase_item in fases_grupos_data %}
@@ -166,6 +198,11 @@
   <div class="h-px bg-gradient-to-r from-transparent via-base-content/10 to-transparent"></div>
   {% endif %}
 
+  <!-- ══════════════════════════════════════════════════════════════
+       PAINEL: CLASSIFICAÇÃO
+  ══════════════════════════════════════════════════════════════ -->
+  <div id="panel-classificacao" class="cls-panel">
+
   <!-- ── Grid principal: tabela + sidebar ───────────────────────── -->
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
@@ -196,6 +233,7 @@
                 <th class="text-center w-9" title="Gols Contra">GC</th>
                 <th class="text-center w-10" title="Saldo de Gols">SG</th>
                 <th class="text-center w-12" title="Pontos">PTS</th>
+                <th class="hidden md:table-cell text-center w-28" title="Últimos 5 jogos">Forma</th>
               </tr>
             </thead>
             <tbody>
@@ -256,6 +294,22 @@
                 <!-- Pontos -->
                 <td class="text-center py-2.5">
                   <span class="stat-number text-lg text-base-content">{{ cls.pontos }}</span>
+                </td>
+
+                <!-- Forma recente -->
+                <td class="hidden md:table-cell text-center py-2.5">
+                  <div class="flex gap-0.5 justify-center">
+                    {% for r in cls.forma %}
+                    <span class="w-5 h-5 rounded-sm text-[9px] font-black flex items-center justify-center
+                      {% if r == 'V' %}bg-success/20 text-success border border-success/30
+                      {% elif r == 'D' %}bg-error/15 text-error border border-error/25
+                      {% else %}bg-base-300/80 text-base-content/40 border border-base-content/10{% endif %}">
+                      {{ r }}
+                    </span>
+                    {% empty %}
+                    <span class="text-[10px] text-base-content/20">—</span>
+                    {% endfor %}
+                  </div>
                 </td>
 
               </tr>
@@ -395,6 +449,166 @@
     </div>
 
   </div>
+  </div>{# /panel-classificacao #}
+
+  <!-- ══════════════════════════════════════════════════════════════
+       PAINEL: ARTILHEIROS
+  ══════════════════════════════════════════════════════════════ -->
+  <div id="panel-artilheiros" class="cls-panel hidden">
+    <div class="card bg-base-200 border border-base-300 overflow-hidden">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
+        <i class="bi bi-bullseye text-warning text-sm"></i>
+        <span class="section-heading text-base text-base-content/70 tracking-widest">ARTILHEIROS</span>
+        {% if artilharia %}
+        <span class="badge badge-ghost badge-sm ml-auto">{{ artilharia|length }}</span>
+        {% endif %}
+      </div>
+      {% if artilharia %}
+      {% with max_gols=artilharia.0.total %}
+      <div class="divide-y divide-base-300">
+        {% for art in artilharia %}
+        <div class="flex items-center gap-4 px-5 py-3 hover:bg-base-300/30 transition-colors group">
+          <!-- Posição / medal -->
+          <div class="position-number w-8 text-center shrink-0
+            {% if forloop.counter == 1 %}text-warning text-xl
+            {% elif forloop.counter == 2 %}text-base-content/50
+            {% elif forloop.counter == 3 %}text-base-content/40
+            {% else %}text-base-content/20{% endif %}">
+            {% if forloop.counter == 1 %}<i class="bi bi-trophy-fill text-warning"></i>
+            {% elif forloop.counter == 2 %}🥈
+            {% elif forloop.counter == 3 %}🥉
+            {% else %}{{ forloop.counter }}{% endif %}
+          </div>
+          <!-- Atleta + equipe -->
+          <div class="flex-1 min-w-0">
+            <p class="font-semibold text-sm text-base-content group-hover:text-warning transition-colors truncate">
+              {{ art.atleta__nome }}
+            </p>
+            <p class="text-xs text-base-content/35 truncate">{{ art.atleta__equipe__nome_equipe }}</p>
+          </div>
+          <!-- Barra proporcional -->
+          <div class="hidden sm:flex items-center gap-3 w-32">
+            <div class="flex-1 h-1.5 bg-base-300 rounded-full overflow-hidden">
+              <div class="h-full bg-warning rounded-full transition-all duration-500"
+                   style="width: {% widthratio art.total max_gols 100 %}%"></div>
+            </div>
+          </div>
+          <!-- Gols -->
+          <div class="stat-number text-2xl text-warning shrink-0 w-8 text-right">{{ art.total }}</div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endwith %}
+      {% else %}
+      {% include 'components/empty_state.html' with icon="dribbble" title="Nenhum gol registrado ainda." %}
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       PAINEL: RESULTADOS
+  ══════════════════════════════════════════════════════════════ -->
+  <div id="panel-resultados" class="cls-panel hidden">
+    {% if rodadas %}
+    <div class="space-y-4">
+      {% for rodada in rodadas %}
+      {% with jogos_finalizados=rodada.jogo_set.all %}
+      {% for jogo in jogos_finalizados %}{% if jogo.finalizado %}{% if forloop.first %}
+      {# Abre o card da rodada apenas se tiver jogo finalizado #}
+      {% endif %}{% endif %}{% endfor %}
+
+      <div class="card bg-base-200 border border-base-300 overflow-hidden">
+        <div class="flex items-center gap-2 px-4 py-2.5 border-b border-base-300 bg-base-300/30">
+          <i class="bi bi-calendar3 text-warning/50 text-xs"></i>
+          <span class="text-xs font-bold text-base-content/50">
+            {% if rodada.fase %}{{ rodada.fase.nome }} — {% endif %}
+            {{ rodada.numero }}ª Rodada
+          </span>
+        </div>
+        <div class="divide-y divide-base-300">
+          {% for jogo in rodada.jogo_set.all %}
+          {% if jogo.finalizado %}
+          <a href="{% url 'competicao:jogo_detalhe' jogo.pk %}"
+             class="flex items-center gap-2 px-4 py-2.5 hover:bg-base-300/30 transition-colors group">
+
+            <!-- Equipe casa -->
+            <div class="flex-1 flex items-center gap-2 justify-end min-w-0">
+              <span class="text-xs font-semibold truncate
+                {% if jogo.gols_casa > jogo.gols_fora %}text-base-content{% else %}text-base-content/40{% endif %}">
+                {{ jogo.equipe_casa.nome_equipe }}
+              </span>
+              {% if jogo.equipe_casa.escudo %}
+              <img src="{{ jogo.equipe_casa.escudo.thumbnail.url }}"
+                   class="w-6 h-6 rounded-full object-cover border border-base-300 shrink-0">
+              {% endif %}
+            </div>
+
+            <!-- Placar -->
+            <div class="shrink-0 flex items-center gap-1.5 px-2.5 py-1 bg-base-300/60 rounded-lg">
+              <span class="stat-number text-sm
+                {% if jogo.gols_casa > jogo.gols_fora %}text-win
+                {% elif jogo.gols_casa == jogo.gols_fora %}text-draw
+                {% else %}text-base-content/40{% endif %}">
+                {{ jogo.gols_casa }}</span>
+              <span class="text-base-content/20 text-xs">–</span>
+              <span class="stat-number text-sm
+                {% if jogo.gols_fora > jogo.gols_casa %}text-win
+                {% elif jogo.gols_casa == jogo.gols_fora %}text-draw
+                {% else %}text-base-content/40{% endif %}">
+                {{ jogo.gols_fora }}</span>
+            </div>
+
+            <!-- Equipe fora -->
+            <div class="flex-1 flex items-center gap-2 min-w-0">
+              {% if jogo.equipe_fora.escudo %}
+              <img src="{{ jogo.equipe_fora.escudo.thumbnail.url }}"
+                   class="w-6 h-6 rounded-full object-cover border border-base-300 shrink-0">
+              {% endif %}
+              <span class="text-xs font-semibold truncate
+                {% if jogo.gols_fora > jogo.gols_casa %}text-base-content{% else %}text-base-content/40{% endif %}">
+                {{ jogo.equipe_fora.nome_equipe }}
+              </span>
+            </div>
+
+          </a>
+          {% endif %}
+          {% empty %}
+          <div class="px-4 py-3 text-xs text-base-content/30 italic">Sem resultados nesta rodada.</div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endwith %}
+      {% endfor %}
+    </div>
+    {% else %}
+    {% include 'components/empty_state.html' with icon="calendar-x" title="Nenhum resultado ainda." subtitle="Os resultados aparecerão aqui após os jogos serem finalizados." %}
+    {% endif %}
+  </div>
 
 </div>
+{% endblock %}
+
+{% block script %}
+<script>
+(function () {
+  'use strict';
+  var tabs   = document.querySelectorAll('.cls-tab');
+  var panels = document.querySelectorAll('.cls-panel');
+
+  tabs.forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      tabs.forEach(function (t) {
+        t.classList.remove('border-warning', 'text-warning', 'bg-warning/5');
+        t.classList.add('border-transparent', 'text-base-content/40');
+      });
+      panels.forEach(function (p) { p.classList.add('hidden'); });
+
+      this.classList.add('border-warning', 'text-warning', 'bg-warning/5');
+      this.classList.remove('border-transparent', 'text-base-content/40');
+      var panel = document.getElementById(this.dataset.panel);
+      if (panel) panel.classList.remove('hidden');
+    });
+  });
+})();
+</script>
 {% endblock %}

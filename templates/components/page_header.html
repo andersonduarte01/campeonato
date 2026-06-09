@@ -1,0 +1,43 @@
+{#
+  page_header.html
+  Uso: {% include 'components/page_header.html' with title="Equipes" subtitle="Gerencie os times cadastrados" icon="shield-fill" breadcrumbs=breadcrumbs_list %}
+  Parâmetros:
+    title       — título principal (obrigatório)
+    subtitle    — subtítulo descritivo (opcional)
+    icon        — nome do bootstrap-icon (opcional)
+    breadcrumbs — lista de dicts: [{"label":"Dashboard","url":"/"},{"label":"Equipes","url":None}]
+#}
+<div class="px-4 md:px-6 pt-5 pb-2">
+
+  {% if breadcrumbs %}
+  <div class="breadcrumbs text-xs text-base-content/40 mb-3 -mt-1">
+    <ul>
+      {% for crumb in breadcrumbs %}
+      <li>
+        {% if crumb.url %}
+          <a href="{{ crumb.url }}" class="hover:text-base-content/70 transition-colors">{{ crumb.label }}</a>
+        {% else %}
+          <span class="text-base-content/60">{{ crumb.label }}</span>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  <div class="flex items-center gap-3">
+    {% if icon %}
+    <div class="w-9 h-9 rounded-xl bg-warning/10 border border-warning/20
+                flex items-center justify-center shrink-0">
+      <i class="bi bi-{{ icon }} text-warning text-base"></i>
+    </div>
+    {% endif %}
+    <div>
+      <h1 class="section-heading text-2xl text-base-content">{{ title }}</h1>
+      {% if subtitle %}
+      <p class="text-sm text-base-content/40 mt-0.5 leading-snug">{{ subtitle }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+</div>

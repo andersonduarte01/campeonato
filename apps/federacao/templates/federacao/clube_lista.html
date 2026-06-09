@@ -1,0 +1,98 @@
+{% extends 'base/indice.html' %}
+{% block titulo %}Perfis de Clubes{% endblock %}
+
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-base-content/40">
+    <ul>
+      <li><a href="{% url 'federacao:dashboard' %}" class="hover:text-base-content/70">Federação</a></li>
+      <li><span class="text-base-content/60">Clubes</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block conteudo %}
+<div class="p-4 md:p-6 max-w-[1200px] mx-auto space-y-5">
+
+  <div class="flex items-end justify-between gap-4">
+    <div>
+      <h1 class="section-heading text-4xl text-base-content leading-none">CLUBES FEDERADOS</h1>
+      <p class="text-sm text-base-content/40 mt-1">Perfis institucionais dos clubes afiliados</p>
+    </div>
+    <a href="{% url 'federacao:clube_criar' %}"
+       class="btn btn-warning gap-2 shadow-lg shadow-warning/20 font-semibold shrink-0">
+      <i class="bi bi-plus-circle-fill"></i>
+      <span class="hidden sm:inline">Cadastrar Clube</span>
+    </a>
+  </div>
+
+  {% if sem_perfil %}
+  <div class="alert border border-warning/25 bg-warning/6 py-3 text-sm">
+    <i class="bi bi-exclamation-triangle-fill text-warning/70 shrink-0"></i>
+    <span class="text-base-content/60">
+      <strong>{{ sem_perfil }}</strong>
+      {{ sem_perfil|pluralize:"clube ainda não possui,clubes ainda não possuem" }} perfil federativo cadastrado.
+    </span>
+  </div>
+  {% endif %}
+
+  {% if clubes %}
+  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+    {% for c in clubes %}
+    <a href="{% url 'federacao:clube_detalhe' c.pk %}"
+       class="card bg-base-200 border border-base-300 hover:border-warning/30 hover:shadow-lg hover:shadow-warning/5 transition-all card-sport group overflow-hidden">
+      <div class="h-0.5 w-0 bg-warning group-hover:w-full transition-all duration-300"></div>
+      <div class="p-4 flex items-center gap-4">
+        <!-- Escudo / Iniciais -->
+        <div class="w-12 h-12 rounded-xl bg-base-300 border border-base-content/8 shrink-0
+                    flex items-center justify-center overflow-hidden">
+          {% if c.equipe.escudo %}
+          <img src="{{ c.equipe.escudo.url }}" class="w-full h-full object-cover">
+          {% else %}
+          <span class="section-heading text-xl text-base-content/40">{{ c.equipe.nome_equipe|first|upper }}</span>
+          {% endif %}
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="font-black text-sm text-base-content truncate group-hover:text-warning transition-colors">
+            {{ c.equipe.nome_equipe }}
+          </p>
+          {% if c.nome_fantasia %}
+          <p class="text-xs text-base-content/40 truncate">{{ c.nome_fantasia }}</p>
+          {% endif %}
+          <div class="flex flex-wrap gap-1 mt-1.5">
+            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold border
+              {% if c.situacao == 'regular' %}bg-success/12 text-success border-success/15
+              {% elif c.situacao == 'irregular' %}bg-error/12 text-error border-error/15
+              {% elif c.situacao == 'suspenso' %}bg-warning/12 text-warning border-warning/15
+              {% else %}bg-base-300 text-base-content/35 border-base-content/10{% endif %}">
+              {{ c.get_situacao_display }}
+            </span>
+            {% if c.cnpj %}
+            <span class="px-1.5 py-0.5 rounded text-[10px] font-mono text-base-content/35 border border-base-content/8">
+              {{ c.cnpj }}
+            </span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="card bg-base-200 border border-base-300">
+    <div class="flex flex-col items-center justify-center py-16 gap-4">
+      <i class="bi bi-building text-4xl text-base-content/20"></i>
+      <div class="text-center">
+        <p class="section-heading text-xl text-base-content/40">SEM CLUBES CADASTRADOS</p>
+        <p class="text-sm text-base-content/30 mt-1.5">Cadastre o perfil federativo dos clubes afiliados.</p>
+      </div>
+      <a href="{% url 'federacao:clube_criar' %}" class="btn btn-warning btn-sm gap-1 font-semibold">
+        <i class="bi bi-plus-circle text-xs"></i> Cadastrar
+      </a>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
