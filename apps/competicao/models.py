@@ -30,10 +30,57 @@ class Local(models.Model):
 # ---------------------------------------------------------------------------
 
 class Arbitro(models.Model):
-    nome = models.CharField(max_length=200, verbose_name='Nome')
-    categoria = models.CharField(max_length=100, blank=True, null=True, verbose_name='Categoria')
+    ASPIRANTE  = 'aspirante'
+    REGIONAL   = 'regional'
+    NACIONAL   = 'nacional'
+    FIFA       = 'fifa'
+    CATEGORIA_CHOICES = [
+        (ASPIRANTE, 'Aspirante'),
+        (REGIONAL,  'Regional'),
+        (NACIONAL,  'Nacional'),
+        (FIFA,      'FIFA'),
+    ]
+
+    DISPONIVEL    = 'disponivel'
+    INDISPONIVEL  = 'indisponivel'
+    LESIONADO     = 'lesionado'
+    FERIAS        = 'ferias'
+    DISPONIBILIDADE_CHOICES = [
+        (DISPONIVEL,   'Disponível'),
+        (INDISPONIVEL, 'Indisponível'),
+        (LESIONADO,    'Lesionado'),
+        (FERIAS,       'Férias'),
+    ]
+
+    # — campos originais —
+    nome       = models.CharField(max_length=200, verbose_name='Nome')
+    categoria  = models.CharField(
+        max_length=20, choices=CATEGORIA_CHOICES, default=REGIONAL,
+        verbose_name='Categoria',
+    )
     observacao = models.TextField(blank=True, null=True, verbose_name='Observações')
-    ativo = models.BooleanField(default=True, verbose_name='Ativo')
+    ativo      = models.BooleanField(default=True, verbose_name='Ativo')
+
+    # — Fase 2: dados pessoais —
+    cpf              = models.CharField(max_length=14, blank=True, null=True, verbose_name='CPF')
+    data_nascimento  = models.DateField(blank=True, null=True, verbose_name='Data de Nascimento')
+    foto             = StdImageField(
+        upload_to='arbitros/fotos/', blank=True, null=True,
+        variations={'thumbnail': (80, 80, True)},
+        verbose_name='Foto',
+    )
+    certificacoes    = models.TextField(blank=True, null=True, verbose_name='Certificações')
+    disponibilidade  = models.CharField(
+        max_length=20, choices=DISPONIBILIDADE_CHOICES, default=DISPONIVEL,
+        verbose_name='Disponibilidade',
+    )
+
+    # — Fase 2: custos operacionais —
+    taxa_por_partida = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True, verbose_name='Taxa por Partida (R$)')
+    diaria           = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True, verbose_name='Diária (R$)')
+    alimentacao      = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True, verbose_name='Alimentação (R$)')
+    hospedagem       = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True, verbose_name='Hospedagem (R$)')
+    deslocamento     = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True, verbose_name='Deslocamento (R$)')
 
     class Meta:
         ordering = ['nome']
@@ -42,6 +89,15 @@ class Arbitro(models.Model):
 
     def __str__(self):
         return self.nome
+
+    @property
+    def custo_total_estimado(self):
+        campos = [self.taxa_por_partida, self.diaria, self.alimentacao, self.hospedagem, self.deslocamento]
+        return sum(v for v in campos if v) or None
+
+    @property
+    def disponivel(self):
+        return self.disponibilidade == self.DISPONIVEL and self.ativo
 
 
 class FaseCompeticao(models.Model):
@@ -542,6 +598,485 @@ class AvaliacaoArbitro(models.Model):
 
     def __str__(self):
         return f"Avaliação {self.nota}/10 — {self.jogo}"
+
+
+# ---------------------------------------------------------------------------
+# Súmula Digital Profissional — Fase 3
+# ---------------------------------------------------------------------------
+
+class SumulaDigital(models.Model):
+    CLIMATICA_CHOICES = [
+        ('boa',     'Boa / Ensolarada'),
+        ('chuvosa', 'Chuvosa'),
+        ('fria',    'Fria'),
+        ('quente',  'Quente'),
+        ('ventosa', 'Ventosa'),
+        ('neblina', 'Neblina'),
+    ]
+    CAMPO_CHOICES = [
+        ('otimo',   'Ótimo'),
+        ('bom',     'Bom'),
+        ('regular', 'Regular'),
+        ('ruim',    'Ruim'),
+        ('pessimo', 'Péssimo'),
+    ]
+
+    jogo              = models.OneToOneField(Jogo, on_delete=models.CASCADE, related_name='sumula_digital')
+    condicao_climatica = models.CharField(max_length=10, choices=CLIMATICA_CHOICES, default='boa', verbose_name='Condição climática')
+    condicao_campo    = models.CharField(max_length=10, choices=CAMPO_CHOICES, default='bom', verbose_name='Condição do campo')
+    relatorio_narrativo = models.TextField(blank=True, null=True, verbose_name='Relatório narrativo do árbitro')
+    finalizada        = models.BooleanField(default=False, verbose_name='Súmula finalizada')
+    finalizada_em     = models.DateTimeField(null=True, blank=True, verbose_name='Finalizada em')
+    hash_integridade  = models.CharField(max_length=64, blank=True, null=True, verbose_name='Hash SHA-256')
+    criada_em         = models.DateTimeField(auto_now_add=True)
+    atualizada_em     = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Súmula Digital'
+        verbose_name_plural = 'Súmulas Digitais'
+
+    def __str__(self):
+        return f"Súmula — {self.jogo}"
+
+    def gerar_hash(self):
+        import hashlib, json
+        dados = {
+            'jogo_id':   self.jogo_id,
+            'gols_casa': self.jogo.gols_casa,
+            'gols_fora': self.jogo.gols_fora,
+            'climatica': self.condicao_climatica,
+            'campo':     self.condicao_campo,
+            'relatorio': self.relatorio_narrativo or '',
+            'ocorrencias': [
+                {'tipo': o.tipo, 'minuto': o.minuto, 'descricao': o.descricao}
+                for o in self.ocorrencias.order_by('id')
+            ],
+            'assinaturas': [
+                {'papel': a.papel, 'nome': a.nome_assinante, 'em': str(a.assinado_em)}
+                for a in self.assinaturas.order_by('id')
+            ],
+        }
+        return hashlib.sha256(
+            json.dumps(dados, ensure_ascii=False, sort_keys=True).encode()
+        ).hexdigest()
+
+
+class OcorrenciaSumula(models.Model):
+    TIPOS = [
+        ('invasao',      'Invasão de campo'),
+        ('tumulto',      'Tumulto / Briga'),
+        ('objetos',      'Objetos arremessados'),
+        ('interrupcao',  'Interrupção da partida'),
+        ('falta_energia','Falta de energia / iluminação'),
+        ('climatica',    'Ocorrência climática'),
+        ('wo',           'W.O. / Abandono'),
+        ('outro',        'Outro'),
+    ]
+
+    sumula    = models.ForeignKey(SumulaDigital, on_delete=models.CASCADE, related_name='ocorrencias')
+    tipo      = models.CharField(max_length=20, choices=TIPOS, verbose_name='Tipo de ocorrência')
+    minuto    = models.PositiveIntegerField(null=True, blank=True, verbose_name='Minuto')
+    descricao = models.TextField(verbose_name='Descrição detalhada')
+    registrado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['minuto', 'registrado_em']
+        verbose_name = 'Ocorrência'
+        verbose_name_plural = 'Ocorrências'
+
+    def __str__(self):
+        min_str = f" ({self.minuto}')" if self.minuto else ''
+        return f"{self.get_tipo_display()}{min_str} — {self.sumula.jogo}"
+
+
+class AnexoSumula(models.Model):
+    TIPOS = [
+        ('foto',      'Foto'),
+        ('video',     'Vídeo'),
+        ('documento', 'Documento PDF'),
+    ]
+
+    sumula    = models.ForeignKey(SumulaDigital, on_delete=models.CASCADE, related_name='anexos')
+    arquivo   = models.FileField(upload_to='sumulas/anexos/', verbose_name='Arquivo')
+    tipo      = models.CharField(max_length=10, choices=TIPOS, default='foto', verbose_name='Tipo')
+    descricao = models.CharField(max_length=200, blank=True, verbose_name='Descrição')
+    enviado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['enviado_em']
+        verbose_name = 'Anexo da Súmula'
+        verbose_name_plural = 'Anexos da Súmula'
+
+    def __str__(self):
+        return f"{self.get_tipo_display()} — {self.sumula.jogo}"
+
+    @property
+    def extensao(self):
+        import os
+        return os.path.splitext(self.arquivo.name)[1].lower()
+
+    @property
+    def is_imagem(self):
+        return self.extensao in ('.jpg', '.jpeg', '.png', '.gif', '.webp')
+
+
+class AssinaturaDigital(models.Model):
+    PAPEIS = [
+        ('arbitro',           'Árbitro Principal'),
+        ('assistente1',       'Árbitro Assistente 1'),
+        ('assistente2',       'Árbitro Assistente 2'),
+        ('capitao_mandante',  'Capitão Mandante'),
+        ('capitao_visitante', 'Capitão Visitante'),
+        ('delegado',          'Delegado'),
+    ]
+
+    sumula        = models.ForeignKey(SumulaDigital, on_delete=models.CASCADE, related_name='assinaturas')
+    papel         = models.CharField(max_length=25, choices=PAPEIS, verbose_name='Papel')
+    nome_assinante = models.CharField(max_length=200, verbose_name='Nome do assinante')
+    assinado_em   = models.DateTimeField(auto_now_add=True)
+    ip_address    = models.GenericIPAddressField(null=True, blank=True, verbose_name='Endereço IP')
+    user_agent    = models.CharField(max_length=500, blank=True, verbose_name='User-Agent')
+
+    class Meta:
+        unique_together = [('sumula', 'papel')]
+        ordering = ['papel']
+        verbose_name = 'Assinatura Digital'
+        verbose_name_plural = 'Assinaturas Digitais'
+
+    def __str__(self):
+        return f"{self.get_papel_display()} — {self.nome_assinante}"
+
+
+# ---------------------------------------------------------------------------
+# Tribunal Desportivo — Fase 4
+# ---------------------------------------------------------------------------
+
+class ProcessoDesportivo(models.Model):
+    TIPO_CHOICES = [
+        ('comportamento', 'Comportamento antidesportivo'),
+        ('resultado',     'Impugnação de resultado'),
+        ('irregularidade','Irregularidade de atleta/clube'),
+        ('violacao',      'Violação de regulamento'),
+        ('arbitral',      'Reclamação arbitral'),
+        ('outro',         'Outro'),
+    ]
+    STATUS_CHOICES = [
+        ('aberto',         'Aberto'),
+        ('em_julgamento',  'Em Julgamento'),
+        ('julgado',        'Julgado'),
+        ('arquivado',      'Arquivado'),
+    ]
+
+    numero           = models.CharField(max_length=20, unique=True, blank=True, verbose_name='Nº do processo')
+    competicao       = models.ForeignKey(Competicao, on_delete=models.SET_NULL, null=True, blank=True,
+                                         related_name='processos', verbose_name='Competição')
+    jogo             = models.ForeignKey('Jogo', on_delete=models.SET_NULL, null=True, blank=True,
+                                         related_name='processos', verbose_name='Partida relacionada')
+    denunciado_atleta = models.ForeignKey('equipe.Atleta', on_delete=models.SET_NULL,
+                                          null=True, blank=True, related_name='processos_desportivos',
+                                          verbose_name='Atleta denunciado')
+    denunciado_equipe = models.ForeignKey('equipe.Equipe', on_delete=models.SET_NULL,
+                                          null=True, blank=True, related_name='processos_desportivos',
+                                          verbose_name='Equipe denunciada')
+    denunciante      = models.CharField(max_length=200, verbose_name='Denunciante / Requerente')
+    tipo             = models.CharField(max_length=20, choices=TIPO_CHOICES, default='comportamento',
+                                        verbose_name='Tipo de processo')
+    descricao        = models.TextField(verbose_name='Descrição dos fatos')
+    status           = models.CharField(max_length=20, choices=STATUS_CHOICES, default='aberto',
+                                        verbose_name='Status')
+    prazo_defesa     = models.DateField(null=True, blank=True, verbose_name='Prazo para defesa')
+    criado_em        = models.DateTimeField(auto_now_add=True)
+    atualizado_em    = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-criado_em']
+        verbose_name = 'Processo Desportivo'
+        verbose_name_plural = 'Processos Desportivos'
+
+    def __str__(self):
+        return f"{self.numero or f'PD-{self.pk}'} — {self.get_tipo_display()}"
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        if is_new and not self.numero:
+            from datetime import date
+            self.numero = f"PD-{date.today().year}-{self.pk:04d}"
+            super().save(update_fields=['numero'])
+
+    @property
+    def status_badge_class(self):
+        return {
+            'aberto':        'badge-warning',
+            'em_julgamento': 'badge-info',
+            'julgado':       'badge-success',
+            'arquivado':     'badge-ghost',
+        }.get(self.status, 'badge-ghost')
+
+    @property
+    def denunciado_str(self):
+        if self.denunciado_atleta:
+            return f"{self.denunciado_atleta.nome} (atleta)"
+        if self.denunciado_equipe:
+            return f"{self.denunciado_equipe.nome_equipe} (equipe)"
+        return '—'
+
+
+class Julgamento(models.Model):
+    PENALIDADE_CHOICES = [
+        ('absolvido',    'Absolvido'),
+        ('advertencia',  'Advertência'),
+        ('multa',        'Multa'),
+        ('suspensao',    'Suspensão de partidas'),
+        ('perda_pontos', 'Perda de pontos'),
+        ('exclusao',     'Exclusão da competição'),
+    ]
+
+    processo         = models.OneToOneField(ProcessoDesportivo, on_delete=models.CASCADE,
+                                            related_name='julgamento', verbose_name='Processo')
+    relator          = models.CharField(max_length=200, verbose_name='Relator / Juiz')
+    descricao        = models.TextField(verbose_name='Fundamentação e decisão')
+    penalidade       = models.CharField(max_length=20, choices=PENALIDADE_CHOICES, verbose_name='Penalidade aplicada')
+    valor_multa      = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True,
+                                           verbose_name='Valor da multa (R$)')
+    jogos_suspensao  = models.PositiveIntegerField(null=True, blank=True,
+                                                   verbose_name='Partidas de suspensão')
+    pontos_perdidos  = models.PositiveIntegerField(null=True, blank=True,
+                                                   verbose_name='Pontos a deduzir')
+    aplicar_suspensao = models.BooleanField(default=True,
+                                            verbose_name='Gerar suspensão automática no sistema',
+                                            help_text='Cria o registro de suspensão para o atleta denunciado.')
+    julgado_em       = models.DateTimeField(auto_now_add=True, verbose_name='Julgado em')
+
+    class Meta:
+        verbose_name = 'Julgamento'
+        verbose_name_plural = 'Julgamentos'
+
+    def __str__(self):
+        return f"Julgamento — {self.processo}"
+
+
+class RecursoDesportivo(models.Model):
+    STATUS_CHOICES = [
+        ('aguardando',    'Aguardando Análise'),
+        ('em_analise',    'Em Análise'),
+        ('provido',       'Provido'),
+        ('improvido',     'Improvido'),
+        ('nao_conhecido', 'Não Conhecido'),
+    ]
+
+    processo    = models.ForeignKey(ProcessoDesportivo, on_delete=models.CASCADE,
+                                    related_name='recursos', verbose_name='Processo')
+    recorrente  = models.CharField(max_length=200, verbose_name='Recorrente')
+    motivo      = models.TextField(verbose_name='Fundamentos do recurso')
+    data_prazo  = models.DateField(null=True, blank=True, verbose_name='Prazo para decisão')
+    status      = models.CharField(max_length=20, choices=STATUS_CHOICES, default='aguardando',
+                                   verbose_name='Status do recurso')
+    decisao     = models.TextField(blank=True, null=True, verbose_name='Decisão do recurso')
+    criado_em   = models.DateTimeField(auto_now_add=True)
+    decidido_em = models.DateTimeField(null=True, blank=True, verbose_name='Decidido em')
+
+    class Meta:
+        ordering = ['-criado_em']
+        verbose_name = 'Recurso Desportivo'
+        verbose_name_plural = 'Recursos Desportivos'
+
+    def __str__(self):
+        return f"Recurso de {self.recorrente} — {self.processo}"
+
+    @property
+    def status_badge_class(self):
+        return {
+            'aguardando':    'badge-warning',
+            'em_analise':    'badge-info',
+            'provido':       'badge-success',
+            'improvido':     'badge-error',
+            'nao_conhecido': 'badge-ghost',
+        }.get(self.status, 'badge-ghost')
+
+
+# ---------------------------------------------------------------------------
+# Financeiro Federativo — Fase 5
+# ---------------------------------------------------------------------------
+
+class LancamentoFinanceiro(models.Model):
+    TIPO_CHOICES = [
+        ('receita', 'Receita'),
+        ('despesa', 'Despesa'),
+    ]
+
+    CAT_RECEITA = [
+        ('filiacao',      'Filiação'),
+        ('anuidade',      'Anuidade'),
+        ('inscricao',     'Inscrição em competição'),
+        ('transferencia', 'Taxa de transferência'),
+        ('arb_receita',   'Arbitragem'),
+        ('multa',         'Multa disciplinar'),
+        ('patrocinio',    'Patrocínio / Apoio'),
+        ('outra_receita', 'Outra receita'),
+    ]
+    CAT_DESPESA = [
+        ('arb_despesa',   'Arbitragem'),
+        ('premiacao',     'Premiação'),
+        ('transporte',    'Transporte'),
+        ('infraestrutura','Infraestrutura'),
+        ('evento',        'Eventos'),
+        ('administrativa','Administrativa'),
+        ('outra_despesa', 'Outra despesa'),
+    ]
+    CATEGORIA_CHOICES = CAT_RECEITA + CAT_DESPESA
+
+    STATUS_CHOICES = [
+        ('pendente',  'Pendente'),
+        ('pago',      'Pago / Recebido'),
+        ('cancelado', 'Cancelado'),
+    ]
+    FORMA_CHOICES = [
+        ('pix',          'PIX'),
+        ('boleto',       'Boleto Bancário'),
+        ('cartao_credito','Cartão de Crédito'),
+        ('cartao_debito', 'Cartão de Débito'),
+        ('transferencia', 'Transferência Bancária'),
+        ('dinheiro',      'Dinheiro / Espécie'),
+        ('outro',         'Outro'),
+    ]
+
+    numero          = models.CharField(max_length=20, unique=True, blank=True, verbose_name='Nº')
+    tipo            = models.CharField(max_length=10, choices=TIPO_CHOICES, verbose_name='Tipo')
+    categoria       = models.CharField(max_length=20, choices=CATEGORIA_CHOICES, verbose_name='Categoria')
+    descricao       = models.CharField(max_length=300, verbose_name='Descrição')
+    valor           = models.DecimalField(max_digits=12, decimal_places=2, verbose_name='Valor (R$)')
+    data_vencimento = models.DateField(verbose_name='Vencimento')
+    data_pagamento  = models.DateField(null=True, blank=True, verbose_name='Data do pagamento')
+    status          = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pendente', verbose_name='Status')
+    forma_pagamento = models.CharField(max_length=20, choices=FORMA_CHOICES, blank=True, null=True, verbose_name='Forma de pagamento')
+    numero_referencia = models.CharField(max_length=100, blank=True, verbose_name='Nº de referência / chave PIX')
+    comprovante     = models.FileField(upload_to='financeiro/comprovantes/', blank=True, null=True, verbose_name='Comprovante')
+    observacoes     = models.TextField(blank=True, null=True, verbose_name='Observações')
+
+    # Vínculos opcionais
+    competicao  = models.ForeignKey(Competicao, on_delete=models.SET_NULL, null=True, blank=True,
+                                    related_name='lancamentos', verbose_name='Competição')
+    equipe      = models.ForeignKey('equipe.Equipe', on_delete=models.SET_NULL, null=True, blank=True,
+                                    related_name='lancamentos_financeiros', verbose_name='Equipe')
+    atleta      = models.ForeignKey('equipe.Atleta', on_delete=models.SET_NULL, null=True, blank=True,
+                                    related_name='lancamentos_financeiros', verbose_name='Atleta')
+
+    criado_em   = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-data_vencimento', '-criado_em']
+        verbose_name = 'Lançamento Financeiro'
+        verbose_name_plural = 'Lançamentos Financeiros'
+
+    def __str__(self):
+        return f"{self.numero or self.pk} — {self.descricao} (R$ {self.valor})"
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        if is_new and not self.numero:
+            from datetime import date
+            prefixo = 'REC' if self.tipo == 'receita' else 'DES'
+            self.numero = f"{prefixo}-{date.today().year}-{self.pk:05d}"
+            super().save(update_fields=['numero'])
+
+    @property
+    def is_atrasado(self):
+        from datetime import date
+        return self.status == 'pendente' and self.data_vencimento < date.today()
+
+    @property
+    def status_efetivo(self):
+        if self.is_atrasado:
+            return 'atrasado'
+        return self.status
+
+    @property
+    def status_badge_class(self):
+        return {
+            'pendente':  'badge-warning',
+            'atrasado':  'badge-error',
+            'pago':      'badge-success',
+            'cancelado': 'badge-ghost',
+        }.get(self.status_efetivo, 'badge-ghost')
+
+    @property
+    def tipo_cor(self):
+        return 'text-success' if self.tipo == 'receita' else 'text-error'
+
+    @property
+    def comprovante_extensao(self):
+        if not self.comprovante:
+            return ''
+        import os
+        return os.path.splitext(self.comprovante.name)[1].lower()
+
+    @property
+    def comprovante_is_imagem(self):
+        return self.comprovante_extensao in ('.jpg', '.jpeg', '.png', '.gif', '.webp')
+
+
+
+# ---------------------------------------------------------------------------
+# Portal Público  (P)
+# ---------------------------------------------------------------------------
+
+class Publicacao(models.Model):
+    TIPO_CHOICES = [
+        ('noticia',           'Notícia'),
+        ('comunicado',        'Comunicado'),
+        ('regulamento',       'Regulamento'),
+        ('documento_oficial', 'Documento Oficial'),
+    ]
+
+    tipo          = models.CharField(max_length=20, choices=TIPO_CHOICES, default='noticia', verbose_name='Tipo')
+    titulo        = models.CharField(max_length=300, verbose_name='Título')
+    slug          = models.SlugField(max_length=320, unique=True, blank=True, verbose_name='Slug')
+    resumo        = models.CharField(max_length=500, blank=True, verbose_name='Resumo')
+    conteudo      = models.TextField(blank=True, verbose_name='Conteúdo')
+    imagem_capa   = models.ImageField(upload_to='portal/imagens/', blank=True, null=True, verbose_name='Imagem de capa')
+    arquivo       = models.FileField(upload_to='portal/documentos/', blank=True, null=True, verbose_name='Arquivo')
+    publicado     = models.BooleanField(default=False, verbose_name='Publicado')
+    destaque      = models.BooleanField(default=False, verbose_name='Destaque')
+    publicado_em  = models.DateTimeField(blank=True, null=True, verbose_name='Publicado em')
+    criado_em     = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-publicado_em', '-criado_em']
+        verbose_name = 'Publicação'
+        verbose_name_plural = 'Publicações'
+
+    def __str__(self):
+        return self.titulo
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            from django.utils.text import slugify
+            base = slugify(self.titulo)[:300]
+            slug = base or 'publicacao'
+            i = 1
+            while Publicacao.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base}-{i}"
+                i += 1
+            self.slug = slug
+        if self.publicado and not self.publicado_em:
+            from django.utils import timezone
+            self.publicado_em = timezone.now()
+        super().save(*args, **kwargs)
+
+    @property
+    def arquivo_extensao(self):
+        if not self.arquivo:
+            return ''
+        import os
+        return os.path.splitext(self.arquivo.name)[1].lower()
+
+    @property
+    def arquivo_is_imagem(self):
+        return self.arquivo_extensao in ('.jpg', '.jpeg', '.png', '.gif', '.webp')
 
 
 # ---------------------------------------------------------------------------

@@ -1,0 +1,140 @@
+{% extends 'base/indice.html' %}
+{% block titulo %}Processos Desportivos{% endblock %}
+
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-base-content/40">
+    <ul>
+      <li><a href="{% url 'competicao:tribunal_dashboard' %}" class="hover:text-base-content/70">Tribunal</a></li>
+      <li><span class="text-base-content/60">Processos</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block conteudo %}
+<div class="p-4 md:p-6 max-w-[1200px] mx-auto space-y-5">
+
+  <!-- Cabeçalho -->
+  <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+    <div>
+      <h1 class="section-heading text-4xl text-base-content leading-none">PROCESSOS</h1>
+      <p class="text-sm text-base-content/40 mt-1">
+        {{ total_abertos }} aberto{{ total_abertos|pluralize }} ·
+        {{ total_em_julgamento }} em julgamento
+      </p>
+    </div>
+    <a href="{% url 'competicao:processo_criar' %}"
+       class="btn btn-warning gap-2 font-bold shadow shadow-warning/20 shrink-0">
+      <i class="bi bi-plus-circle-fill"></i> Novo Processo
+    </a>
+  </div>
+
+  <!-- Filtros -->
+  <form method="get" class="flex flex-wrap items-end gap-2">
+
+    <!-- Busca -->
+    <label class="input input-sm input-bordered flex items-center gap-2 flex-1 min-w-48">
+      <i class="bi bi-search text-xs text-base-content/30"></i>
+      <input type="search" name="q" value="{{ q }}" placeholder="Buscar por número, denunciante..." class="grow bg-transparent outline-none text-sm">
+    </label>
+
+    <!-- Status -->
+    <select name="status" class="select select-sm select-bordered">
+      <option value="">Todos os status</option>
+      {% for val, label in status_choices %}
+      <option value="{{ val }}" {% if filtro_status == val %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+
+    <!-- Tipo -->
+    <select name="tipo" class="select select-sm select-bordered">
+      <option value="">Todos os tipos</option>
+      {% for val, label in tipo_choices %}
+      <option value="{{ val }}" {% if filtro_tipo == val %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+
+    <button type="submit" class="btn btn-sm btn-ghost border border-base-content/10">
+      <i class="bi bi-funnel text-sm"></i> Filtrar
+    </button>
+    {% if q or filtro_status or filtro_tipo %}
+    <a href="{% url 'competicao:processo_lista' %}" class="btn btn-sm btn-ghost text-error/60 hover:text-error">
+      <i class="bi bi-x text-sm"></i> Limpar
+    </a>
+    {% endif %}
+  </form>
+
+  <!-- Lista -->
+  <div class="card bg-base-200 border border-base-300 overflow-hidden">
+    <div class="divide-y divide-base-300">
+      {% for proc in processos %}
+      <a href="{% url 'competicao:processo_detalhe' proc.pk %}"
+         class="flex items-center gap-3 px-4 py-4 hover:bg-base-300/40 transition-colors group">
+
+        <div class="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center
+                    {% if proc.status == 'aberto' %}bg-warning/15{% elif proc.status == 'em_julgamento' %}bg-info/15{% elif proc.status == 'julgado' %}bg-success/15{% else %}bg-base-300{% endif %}">
+          {% if proc.status == 'aberto' %}
+            <i class="bi bi-folder2-open text-warning"></i>
+          {% elif proc.status == 'em_julgamento' %}
+            <i class="bi bi-hourglass-split text-info"></i>
+          {% elif proc.status == 'julgado' %}
+            <i class="bi bi-check-circle-fill text-success"></i>
+          {% else %}
+            <i class="bi bi-archive text-base-content/30"></i>
+          {% endif %}
+        </div>
+
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 mb-1 flex-wrap">
+            <span class="font-bold text-sm font-mono text-base-content">{{ proc.numero }}</span>
+            <span class="badge {{ proc.status_badge_class }} badge-sm">{{ proc.get_status_display }}</span>
+            <span class="badge badge-ghost badge-xs">{{ proc.get_tipo_display }}</span>
+          </div>
+          <p class="text-sm text-base-content/60 truncate">
+            Denunciante: <span class="font-medium">{{ proc.denunciante }}</span>
+            {% if proc.denunciado_str != '—' %}· Denunciado: <span class="font-medium">{{ proc.denunciado_str }}</span>{% endif %}
+            {% if proc.competicao %}· {{ proc.competicao.nome }}{% endif %}
+          </p>
+        </div>
+
+        <div class="text-right shrink-0">
+          <p class="text-xs text-base-content/30">{{ proc.criado_em|date:"d/m/Y" }}</p>
+          {% if proc.recursos.count %}
+          <span class="badge badge-error badge-xs mt-1">{{ proc.recursos.count }} recurso{{ proc.recursos.count|pluralize }}</span>
+          {% endif %}
+        </div>
+
+        <i class="bi bi-chevron-right text-xs text-base-content/20 group-hover:text-warning shrink-0 transition-colors"></i>
+      </a>
+      {% empty %}
+      <div class="flex flex-col items-center justify-center py-16 gap-2 text-base-content/30">
+        <i class="bi bi-folder2 text-5xl"></i>
+        <p class="text-base font-medium">Nenhum processo encontrado</p>
+        {% if q or filtro_status or filtro_tipo %}
+        <p class="text-sm">Tente remover os filtros</p>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Paginação -->
+  {% if is_paginated %}
+  <div class="flex justify-center">
+    <div class="join">
+      {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}&status={{ filtro_status }}&tipo={{ filtro_tipo }}&q={{ q }}"
+         class="join-item btn btn-sm">«</a>
+      {% endif %}
+      <button class="join-item btn btn-sm">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</button>
+      {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}&status={{ filtro_status }}&tipo={{ filtro_tipo }}&q={{ q }}"
+         class="join-item btn btn-sm">»</a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

@@ -13,124 +13,216 @@
 {% endblock %}
 
 {% block conteudo %}
-<div class="p-4 md:p-6 space-y-5">
+<div class="p-4 md:p-6 space-y-5 max-w-[1400px] mx-auto">
 
   <!-- Cabeçalho -->
-  <div class="flex items-center justify-between gap-4">
-    <div class="flex items-center gap-3">
-      <div class="w-9 h-9 rounded-xl bg-warning/10 border border-warning/20
-                  flex items-center justify-center shrink-0">
-        <i class="bi bi-person-badge text-warning text-base"></i>
-      </div>
-      <div>
-        <h1 class="section-heading text-2xl text-base-content leading-none">Árbitros</h1>
-        <p class="text-xs text-base-content/40 mt-0.5">
-          {{ arbitros|length }} árbitro{{ arbitros|length|pluralize }} cadastrado{{ arbitros|length|pluralize }}
-        </p>
-      </div>
+  <div class="flex items-end justify-between gap-4">
+    <div>
+      <h1 class="section-heading text-4xl text-base-content leading-none">ÁRBITROS</h1>
+      <p class="text-sm text-base-content/40 mt-1">
+        {{ arbitros|length }} árbitro{{ arbitros|length|pluralize }} cadastrado{{ arbitros|length|pluralize }}
+      </p>
     </div>
-    <button class="btn btn-warning btn-sm gap-1.5 shadow-lg shadow-warning/20"
-            onclick="document.getElementById('form-novo-arbitro').classList.toggle('hidden')">
-      <i class="bi bi-plus-circle"></i>
+    <a href="{% url 'competicao:arbitro_criar' %}"
+       class="btn btn-warning gap-2 shadow-lg shadow-warning/20 font-semibold shrink-0">
+      <i class="bi bi-plus-lg"></i>
       <span class="hidden sm:inline">Novo Árbitro</span>
       <span class="sm:hidden">Novo</span>
-    </button>
+    </a>
   </div>
 
-  <!-- Formulário de criação (toggle) -->
-  <div id="form-novo-arbitro" class="hidden">
-    <div class="card bg-base-200 border border-warning/30">
-      <div class="px-4 py-3 border-b border-base-300 flex items-center gap-2">
-        <i class="bi bi-person-plus text-warning text-sm"></i>
-        <span class="font-semibold text-sm">Cadastrar Árbitro</span>
+  <!-- Stats rápidos -->
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <div class="card bg-base-200 border border-base-300 card-sport">
+      <div class="card-body p-4 flex-row items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-success/10 border border-success/20 flex items-center justify-center shrink-0">
+          <i class="bi bi-check-circle-fill text-success text-sm"></i>
+        </div>
+        <div>
+          <div class="stat-number text-2xl text-base-content leading-none">
+            {{ disponíveis_count }}
+          </div>
+          <p class="text-xs text-base-content/40 mt-0.5">Disponíveis</p>
+        </div>
       </div>
-      <div class="card-body p-4">
-        <form method="post" action="{% url 'competicao:arbitro_criar' %}" class="flex flex-col sm:flex-row gap-3">
-          {% csrf_token %}
-          <div class="flex-1">
-            <label class="label py-0 mb-1">
-              <span class="label-text font-semibold text-xs">Nome *</span>
-            </label>
-            {{ form.nome }}
+    </div>
+    <div class="card bg-base-200 border border-base-300 card-sport">
+      <div class="card-body p-4 flex-row items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-error/10 border border-error/20 flex items-center justify-center shrink-0">
+          <i class="bi bi-x-circle-fill text-error text-sm"></i>
+        </div>
+        <div>
+          <div class="stat-number text-2xl text-base-content leading-none">
+            {{ indisponiveis_count }}
           </div>
-          <div class="flex-1">
-            <label class="label py-0 mb-1">
-              <span class="label-text font-semibold text-xs">Categoria</span>
-            </label>
-            {{ form.categoria }}
+          <p class="text-xs text-base-content/40 mt-0.5">Indisponíveis</p>
+        </div>
+      </div>
+    </div>
+    <div class="card bg-base-200 border border-base-300 card-sport">
+      <div class="card-body p-4 flex-row items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-warning/10 border border-warning/20 flex items-center justify-center shrink-0">
+          <i class="bi bi-award-fill text-warning text-sm"></i>
+        </div>
+        <div>
+          <div class="stat-number text-2xl text-base-content leading-none">
+            {{ fifa_count }}
           </div>
-          <div class="flex items-end">
-            <button type="submit" class="btn btn-warning btn-sm gap-1">
-              <i class="bi bi-save"></i> Salvar
-            </button>
+          <p class="text-xs text-base-content/40 mt-0.5">FIFA</p>
+        </div>
+      </div>
+    </div>
+    <div class="card bg-base-200 border border-base-300 card-sport">
+      <div class="card-body p-4 flex-row items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-info/10 border border-info/20 flex items-center justify-center shrink-0">
+          <i class="bi bi-graph-up text-info text-sm"></i>
+        </div>
+        <div>
+          <div class="stat-number text-2xl text-base-content leading-none">
+            {{ total_jogos_count }}
           </div>
-        </form>
+          <p class="text-xs text-base-content/40 mt-0.5">Jogos apitados</p>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Busca -->
-  <form method="get" class="flex gap-2 max-w-sm">
-    <label class="input input-sm flex-1 flex items-center gap-2 bg-base-200 border-base-300">
-      <i class="bi bi-search text-base-content/30 text-xs"></i>
-      <input type="search" name="q" value="{{ q }}" class="grow bg-transparent text-sm outline-none"
-             placeholder="Buscar árbitro...">
-    </label>
-    <button type="submit" class="btn btn-sm btn-ghost">Buscar</button>
-    {% if q %}
-    <a href="{% url 'competicao:arbitro_lista' %}" class="btn btn-sm btn-ghost text-error">Limpar</a>
-    {% endif %}
-  </form>
+  <!-- Filtros -->
+  <div class="flex flex-wrap gap-3 items-end">
+    <form method="get" class="flex gap-2 flex-1 min-w-48 max-w-sm">
+      <label class="input input-sm flex-1 flex items-center gap-2 bg-base-200 border-base-300">
+        <i class="bi bi-search text-base-content/30 text-xs"></i>
+        <input type="search" name="q" value="{{ q }}" class="grow bg-transparent text-sm outline-none"
+               placeholder="Buscar árbitro...">
+        {% if filtro_disp %}<input type="hidden" name="disp" value="{{ filtro_disp }}">{% endif %}
+        {% if filtro_cat %}<input type="hidden" name="cat" value="{{ filtro_cat }}">{% endif %}
+      </label>
+    </form>
+    <div class="flex gap-1 flex-wrap">
+      <a href="?{% if q %}q={{ q }}&{% endif %}"
+         class="btn btn-xs {% if not filtro_disp %}btn-warning{% else %}btn-ghost border border-base-content/15{% endif %}">
+        Todos
+      </a>
+      <a href="?{% if q %}q={{ q }}&{% endif %}disp=disponivel"
+         class="btn btn-xs {% if filtro_disp == 'disponivel' %}btn-success{% else %}btn-ghost border border-base-content/15{% endif %}">
+        Disponíveis
+      </a>
+      <a href="?{% if q %}q={{ q }}&{% endif %}disp=indisponivel"
+         class="btn btn-xs {% if filtro_disp == 'indisponivel' %}btn-error{% else %}btn-ghost border border-base-content/15{% endif %}">
+        Indisponíveis
+      </a>
+    </div>
+    <div class="flex gap-1 flex-wrap">
+      {% for val, label in categorias %}
+      <a href="?{% if q %}q={{ q }}&{% endif %}{% if filtro_disp %}disp={{ filtro_disp }}&{% endif %}cat={{ val }}"
+         class="btn btn-xs {% if filtro_cat == val %}btn-warning{% else %}btn-ghost border border-base-content/15{% endif %}">
+        {{ label }}
+      </a>
+      {% endfor %}
+    </div>
+  </div>
 
-  <!-- Listagem ou empty state -->
+  <!-- Grid de árbitros -->
   {% if arbitros %}
-  <div class="card bg-base-200 border border-base-300 overflow-hidden">
-    <div class="overflow-x-auto">
-      <table class="table table-sm">
-        <thead>
-          <tr class="bg-base-300/70 text-xs text-base-content/60 uppercase tracking-wider">
-            <th>Nome</th>
-            <th>Categoria</th>
-            <th class="text-center">Jogos Apitados</th>
-            <th class="text-center">Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for arbitro in arbitros %}
-          <tr class="hover:bg-base-300/30 transition-colors">
-            <td class="font-semibold text-sm">
-              <i class="bi bi-person-badge text-base-content/30 text-xs mr-1"></i>
-              {{ arbitro.nome }}
-            </td>
-            <td class="text-sm text-base-content/60">{{ arbitro.categoria|default:"—" }}</td>
-            <td class="text-center">
-              <span class="badge badge-ghost badge-sm">{{ arbitro.jogos.count }}</span>
-            </td>
-            <td class="text-center">
-              <a href="{% url 'competicao:arbitro_editar' arbitro.pk %}" class="btn btn-ghost btn-xs"
-                 title="Editar">
-                <i class="bi bi-pencil"></i>
-              </a>
-              <form method="post" action="{% url 'competicao:arbitro_excluir' arbitro.pk %}" class="inline"
-                    onsubmit="return confirm('Excluir árbitro {{ arbitro.nome }}?')">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-ghost btn-xs text-error" title="Excluir">
-                  <i class="bi bi-trash"></i>
-                </button>
-              </form>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+    {% for arbitro in arbitros %}
+    <a href="{% url 'competicao:arbitro_detalhe' arbitro.pk %}"
+       class="card bg-base-200 border border-base-300 card-sport overflow-hidden group hover:border-warning/40 transition-all">
+
+      <!-- Barra colorida por disponibilidade -->
+      <div class="h-1 {% if arbitro.disponibilidade == 'disponivel' %}bg-success{% elif arbitro.disponibilidade == 'indisponivel' %}bg-error{% elif arbitro.disponibilidade == 'lesionado' %}bg-warning{% else %}bg-base-content/30{% endif %}"></div>
+
+      <div class="card-body p-4 gap-3">
+
+        <!-- Foto + nome + badges -->
+        <div class="flex items-start gap-3">
+          <!-- Avatar -->
+          <div class="shrink-0">
+            {% if arbitro.foto %}
+              <img src="{{ arbitro.foto.thumbnail.url }}" alt="{{ arbitro.nome }}"
+                   class="w-14 h-14 rounded-full object-cover border-2 border-base-300 group-hover:border-warning/40 transition-colors">
+            {% else %}
+              <div class="w-14 h-14 rounded-full bg-warning/10 border-2 border-base-300
+                          flex items-center justify-center group-hover:border-warning/40 transition-colors">
+                <span class="text-xl font-black text-warning/60">{{ arbitro.nome|first|upper }}</span>
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- Info principal -->
+          <div class="flex-1 min-w-0">
+            <p class="font-bold text-sm text-base-content truncate">{{ arbitro.nome }}</p>
+
+            <!-- Categoria -->
+            <div class="mt-1">
+              {% if arbitro.categoria == 'fifa' %}
+                <span class="badge badge-warning badge-sm font-bold uppercase tracking-wider">
+                  <i class="bi bi-award-fill mr-1"></i> FIFA
+                </span>
+              {% elif arbitro.categoria == 'nacional' %}
+                <span class="badge badge-info badge-sm font-semibold uppercase">Nacional</span>
+              {% elif arbitro.categoria == 'regional' %}
+                <span class="badge badge-ghost badge-sm uppercase">Regional</span>
+              {% else %}
+                <span class="badge badge-ghost badge-sm text-base-content/50 uppercase">Aspirante</span>
+              {% endif %}
+            </div>
+
+            <!-- Disponibilidade -->
+            <div class="mt-1.5 flex items-center gap-1.5">
+              {% if arbitro.disponibilidade == 'disponivel' %}
+                <span class="w-1.5 h-1.5 rounded-full bg-success inline-block"></span>
+                <span class="text-xs text-success font-medium">Disponível</span>
+              {% elif arbitro.disponibilidade == 'indisponivel' %}
+                <span class="w-1.5 h-1.5 rounded-full bg-error inline-block"></span>
+                <span class="text-xs text-error font-medium">Indisponível</span>
+              {% elif arbitro.disponibilidade == 'lesionado' %}
+                <span class="w-1.5 h-1.5 rounded-full bg-warning inline-block"></span>
+                <span class="text-xs text-warning font-medium">Lesionado</span>
+              {% else %}
+                <span class="w-1.5 h-1.5 rounded-full bg-base-content/30 inline-block"></span>
+                <span class="text-xs text-base-content/50 font-medium">Férias</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Ativo / inativo -->
+          {% if not arbitro.ativo %}
+          <span class="badge badge-error badge-xs shrink-0">Inativo</span>
+          {% endif %}
+        </div>
+
+        <!-- Stats linha -->
+        <div class="flex items-center gap-4 pt-1 border-t border-base-300/60">
+          <div class="flex items-center gap-1.5 text-xs text-base-content/50">
+            <i class="bi bi-whistle"></i>
+            <span class="font-semibold text-base-content">{{ arbitro.jogos_arbitrados.count }}</span>
+            <span>jogos</span>
+          </div>
+          {% if arbitro.taxa_por_partida %}
+          <div class="flex items-center gap-1.5 text-xs text-base-content/50">
+            <i class="bi bi-cash"></i>
+            <span class="font-semibold text-base-content">R$ {{ arbitro.taxa_por_partida }}</span>
+            <span>/partida</span>
+          </div>
+          {% endif %}
+          <div class="ml-auto">
+            <i class="bi bi-chevron-right text-base-content/20 text-xs group-hover:text-warning/50 transition-colors"></i>
+          </div>
+        </div>
+
+      </div>
+    </a>
+    {% endfor %}
   </div>
 
   {% else %}
   {% include 'components/empty_state.html' with
      icon="person-badge"
-     title="Nenhum árbitro cadastrado."
-     subtitle="Cadastre árbitros para atribuí-los aos jogos da competição." %}
+     title="Nenhum árbitro encontrado."
+     subtitle="Cadastre árbitros para atribuí-los aos jogos da competição."
+     cta_url="competicao:arbitro_criar"
+     cta_label="Cadastrar Árbitro" %}
   {% endif %}
 
 </div>

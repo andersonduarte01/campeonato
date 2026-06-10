@@ -198,6 +198,14 @@
            class="btn btn-ghost btn-sm gap-1 border border-base-content/10">
           <i class="bi bi-people-fill text-sm"></i> Escalação
         </a>
+        <a href="{% url 'competicao:escala_inteligente' jogo.pk %}"
+           class="btn btn-ghost btn-sm gap-1 border border-base-content/10">
+          <i class="bi bi-cpu-fill text-sm"></i> Escala
+        </a>
+        <a href="{% url 'competicao:sumula_digital' jogo.pk %}"
+           class="btn btn-ghost btn-sm gap-1 border border-warning/30 text-warning hover:bg-warning/10">
+          <i class="bi bi-file-earmark-check-fill text-sm"></i> Súmula Digital
+        </a>
         <a href="{% url 'competicao:pdf_sumula' jogo.pk %}" target="_blank"
            class="btn btn-ghost btn-sm gap-1 border border-base-content/10">
           <i class="bi bi-printer text-sm"></i> Súmula

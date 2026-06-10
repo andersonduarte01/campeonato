@@ -1,0 +1,123 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>Comprovante {{ lan.numero }}</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body { background: #fff; font-family: Arial, sans-serif; margin: 0; font-size: 13px; }
+  @media print { .no-print { display: none !important; } }
+
+  .header { background: #212529; color: #fff; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
+  .header h4 { margin: 0; font-size: 1rem; }
+  .header .sub { font-size: .78rem; opacity: .6; margin-top: 2px; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: .72rem; font-weight: 700; text-transform: uppercase; }
+  .badge-receita { background: #198754; color: #fff; }
+  .badge-despesa { background: #dc3545; color: #fff; }
+  .badge-pago    { background: #198754; color: #fff; }
+  .badge-pendente{ background: #ffc107; color: #000; }
+  .badge-cancelado{ background: #6c757d; color: #fff; }
+
+  .container { padding: 24px; }
+  .valor-bloco { text-align: center; padding: 20px; border: 2px solid #dee2e6; border-radius: 8px; margin-bottom: 20px; }
+  .valor-num { font-size: 2.5rem; font-weight: 900; }
+  .receita { color: #198754; }
+  .despesa { color: #dc3545; }
+
+  table.info { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+  table.info td { padding: 6px 8px; font-size: .85rem; border-bottom: 1px solid #dee2e6; }
+  table.info td:first-child { font-weight: 700; color: #6c757d; width: 40%; }
+
+  .comprovante-img { max-width: 100%; max-height: 300px; object-fit: contain; border: 1px solid #dee2e6; border-radius: 4px; margin-top: 12px; }
+  .footer { border-top: 1px solid #dee2e6; padding: 12px 24px; font-size: .72rem; color: #6c757d; text-align: center; }
+  .btn { display: inline-block; padding: 6px 14px; border-radius: 4px; border: 1px solid; cursor: pointer; font-size: .8rem; }
+  .btn-light { background: #f8f9fa; color: #212529; border-color: #ddd; }
+  .btn-outline { background: transparent; color: #fff; border-color: rgba(255,255,255,.4); }
+  .seal { border: 2px dashed #dee2e6; border-radius: 8px; padding: 16px; text-align: center; color: #adb5bd; font-size: .8rem; margin-top: 20px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h4>COMPROVANTE FINANCEIRO</h4>
+    <div class="sub">{{ lan.numero }} · CHAMPS — Gestão Federativa</div>
+  </div>
+  <div class="no-print" style="display:flex;gap:8px">
+    <button onclick="window.print()" class="btn btn-light" style="font-size:.75rem;padding:4px 10px">Imprimir</button>
+    <button onclick="window.close()" class="btn btn-outline" style="font-size:.75rem;padding:4px 10px">Fechar</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Valor em destaque -->
+  <div class="valor-bloco">
+    <div style="margin-bottom:6px">
+      <span class="badge badge-{{ lan.tipo }}">{{ lan.get_tipo_display }}</span>
+      &nbsp;
+      <span class="badge badge-{{ lan.status }}">{{ lan.get_status_display }}</span>
+    </div>
+    <div class="valor-num {{ lan.tipo }}">
+      {% if lan.tipo == 'receita' %}+{% else %}-{% endif %}R$ {{ lan.valor|floatformat:2 }}
+    </div>
+    <div style="font-size:.85rem;color:#6c757d;margin-top:4px">{{ lan.descricao }}</div>
+  </div>
+
+  <!-- Tabela de detalhes -->
+  <table class="info">
+    <tr><td>Número</td><td style="font-family:monospace">{{ lan.numero }}</td></tr>
+    <tr><td>Categoria</td><td>{{ lan.get_categoria_display }}</td></tr>
+    <tr><td>Vencimento</td><td>{{ lan.data_vencimento|date:"d/m/Y" }}</td></tr>
+    {% if lan.data_pagamento %}
+    <tr><td>Data do Pagamento</td><td>{{ lan.data_pagamento|date:"d/m/Y" }}</td></tr>
+    {% endif %}
+    {% if lan.forma_pagamento %}
+    <tr><td>Forma de Pagamento</td><td>{{ lan.get_forma_pagamento_display }}</td></tr>
+    {% endif %}
+    {% if lan.numero_referencia %}
+    <tr><td>Referência / ID</td><td style="font-family:monospace">{{ lan.numero_referencia }}</td></tr>
+    {% endif %}
+    {% if lan.competicao %}
+    <tr><td>Competição</td><td>{{ lan.competicao.nome }}</td></tr>
+    {% endif %}
+    {% if lan.equipe %}
+    <tr><td>Equipe</td><td>{{ lan.equipe.nome_equipe }}</td></tr>
+    {% endif %}
+    {% if lan.atleta %}
+    <tr><td>Atleta</td><td>{{ lan.atleta.nome }}</td></tr>
+    {% endif %}
+    {% if lan.observacoes %}
+    <tr><td>Observações</td><td>{{ lan.observacoes }}</td></tr>
+    {% endif %}
+  </table>
+
+  <!-- Comprovante de pagamento (imagem) -->
+  {% if lan.comprovante and lan.comprovante_is_imagem %}
+  <div style="margin-top:16px">
+    <strong style="font-size:.82rem;color:#6c757d;text-transform:uppercase;letter-spacing:.04em">Comprovante de Pagamento</strong>
+    <br>
+    <img src="{{ lan.comprovante.url }}" class="comprovante-img">
+  </div>
+  {% elif lan.comprovante %}
+  <p style="margin-top:12px;font-size:.82rem;color:#6c757d">
+    <strong>Comprovante:</strong>
+    <a href="{{ lan.comprovante.url }}" target="_blank">{{ lan.comprovante.name }}</a>
+  </p>
+  {% endif %}
+
+  <!-- Área de assinatura -->
+  <div class="seal" style="margin-top:24px">
+    <p style="margin:0 0 4px 0;font-weight:700;font-size:.82rem;color:#495057">Documento gerado automaticamente</p>
+    <p style="margin:0;font-size:.75rem">Gerado em {% now "d/m/Y \à\s H:i" %} · CHAMPS — Plataforma Federativa Profissional</p>
+  </div>
+
+</div>
+
+<div class="footer">
+  CHAMPS — Gestão Federativa &nbsp;|&nbsp; Documento nº {{ lan.numero }} &nbsp;|&nbsp; Gerado em {% now "d/m/Y H:i" %}
+</div>
+
+</body>
+</html>

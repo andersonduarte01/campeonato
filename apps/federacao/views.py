@@ -189,9 +189,27 @@ def transferencia_acao(request, pk, acao):
         elif acao == 'aprovar' and t.status in (Transferencia.STATUS_SOLICITADA, Transferencia.STATUS_EM_ANALISE):
             t.aprovar(usuario=request.user)
             messages.success(request, f'Transferência de {t.atleta.nome} aprovada.')
+            try:
+                from apps.auditoria.utils import registrar_auditoria
+                registrar_auditoria(
+                    request, 'aprovar',
+                    descricao=f'Transferência aprovada: {t.atleta.nome} → {t.clube_destino.nome_equipe}',
+                    objeto=t,
+                )
+            except Exception:
+                pass
         elif acao == 'rejeitar' and t.status in (Transferencia.STATUS_SOLICITADA, Transferencia.STATUS_EM_ANALISE):
             t.rejeitar()
             messages.warning(request, 'Transferência rejeitada.')
+            try:
+                from apps.auditoria.utils import registrar_auditoria
+                registrar_auditoria(
+                    request, 'rejeitar',
+                    descricao=f'Transferência rejeitada: {t.atleta.nome}',
+                    objeto=t,
+                )
+            except Exception:
+                pass
         elif acao == 'cancelar' and t.status not in (Transferencia.STATUS_APROVADA, Transferencia.STATUS_REJEITADA):
             t.cancelar()
             messages.warning(request, 'Transferência cancelada.')

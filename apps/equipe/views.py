@@ -101,3 +101,15 @@ class AtletaDeleteView(LoginRequiredMixin, DeleteView):
 
     def get_success_url(self):
         return reverse_lazy('equipe:detalhe', kwargs={'pk': self.object.equipe.pk})
+
+    def form_valid(self, form):
+        try:
+            from apps.auditoria.utils import registrar_auditoria
+            registrar_auditoria(
+                self.request, 'excluir',
+                descricao=f'Atleta excluído: {self.object.nome} ({self.object.equipe.nome_equipe})',
+                objeto=self.object,
+            )
+        except Exception:
+            pass
+        return super().form_valid(form)

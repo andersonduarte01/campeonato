@@ -1,0 +1,130 @@
+{% extends 'portal/base.html' %}
+{% block titulo %}{{ pub.titulo }}{% endblock %}
+
+{% block conteudo %}
+
+<div class="max-w-5xl mx-auto px-4 py-10">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+    <!-- Conteúdo principal -->
+    <article class="lg:col-span-2 space-y-6">
+
+      <!-- Meta -->
+      <div>
+        <div class="flex items-center gap-2 flex-wrap mb-3">
+          <a href="{% url 'competicao:portal_publicacao_lista' %}?tipo={{ pub.tipo }}"
+             class="badge badge-warning text-xs">{{ pub.get_tipo_display }}</a>
+          {% if pub.publicado_em %}
+          <span class="text-xs text-base-content/35">{{ pub.publicado_em|date:"d \d\e F \d\e Y" }}</span>
+          {% endif %}
+        </div>
+        <h1 class="section-heading text-4xl text-base-content leading-tight">{{ pub.titulo }}</h1>
+        {% if pub.resumo %}
+        <p class="text-base text-base-content/50 mt-3 leading-relaxed">{{ pub.resumo }}</p>
+        {% endif %}
+      </div>
+
+      <!-- Imagem de capa -->
+      {% if pub.imagem_capa %}
+      <div class="rounded-2xl overflow-hidden border border-base-300">
+        <img src="{{ pub.imagem_capa.url }}" alt="{{ pub.titulo }}"
+             class="w-full object-cover max-h-80">
+      </div>
+      {% endif %}
+
+      <!-- Conteúdo -->
+      {% if pub.conteudo %}
+      <div class="prose prose-sm max-w-none text-base-content/70 leading-relaxed
+                  [&>p]:mb-4 [&>h2]:font-title [&>h2]:text-2xl [&>h2]:text-base-content [&>h2]:mt-6">
+        {{ pub.conteudo|linebreaks }}
+      </div>
+      {% endif %}
+
+      <!-- Arquivo -->
+      {% if pub.arquivo %}
+      <div>
+        <div class="flex items-center gap-2 mb-2">
+          <i class="bi bi-paperclip text-warning text-sm"></i>
+          <span class="section-heading text-sm text-base-content/70 tracking-widest">ARQUIVO ANEXO</span>
+        </div>
+        <a href="{{ pub.arquivo.url }}" target="_blank"
+           class="flex items-center gap-3 p-4 bg-base-200 border border-base-300 rounded-xl hover:border-warning/30 transition-colors group">
+          <div class="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center shrink-0">
+            <i class="bi bi-{% if pub.arquivo_is_imagem %}image{% else %}file-earmark-pdf{% endif %} text-warning text-lg"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="font-semibold text-sm text-base-content group-hover:text-warning transition-colors truncate">
+              {{ pub.arquivo.name|slice:"20:" }}
+            </p>
+            <p class="text-xs text-base-content/40">
+              {{ pub.arquivo_extensao|upper|slice:"1:" }} · Clique para abrir
+            </p>
+          </div>
+          <i class="bi bi-box-arrow-up-right text-base-content/25 text-sm"></i>
+        </a>
+      </div>
+      {% endif %}
+
+    </article>
+
+    <!-- Sidebar -->
+    <aside class="space-y-5">
+
+      <a href="{% url 'competicao:portal_publicacao_lista' %}?tipo={{ pub.tipo }}"
+         class="flex items-center gap-1.5 text-xs text-base-content/40 hover:text-warning transition-colors">
+        <i class="bi bi-arrow-left"></i> Voltar para {{ pub.get_tipo_display|lower }}s
+      </a>
+
+      {% if relacionadas %}
+      <div class="card bg-base-200 border border-base-300 overflow-hidden">
+        <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300">
+          <i class="bi bi-link-45deg text-warning text-sm"></i>
+          <span class="section-heading text-sm text-base-content/70 tracking-widest">RELACIONADOS</span>
+        </div>
+        <div class="divide-y divide-base-300">
+          {% for r in relacionadas %}
+          <a href="{% url 'competicao:portal_publicacao_detalhe' r.slug %}"
+             class="flex flex-col px-4 py-3 hover:bg-base-300/30 transition-colors group">
+            <p class="text-sm font-medium text-base-content group-hover:text-warning transition-colors leading-snug line-clamp-2">
+              {{ r.titulo }}
+            </p>
+            {% if r.publicado_em %}
+            <p class="text-xs text-base-content/30 mt-0.5">{{ r.publicado_em|date:"d/m/Y" }}</p>
+            {% endif %}
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Seções do portal -->
+      <div class="card bg-base-200 border border-base-300 overflow-hidden">
+        <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300">
+          <i class="bi bi-grid text-warning text-sm"></i>
+          <span class="section-heading text-sm text-base-content/70 tracking-widest">PORTAL</span>
+        </div>
+        <div class="p-3 space-y-1">
+          <a href="{% url 'competicao:portal_publicacao_lista' %}?tipo=noticia"
+             class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-base-content/60 hover:bg-base-300/50 hover:text-base-content transition-colors">
+            <i class="bi bi-newspaper text-warning/60"></i> Notícias
+          </a>
+          <a href="{% url 'competicao:portal_publicacao_lista' %}?tipo=comunicado"
+             class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-base-content/60 hover:bg-base-300/50 hover:text-base-content transition-colors">
+            <i class="bi bi-megaphone text-warning/60"></i> Comunicados
+          </a>
+          <a href="{% url 'competicao:portal_publicacao_lista' %}?tipo=regulamento"
+             class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-base-content/60 hover:bg-base-300/50 hover:text-base-content transition-colors">
+            <i class="bi bi-journal-text text-warning/60"></i> Regulamentos
+          </a>
+          <a href="{% url 'competicao:portal_publicacao_lista' %}?tipo=documento_oficial"
+             class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-base-content/60 hover:bg-base-300/50 hover:text-base-content transition-colors">
+            <i class="bi bi-file-earmark-text text-warning/60"></i> Documentos
+          </a>
+        </div>
+      </div>
+
+    </aside>
+
+  </div>
+</div>
+{% endblock %}

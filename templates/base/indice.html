@@ -48,6 +48,14 @@
   {% url 'federacao:transferencia_lista' as url_fed_transf %}
   {% url 'federacao:clube_lista'       as url_fed_clubes %}
   {% url 'federacao:documento_lista'   as url_fed_docs %}
+  {% url 'competicao:tribunal_dashboard'   as url_tribunal %}
+  {% url 'competicao:processo_lista'     as url_processos %}
+  {% url 'competicao:financeiro_dashboard' as url_financeiro %}
+  {% url 'competicao:lancamento_lista'   as url_lancamentos %}
+  {% url 'competicao:publicacao_admin_lista' as url_portal_admin %}
+  {% url 'competicao:portal_home'        as url_portal %}
+  {% url 'auditoria:log_lista'           as url_audit_logs %}
+  {% url 'auditoria:lgpd_dashboard'      as url_lgpd %}
 
   <!-- ─────────────────────────────────────────────────────────────────
        DRAWER — lg:drawer-open torna a sidebar permanente no desktop
@@ -299,7 +307,75 @@
             Documentos
           </a>
 
+          <!-- FINANCEIRO -->
+          <div class="sidebar-section">
+            <span class="sidebar-section-label">Financeiro</span>
+          </div>
+
+          <a href="{{ url_financeiro }}"
+             class="sidebar-link {% if request.path == url_financeiro %}sidebar-link-active{% endif %}">
+            <i class="bi bi-cash-coin text-base shrink-0 text-warning/50"></i>
+            Financeiro
+          </a>
+
+          <a href="{{ url_lancamentos }}"
+             class="sidebar-link {% if url_lancamentos in request.path %}sidebar-link-active{% endif %}">
+            <i class="bi bi-receipt text-base shrink-0 text-warning/50"></i>
+            Lançamentos
+          </a>
+
+          <!-- PORTAL -->
+          <div class="sidebar-section">
+            <span class="sidebar-section-label">Portal Público</span>
+          </div>
+
+          <a href="{{ url_portal_admin }}"
+             class="sidebar-link {% if url_portal_admin in request.path %}sidebar-link-active{% endif %}">
+            <i class="bi bi-globe text-base shrink-0 text-warning/50"></i>
+            Publicações
+          </a>
+
+          <a href="{{ url_portal }}" target="_blank"
+             class="sidebar-link">
+            <i class="bi bi-box-arrow-up-right text-base shrink-0 text-warning/50"></i>
+            Ver Portal
+          </a>
+
+          <!-- TRIBUNAL -->
+          <div class="sidebar-section">
+            <span class="sidebar-section-label">Tribunal</span>
+          </div>
+
+          <a href="{{ url_tribunal }}"
+             class="sidebar-link {% if request.path == url_tribunal %}sidebar-link-active{% endif %}">
+            <i class="bi bi-hammer text-base shrink-0 text-warning/50"></i>
+            Tribunal Desportivo
+          </a>
+
+          <a href="{{ url_processos }}"
+             class="sidebar-link {% if url_processos in request.path %}sidebar-link-active{% endif %}">
+            <i class="bi bi-folder2-open text-base shrink-0 text-warning/50"></i>
+            Processos
+          </a>
+
+          <!-- AUDITORIA -->
+          <div class="sidebar-section">
+            <span class="sidebar-section-label">Segurança</span>
+          </div>
+
+          <a href="{{ url_lgpd }}"
+             class="sidebar-link {% if url_lgpd in request.path %}sidebar-link-active{% endif %}">
+            <i class="bi bi-shield-lock text-base shrink-0 text-warning/50"></i>
+            LGPD / Privacidade
+          </a>
+
           {% if user.is_authenticated and user.is_admin or user.is_authenticated and user.perfil == 'admin' %}
+          <a href="{{ url_audit_logs }}"
+             class="sidebar-link {% if url_audit_logs in request.path %}sidebar-link-active{% endif %}">
+            <i class="bi bi-journal-text text-base shrink-0 text-warning/50"></i>
+            Logs de Auditoria
+          </a>
+
           <!-- ADMINISTRAÇÃO -->
           <div class="sidebar-section">
             <span class="sidebar-section-label">Administração</span>

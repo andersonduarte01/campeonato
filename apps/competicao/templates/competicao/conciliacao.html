@@ -1,0 +1,152 @@
+{% extends 'base/indice.html' %}
+{% block titulo %}Conciliação Bancária{% endblock %}
+
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-base-content/40">
+    <ul>
+      <li><a href="{% url 'competicao:financeiro_dashboard' %}" class="hover:text-base-content/70">Financeiro</a></li>
+      <li><span class="text-base-content/60">Conciliação</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block conteudo %}
+<div class="p-4 md:p-6 max-w-[1000px] mx-auto space-y-5">
+
+  <div class="flex items-end justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2 mb-1">
+        <i class="bi bi-check2-square text-warning text-sm"></i>
+        <span class="text-xs font-bold uppercase tracking-widest text-base-content/40">Financeiro Federativo</span>
+      </div>
+      <h1 class="section-heading text-4xl text-base-content leading-none">CONCILIAÇÃO BANCÁRIA</h1>
+      <p class="text-sm text-base-content/40 mt-1">Marque múltiplos lançamentos como pagos de uma vez</p>
+    </div>
+    <a href="{% url 'competicao:lancamento_lista' %}"
+       class="btn btn-ghost btn-sm border border-base-content/10">
+      <i class="bi bi-arrow-left text-sm"></i> Voltar
+    </a>
+  </div>
+
+  <form method="post" id="form-conciliacao">
+    {% csrf_token %}
+
+    <!-- Opções globais de baixa -->
+    <div class="card bg-base-200 border border-warning/20 overflow-hidden mb-4">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-warning/5">
+        <i class="bi bi-sliders text-warning text-sm"></i>
+        <span class="section-heading text-sm text-base-content/70 tracking-widest">PARÂMETROS DA BAIXA</span>
+      </div>
+      <div class="p-4 flex flex-wrap items-end gap-4">
+        <div>
+          <label class="label py-0 mb-1">
+            <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Data do pagamento</span>
+          </label>
+          <input type="date" name="data_pagamento" value="{{ hoje|date:'Y-m-d' }}"
+                 class="input input-sm input-bordered">
+        </div>
+        <div class="w-56">
+          <label class="label py-0 mb-1">
+            <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Forma de pagamento</span>
+          </label>
+          <select name="forma_pagamento" class="select select-sm select-bordered w-full">
+            <option value="">Manter individual</option>
+            {% for v, l in forma_choices %}<option value="{{ v }}">{{ l }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="flex items-center gap-2 ml-auto">
+          <button type="button" id="sel-all" class="btn btn-ghost btn-xs border border-base-content/10">
+            Selecionar todos
+          </button>
+          <button type="button" id="des-all" class="btn btn-ghost btn-xs border border-base-content/10">
+            Limpar
+          </button>
+          <button type="submit" class="btn btn-warning btn-sm gap-1.5 font-semibold shadow shadow-warning/20"
+                  onclick="return confirm('Baixar os lançamentos selecionados?')">
+            <i class="bi bi-check-circle-fill"></i> Confirmar Selecionados
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista de pendentes -->
+    <div class="card bg-base-200 border border-base-300 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="table table-sm w-full">
+          <thead>
+            <tr class="text-xs font-bold uppercase tracking-wider text-base-content/40 border-b border-base-300">
+              <th class="py-3 w-10">
+                <input type="checkbox" id="check-all" class="checkbox checkbox-sm checkbox-warning">
+              </th>
+              <th>Nº</th>
+              <th>Tipo</th>
+              <th>Descrição</th>
+              <th>Vencimento</th>
+              <th class="text-right">Valor</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for l in pendentes %}
+            <tr class="hover:bg-base-300/30 transition-colors border-b border-base-300/50
+                       {% if l.is_atrasado %}bg-error/5{% endif %}">
+              <td class="py-3">
+                <input type="checkbox" name="ids" value="{{ l.pk }}"
+                       class="checkbox checkbox-sm checkbox-warning item-check">
+              </td>
+              <td class="font-mono text-xs text-base-content/50">
+                <a href="{% url 'competicao:lancamento_detalhe' l.pk %}" class="hover:text-warning">{{ l.numero }}</a>
+              </td>
+              <td>
+                <span class="badge badge-xs {% if l.tipo == 'receita' %}badge-success{% else %}badge-error{% endif %}">
+                  {{ l.get_tipo_display }}
+                </span>
+              </td>
+              <td class="text-sm max-w-64">
+                <p class="truncate">{{ l.descricao }}</p>
+                {% if l.equipe %}<p class="text-xs text-base-content/30 truncate">{{ l.equipe.nome_equipe }}</p>{% endif %}
+              </td>
+              <td class="text-xs {% if l.is_atrasado %}text-error font-bold{% else %}text-base-content/50{% endif %}">
+                {{ l.data_vencimento|date:"d/m/Y" }}
+              </td>
+              <td class="text-right font-mono font-bold text-sm {% if l.tipo == 'receita' %}text-success{% else %}text-error{% endif %}">
+                {% if l.tipo == 'receita' %}+{% else %}-{% endif %}R$ {{ l.valor|floatformat:2 }}
+              </td>
+              <td>
+                {% if l.is_atrasado %}
+                <span class="badge badge-error badge-xs">Atrasado</span>
+                {% else %}
+                <span class="badge badge-warning badge-xs">Pendente</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="7" class="text-center py-12 text-base-content/30 text-sm">
+                <i class="bi bi-check-circle text-3xl block mb-2"></i>
+                Nenhum lançamento pendente
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </form>
+
+</div>
+
+<script>
+  const checkAll = document.getElementById('check-all');
+  const selAll   = document.getElementById('sel-all');
+  const desAll   = document.getElementById('des-all');
+  const items    = () => document.querySelectorAll('.item-check');
+
+  if (checkAll) checkAll.addEventListener('change', () => items().forEach(c => c.checked = checkAll.checked));
+  if (selAll)   selAll.addEventListener('click',  () => { items().forEach(c => c.checked = true);  if(checkAll) checkAll.checked = true; });
+  if (desAll)   desAll.addEventListener('click',  () => { items().forEach(c => c.checked = false); if(checkAll) checkAll.checked = false; });
+</script>
+{% endblock %}

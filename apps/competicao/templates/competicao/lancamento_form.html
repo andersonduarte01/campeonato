@@ -1,0 +1,180 @@
+{% extends 'base/indice.html' %}
+{% block titulo %}{% if lancamento %}Editar Lançamento{% else %}Novo Lançamento{% endif %}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-base-content/40">
+    <ul>
+      <li><a href="{% url 'competicao:financeiro_dashboard' %}" class="hover:text-base-content/70">Financeiro</a></li>
+      <li><a href="{% url 'competicao:lancamento_lista' %}" class="hover:text-base-content/70">Lançamentos</a></li>
+      <li><span class="text-base-content/60">{% if lancamento %}Editar{% else %}Novo{% endif %}</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block conteudo %}
+<div class="p-4 md:p-6 max-w-[860px] mx-auto space-y-5">
+
+  <div class="flex items-end justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2 mb-1">
+        <i class="bi bi-cash-coin text-warning text-sm"></i>
+        <span class="text-xs font-bold uppercase tracking-widest text-base-content/40">Financeiro Federativo</span>
+      </div>
+      <h1 class="section-heading text-4xl text-base-content leading-none">
+        {% if lancamento %}EDITAR LANÇAMENTO{% else %}NOVO LANÇAMENTO{% endif %}
+      </h1>
+      {% if lancamento %}<p class="text-sm text-base-content/40 mt-1 font-mono">{{ lancamento.numero }}</p>{% endif %}
+    </div>
+    <a href="{% if lancamento %}{% url 'competicao:lancamento_detalhe' lancamento.pk %}{% else %}{% url 'competicao:lancamento_lista' %}{% endif %}"
+       class="btn btn-ghost btn-sm border border-base-content/10">
+      <i class="bi bi-arrow-left text-sm"></i> Voltar
+    </a>
+  </div>
+
+  <form method="post" class="space-y-4">
+    {% csrf_token %}
+
+    <!-- Tipo e Categoria -->
+    <div class="card bg-base-200 border border-base-300 overflow-hidden">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
+        <i class="bi bi-tag-fill text-warning text-sm"></i>
+        <span class="section-heading text-sm text-base-content/70 tracking-widest">CLASSIFICAÇÃO</span>
+      </div>
+      <div class="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="label py-0 mb-1">
+            <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Tipo *</span>
+          </label>
+          {{ form.tipo }}
+        </div>
+        <div>
+          <label class="label py-0 mb-1">
+            <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Categoria *</span>
+          </label>
+          {{ form.categoria }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Valores e datas -->
+    <div class="card bg-base-200 border border-base-300 overflow-hidden">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
+        <i class="bi bi-currency-dollar text-warning text-sm"></i>
+        <span class="section-heading text-sm text-base-content/70 tracking-widest">VALORES</span>
+      </div>
+      <div class="p-4 space-y-4">
+        <div>
+          <label class="label py-0 mb-1">
+            <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Descrição *</span>
+          </label>
+          {{ form.descricao }}
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="label py-0 mb-1">
+              <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Valor (R$) *</span>
+            </label>
+            {{ form.valor }}
+          </div>
+          <div>
+            <label class="label py-0 mb-1">
+              <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Vencimento *</span>
+            </label>
+            {{ form.data_vencimento }}
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="label py-0 mb-1">
+              <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Forma de pagamento</span>
+            </label>
+            {{ form.forma_pagamento }}
+          </div>
+          <div>
+            <label class="label py-0 mb-1">
+              <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Nº de referência</span>
+            </label>
+            {{ form.numero_referencia }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vínculos -->
+    <div class="card bg-base-200 border border-base-300 overflow-hidden">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
+        <i class="bi bi-link-45deg text-warning text-sm"></i>
+        <span class="section-heading text-sm text-base-content/70 tracking-widest">VÍNCULOS (opcional)</span>
+      </div>
+      <div class="p-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div>
+          <label class="label py-0 mb-1">
+            <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Competição</span>
+          </label>
+          {{ form.competicao }}
+        </div>
+        <div>
+          <label class="label py-0 mb-1">
+            <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Equipe</span>
+          </label>
+          {{ form.equipe }}
+        </div>
+        <div>
+          <label class="label py-0 mb-1">
+            <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Atleta</span>
+          </label>
+          {{ form.atleta }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Observações -->
+    <div>
+      <label class="label py-0 mb-1">
+        <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Observações</span>
+      </label>
+      {{ form.observacoes }}
+    </div>
+
+    <div class="flex justify-end gap-2">
+      <a href="{% if lancamento %}{% url 'competicao:lancamento_detalhe' lancamento.pk %}{% else %}{% url 'competicao:lancamento_lista' %}{% endif %}"
+         class="btn btn-ghost btn-sm border border-base-content/10">Cancelar</a>
+      <button type="submit" class="btn btn-warning gap-1.5 font-semibold shadow shadow-warning/20">
+        <i class="bi bi-floppy2"></i>
+        {% if lancamento %}Salvar alterações{% else %}Criar Lançamento{% endif %}
+      </button>
+    </div>
+  </form>
+
+</div>
+
+<script>
+(function () {
+  const tipoSel = document.getElementById('id_tipo_fin');
+  const catSel  = document.getElementById('id_categoria_fin');
+  if (!tipoSel || !catSel) return;
+
+  const catReceita = {{ cat_receita|safe }};
+  const catDespesa = {{ cat_despesa|safe }};
+
+  function filterCat() {
+    const tipo = tipoSel.value;
+    const allowed = tipo === 'receita' ? catReceita : (tipo === 'despesa' ? catDespesa : null);
+    Array.from(catSel.options).forEach(opt => {
+      if (!opt.value) return;
+      const show = !allowed || allowed.includes(opt.value);
+      opt.hidden = !show;
+      opt.disabled = !show;
+    });
+    // reset if current value hidden
+    const cur = catSel.options[catSel.selectedIndex];
+    if (cur && (cur.hidden || cur.disabled)) catSel.value = '';
+  }
+
+  tipoSel.addEventListener('change', filterCat);
+  filterCat();
+})();
+</script>
+{% endblock %}

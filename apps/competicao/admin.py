@@ -3,6 +3,9 @@ from .models import (
     Competicao, Jogo, Rodada, Gol, Cartao, InscricaoAtleta, Classificacao,
     Fase, Grupo, ClassificacaoGrupo, ConfrontoMatamate, Suspensao,
     Local, Arbitro, EscalacaoJogo, Substituicao, ArbitrosJogo,
+    SumulaDigital, OcorrenciaSumula, AnexoSumula, AssinaturaDigital,
+    ProcessoDesportivo, Julgamento, RecursoDesportivo,
+    LancamentoFinanceiro, Publicacao,
 )
 
 
@@ -107,9 +110,15 @@ class LocalAdmin(admin.ModelAdmin):
 
 @admin.register(Arbitro)
 class ArbitroAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'categoria', 'ativo')
-    list_filter = ('ativo',)
-    search_fields = ('nome',)
+    list_display = ('nome', 'categoria', 'disponibilidade', 'ativo', 'taxa_por_partida')
+    list_filter = ('ativo', 'categoria', 'disponibilidade')
+    search_fields = ('nome', 'cpf')
+    fieldsets = (
+        ('Identificação', {'fields': ('nome', 'cpf', 'data_nascimento', 'foto')}),
+        ('Categoria e Status', {'fields': ('categoria', 'disponibilidade', 'ativo')}),
+        ('Certificações', {'fields': ('certificacoes', 'observacao')}),
+        ('Custos Operacionais', {'fields': ('taxa_por_partida', 'diaria', 'alimentacao', 'hospedagem', 'deslocamento')}),
+    )
 
 
 @admin.register(ArbitrosJogo)
@@ -126,3 +135,76 @@ class EscalacaoInline(admin.TabularInline):
 class SubstituicaoInline(admin.TabularInline):
     model = Substituicao
     extra = 0
+
+
+class OcorrenciaInline(admin.TabularInline):
+    model = OcorrenciaSumula
+    extra = 0
+
+
+class AnexoInline(admin.TabularInline):
+    model = AnexoSumula
+    extra = 0
+
+
+class AssinaturaInline(admin.TabularInline):
+    model = AssinaturaDigital
+    extra = 0
+    readonly_fields = ('assinado_em', 'ip_address', 'user_agent')
+
+
+@admin.register(SumulaDigital)
+class SumulaDigitalAdmin(admin.ModelAdmin):
+    list_display  = ('jogo', 'condicao_climatica', 'condicao_campo', 'finalizada', 'finalizada_em')
+    list_filter   = ('finalizada', 'condicao_climatica', 'condicao_campo')
+    readonly_fields = ('hash_integridade', 'finalizada_em', 'criada_em', 'atualizada_em')
+    inlines       = [OcorrenciaInline, AnexoInline, AssinaturaInline]
+
+
+class JulgamentoInline(admin.StackedInline):
+    model = Julgamento
+    extra = 0
+    readonly_fields = ('julgado_em',)
+
+
+class RecursoInline(admin.TabularInline):
+    model = RecursoDesportivo
+    extra = 0
+    readonly_fields = ('criado_em', 'decidido_em')
+
+
+@admin.register(ProcessoDesportivo)
+class ProcessoDesportivoAdmin(admin.ModelAdmin):
+    list_display   = ('numero', 'tipo', 'status', 'denunciante', 'competicao', 'criado_em')
+    list_filter    = ('status', 'tipo')
+    search_fields  = ('numero', 'denunciante', 'descricao')
+    readonly_fields = ('numero', 'criado_em', 'atualizado_em')
+    inlines        = [JulgamentoInline, RecursoInline]
+
+
+@admin.register(RecursoDesportivo)
+class RecursoDesportivoAdmin(admin.ModelAdmin):
+    list_display  = ('processo', 'recorrente', 'status', 'criado_em')
+    list_filter   = ('status',)
+    readonly_fields = ('criado_em', 'decidido_em')
+
+
+@admin.register(LancamentoFinanceiro)
+class LancamentoFinanceiroAdmin(admin.ModelAdmin):
+    list_display   = ('numero', 'tipo', 'categoria', 'descricao', 'valor', 'data_vencimento', 'status')
+    list_filter    = ('tipo', 'status', 'categoria', 'forma_pagamento')
+    search_fields  = ('numero', 'descricao', 'numero_referencia')
+    readonly_fields = ('numero', 'criado_em', 'atualizado_em')
+    list_editable  = ('status',)
+    date_hierarchy = 'data_vencimento'
+
+
+@admin.register(Publicacao)
+class PublicacaoAdmin(admin.ModelAdmin):
+    list_display   = ('titulo', 'tipo', 'publicado', 'destaque', 'publicado_em')
+    list_filter    = ('tipo', 'publicado', 'destaque')
+    search_fields  = ('titulo', 'resumo', 'conteudo')
+    readonly_fields = ('slug', 'criado_em', 'atualizado_em')
+    list_editable  = ('publicado', 'destaque')
+    prepopulated_fields = {}
+    date_hierarchy = 'criado_em'

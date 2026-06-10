@@ -31,7 +31,9 @@
       "Bash(node -e \"const d=require\\('./node_modules/daisyui'\\); console.log\\(Object.keys\\(d\\)\\)\")",
       "Bash(Get-ChildItem \"theme\\\\static_src\\\\node_modules\\\\daisyui\" -Recurse -Name)",
       "Bash(Select-Object -First 20)",
-      "Bash(python *)"
+      "Bash(python *)",
+      "Bash(Get-ChildItem *)",
+      "PowerShell(New-Item *)"
     ]
   }
 }

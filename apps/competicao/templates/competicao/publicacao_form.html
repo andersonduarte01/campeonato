@@ -1,0 +1,154 @@
+{% extends 'base/indice.html' %}
+{% block titulo %}{{ titulo_pagina }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-base-content/40">
+    <ul>
+      <li><a href="{% url 'competicao:publicacao_admin_lista' %}" class="hover:text-base-content/70">Portal</a></li>
+      <li><span class="text-base-content/60">{{ titulo_pagina }}</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block conteudo %}
+<div class="p-4 md:p-6 max-w-[800px] mx-auto space-y-5">
+
+  <!-- Cabeçalho -->
+  <div class="flex items-end justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2 mb-1">
+        <i class="bi bi-globe text-warning text-sm"></i>
+        <span class="text-xs font-bold uppercase tracking-widest text-base-content/40">Portal Público</span>
+      </div>
+      <h1 class="section-heading text-4xl text-base-content leading-none">{{ titulo_pagina|upper }}</h1>
+    </div>
+    <a href="{% url 'competicao:publicacao_admin_lista' %}"
+       class="btn btn-ghost btn-sm border border-base-content/10">
+      <i class="bi bi-arrow-left text-sm"></i> Voltar
+    </a>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" class="space-y-4">
+    {% csrf_token %}
+
+    <!-- Tipo e título -->
+    <div class="card bg-base-200 border border-base-300 overflow-hidden">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
+        <i class="bi bi-tag text-warning text-sm"></i>
+        <span class="section-heading text-sm text-base-content/70 tracking-widest">IDENTIFICAÇÃO</span>
+      </div>
+      <div class="p-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div>
+          <label class="label py-0 mb-1">
+            <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Tipo *</span>
+          </label>
+          {{ form.tipo }}
+          {% if form.tipo.errors %}
+          <p class="text-error text-xs mt-1">{{ form.tipo.errors.0 }}</p>
+          {% endif %}
+        </div>
+        <div class="sm:col-span-2">
+          <label class="label py-0 mb-1">
+            <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Título *</span>
+          </label>
+          {{ form.titulo }}
+          {% if form.titulo.errors %}
+          <p class="text-error text-xs mt-1">{{ form.titulo.errors.0 }}</p>
+          {% endif %}
+        </div>
+        <div class="sm:col-span-3">
+          <label class="label py-0 mb-1">
+            <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Resumo</span>
+          </label>
+          {{ form.resumo }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Conteúdo -->
+    <div class="card bg-base-200 border border-base-300 overflow-hidden">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
+        <i class="bi bi-file-text text-warning text-sm"></i>
+        <span class="section-heading text-sm text-base-content/70 tracking-widest">CONTEÚDO</span>
+      </div>
+      <div class="p-4">
+        <label class="label py-0 mb-1">
+          <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Texto completo</span>
+        </label>
+        {{ form.conteudo }}
+      </div>
+    </div>
+
+    <!-- Arquivos e mídia -->
+    <div class="card bg-base-200 border border-base-300 overflow-hidden">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
+        <i class="bi bi-paperclip text-warning text-sm"></i>
+        <span class="section-heading text-sm text-base-content/70 tracking-widest">MÍDIA E ARQUIVOS</span>
+      </div>
+      <div class="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="label py-0 mb-1">
+            <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Imagem de capa</span>
+          </label>
+          {{ form.imagem_capa }}
+          {% if pub and pub.imagem_capa %}
+          <div class="mt-2 flex items-center gap-2">
+            <img src="{{ pub.imagem_capa.url }}" class="h-12 w-16 object-cover rounded-lg border border-base-300">
+            <span class="text-xs text-base-content/30">atual</span>
+          </div>
+          {% endif %}
+        </div>
+        <div>
+          <label class="label py-0 mb-1">
+            <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Arquivo (PDF, DOC…)</span>
+          </label>
+          {{ form.arquivo }}
+          {% if pub and pub.arquivo %}
+          <p class="text-xs text-base-content/30 mt-1">
+            <i class="bi bi-paperclip"></i> {{ pub.arquivo.name }}
+          </p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Opções de publicação -->
+    <div class="card bg-base-200 border border-base-300 overflow-hidden">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
+        <i class="bi bi-toggle-on text-warning text-sm"></i>
+        <span class="section-heading text-sm text-base-content/70 tracking-widest">PUBLICAÇÃO</span>
+      </div>
+      <div class="p-4 flex flex-wrap gap-6">
+        <div class="flex items-center gap-3">
+          {{ form.publicado }}
+          <div>
+            <p class="text-sm font-semibold text-base-content">Publicado</p>
+            <p class="text-xs text-base-content/40">Visível no portal público</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          {{ form.destaque }}
+          <div>
+            <p class="text-sm font-semibold text-base-content">Destaque</p>
+            <p class="text-xs text-base-content/40">Exibir na seção de destaques</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ações -->
+    <div class="flex items-center justify-end gap-3">
+      <a href="{% url 'competicao:publicacao_admin_lista' %}"
+         class="btn btn-ghost btn-sm border border-base-content/10">Cancelar</a>
+      <button type="submit"
+              class="btn btn-warning btn-sm gap-1.5 font-semibold shadow shadow-warning/20">
+        <i class="bi bi-check-lg"></i> Salvar Publicação
+      </button>
+    </div>
+
+  </form>
+
+</div>
+{% endblock %}

@@ -1,0 +1,201 @@
+{% extends 'portal/base.html' %}
+{% block titulo %}Portal Federativo{% endblock %}
+
+{% block conteudo %}
+
+<!-- Hero -->
+<section class="bg-base-200 border-b border-base-300 relative overflow-hidden">
+  <div class="absolute inset-0 opacity-5"
+       style="background-image: repeating-linear-gradient(45deg, oklch(80% 0.18 85) 0px, transparent 1px, transparent 24px, oklch(80% 0.18 85) 25px, transparent 26px);">
+  </div>
+  <div class="max-w-6xl mx-auto px-4 py-16 relative">
+    <div class="max-w-xl">
+      <div class="flex items-center gap-2 mb-4">
+        <span class="badge badge-warning badge-sm font-semibold">Portal Federativo</span>
+      </div>
+      <h1 class="font-title text-6xl text-base-content leading-none mb-3">FEDERAÇÃO</h1>
+      <p class="text-base-content/50 text-sm leading-relaxed">
+        Notícias, comunicados, regulamentos e informações oficiais da federação.
+        Acompanhe as competições, atletas e clubes filiados.
+      </p>
+      <div class="flex flex-wrap gap-3 mt-6">
+        <a href="{% url 'competicao:portal_publicacao_lista' %}?tipo=noticia"
+           class="btn btn-warning btn-sm gap-1.5">
+          <i class="bi bi-newspaper"></i> Notícias
+        </a>
+        <a href="{% url 'competicao:portal_publicacao_lista' %}?tipo=regulamento"
+           class="btn btn-ghost btn-sm border border-base-content/15 gap-1.5">
+          <i class="bi bi-file-text"></i> Regulamentos
+        </a>
+        <a href="{% url 'competicao:portal_publicacao_lista' %}"
+           class="btn btn-ghost btn-sm border border-base-content/15 gap-1.5">
+          <i class="bi bi-grid"></i> Tudo
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="max-w-6xl mx-auto px-4 py-10 space-y-12">
+
+  <!-- Destaques -->
+  {% if destaques %}
+  <section>
+    <div class="flex items-center gap-2 mb-5">
+      <i class="bi bi-star-fill text-warning text-sm"></i>
+      <h2 class="section-heading text-2xl text-base-content">DESTAQUES</h2>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {% for pub in destaques %}
+      <a href="{% url 'competicao:portal_publicacao_detalhe' pub.slug %}"
+         class="card bg-base-200 border border-base-300 hover:border-warning/40 transition-colors group overflow-hidden">
+        {% if pub.imagem_capa %}
+        <figure class="h-40 overflow-hidden">
+          <img src="{{ pub.imagem_capa.url }}" alt="{{ pub.titulo }}"
+               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+        </figure>
+        {% else %}
+        <div class="h-40 bg-base-300/50 flex items-center justify-center">
+          <i class="bi bi-{% if pub.tipo == 'noticia' %}newspaper{% elif pub.tipo == 'comunicado' %}megaphone{% else %}file-text{% endif %} text-4xl text-base-content/15"></i>
+        </div>
+        {% endif %}
+        <div class="p-4">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="badge badge-xs badge-warning">{{ pub.get_tipo_display }}</span>
+            {% if pub.publicado_em %}
+            <span class="text-xs text-base-content/30">{{ pub.publicado_em|date:"d/m/Y" }}</span>
+            {% endif %}
+          </div>
+          <h3 class="font-semibold text-sm text-base-content leading-snug group-hover:text-warning transition-colors line-clamp-2">
+            {{ pub.titulo }}
+          </h3>
+          {% if pub.resumo %}
+          <p class="text-xs text-base-content/40 mt-1 line-clamp-2">{{ pub.resumo }}</p>
+          {% endif %}
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+    <!-- Últimas publicações -->
+    <div class="lg:col-span-2 space-y-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i class="bi bi-clock-history text-warning text-sm"></i>
+          <h2 class="section-heading text-2xl text-base-content">ÚLTIMAS PUBLICAÇÕES</h2>
+        </div>
+        <a href="{% url 'competicao:portal_publicacao_lista' %}"
+           class="text-xs text-warning hover:text-warning/70 font-semibold">Ver todas →</a>
+      </div>
+
+      {% if ultimas %}
+      <div class="space-y-2">
+        {% for pub in ultimas %}
+        <a href="{% url 'competicao:portal_publicacao_detalhe' pub.slug %}"
+           class="flex gap-4 p-4 bg-base-200 border border-base-300 rounded-xl hover:border-warning/30 transition-colors group">
+          {% if pub.imagem_capa %}
+          <div class="w-16 h-16 rounded-lg overflow-hidden shrink-0">
+            <img src="{{ pub.imagem_capa.url }}" alt="" class="w-full h-full object-cover">
+          </div>
+          {% else %}
+          <div class="w-16 h-16 rounded-lg bg-base-300/50 flex items-center justify-center shrink-0">
+            <i class="bi bi-{% if pub.tipo == 'noticia' %}newspaper{% elif pub.tipo == 'comunicado' %}megaphone{% elif pub.tipo == 'regulamento' %}journal-text{% else %}file-earmark-text{% endif %} text-xl text-base-content/20"></i>
+          </div>
+          {% endif %}
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="badge badge-xs badge-outline text-base-content/40">{{ pub.get_tipo_display }}</span>
+              {% if pub.publicado_em %}
+              <span class="text-xs text-base-content/25">{{ pub.publicado_em|date:"d/m/Y" }}</span>
+              {% endif %}
+            </div>
+            <p class="font-semibold text-sm text-base-content group-hover:text-warning transition-colors truncate">{{ pub.titulo }}</p>
+            {% if pub.resumo %}
+            <p class="text-xs text-base-content/40 line-clamp-1 mt-0.5">{{ pub.resumo }}</p>
+            {% endif %}
+          </div>
+          <i class="bi bi-arrow-right text-base-content/20 group-hover:text-warning transition-colors self-center text-sm shrink-0"></i>
+        </a>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="text-center py-12 text-base-content/25">
+        <i class="bi bi-newspaper text-4xl block mb-2"></i>
+        <p class="text-sm">Nenhuma publicação ainda.</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Sidebar -->
+    <div class="space-y-5">
+
+      <!-- Comunicados recentes -->
+      <div class="card bg-base-200 border border-base-300 overflow-hidden">
+        <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300">
+          <i class="bi bi-megaphone-fill text-warning text-sm"></i>
+          <span class="section-heading text-sm text-base-content/70 tracking-widest">COMUNICADOS</span>
+        </div>
+        <div class="divide-y divide-base-300">
+          {% for pub in comunicados %}
+          <a href="{% url 'competicao:portal_publicacao_detalhe' pub.slug %}"
+             class="flex items-start gap-3 px-4 py-3 hover:bg-base-300/30 transition-colors group">
+            <i class="bi bi-circle-fill text-warning/50 text-[6px] mt-2 shrink-0"></i>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-base-content group-hover:text-warning transition-colors leading-snug line-clamp-2">
+                {{ pub.titulo }}
+              </p>
+              {% if pub.publicado_em %}
+              <p class="text-xs text-base-content/30 mt-0.5">{{ pub.publicado_em|date:"d/m/Y" }}</p>
+              {% endif %}
+            </div>
+          </a>
+          {% empty %}
+          <p class="text-xs text-base-content/25 px-4 py-4 text-center">Nenhum comunicado.</p>
+          {% endfor %}
+        </div>
+        {% if comunicados %}
+        <div class="px-4 py-3 border-t border-base-300">
+          <a href="{% url 'competicao:portal_publicacao_lista' %}?tipo=comunicado"
+             class="text-xs text-warning hover:text-warning/70 font-semibold">Ver todos comunicados →</a>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Competições -->
+      {% if competicoes %}
+      <div class="card bg-base-200 border border-base-300 overflow-hidden">
+        <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300">
+          <i class="bi bi-trophy text-warning text-sm"></i>
+          <span class="section-heading text-sm text-base-content/70 tracking-widest">COMPETIÇÕES</span>
+        </div>
+        <div class="divide-y divide-base-300">
+          {% for comp in competicoes %}
+          <a href="{% url 'competicao:public_classificacao' comp.pk %}"
+             class="flex items-center gap-3 px-4 py-3 hover:bg-base-300/30 transition-colors group">
+            <div class="w-7 h-7 rounded-lg bg-warning/10 flex items-center justify-center shrink-0">
+              <i class="bi bi-trophy-fill text-warning text-xs"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-base-content group-hover:text-warning transition-colors truncate">
+                {{ comp.nome }}
+              </p>
+              {% if comp.data_inicio %}
+              <p class="text-xs text-base-content/30">{{ comp.data_inicio|date:"Y" }}</p>
+              {% endif %}
+            </div>
+            <i class="bi bi-bar-chart-line text-base-content/20 text-sm shrink-0"></i>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}

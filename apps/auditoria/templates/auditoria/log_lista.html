@@ -1,0 +1,179 @@
+{% extends 'base/indice.html' %}
+{% block titulo %}Logs de Auditoria{% endblock %}
+
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-base-content/40">
+    <ul>
+      <li><span class="text-base-content/60">Auditoria</span></li>
+      <li><span class="text-base-content/60">Logs</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block conteudo %}
+<div class="p-4 md:p-6 max-w-[1200px] mx-auto space-y-5">
+
+  <!-- Cabeçalho -->
+  <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2 mb-1">
+        <i class="bi bi-shield-lock text-warning text-sm"></i>
+        <span class="text-xs font-bold uppercase tracking-widest text-base-content/40">Auditoria e Segurança</span>
+      </div>
+      <h1 class="section-heading text-4xl text-base-content leading-none">LOGS DE AUDITORIA</h1>
+      <p class="text-sm text-base-content/40 mt-1">
+        {{ total }} registro{{ total|pluralize:",s" }} encontrado{{ total|pluralize:",s" }}
+      </p>
+    </div>
+    <a href="{% url 'auditoria:lgpd_dashboard' %}"
+       class="btn btn-ghost btn-sm border border-base-content/10 gap-1">
+      <i class="bi bi-person-lock text-sm"></i> LGPD
+    </a>
+  </div>
+
+  <!-- Filtros -->
+  <form method="get" class="card bg-base-200 border border-base-300 p-4">
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <label class="label py-0 mb-1">
+          <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Ação</span>
+        </label>
+        <select name="acao" class="select select-sm select-bordered" onchange="this.form.submit()">
+          <option value="">Todas as ações</option>
+          {% for v, l in acao_choices %}
+          <option value="{{ v }}" {% if acao_filtro == v %}selected{% endif %}>{{ l }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="label py-0 mb-1">
+          <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Modelo</span>
+        </label>
+        <select name="modelo" class="select select-sm select-bordered" onchange="this.form.submit()">
+          <option value="">Todos os modelos</option>
+          {% for m in modelos_distintos %}
+          <option value="{{ m }}" {% if modelo_filtro == m %}selected{% endif %}>{{ m }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="label py-0 mb-1">
+          <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">De</span>
+        </label>
+        <input type="date" name="data_de" value="{{ data_de }}"
+               class="input input-sm input-bordered" onchange="this.form.submit()">
+      </div>
+      <div>
+        <label class="label py-0 mb-1">
+          <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Até</span>
+        </label>
+        <input type="date" name="data_ate" value="{{ data_ate }}"
+               class="input input-sm input-bordered" onchange="this.form.submit()">
+      </div>
+      <div class="flex-1 min-w-48">
+        <label class="label py-0 mb-1">
+          <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Busca</span>
+        </label>
+        <div class="join">
+          <input type="text" name="q" value="{{ q }}" placeholder="E-mail, descrição, objeto…"
+                 class="input input-sm input-bordered join-item w-full">
+          <button type="submit" class="btn btn-sm btn-ghost border border-base-content/15 join-item">
+            <i class="bi bi-search"></i>
+          </button>
+        </div>
+      </div>
+      {% if q or acao_filtro or modelo_filtro or data_de or data_ate %}
+      <a href="{% url 'auditoria:log_lista' %}"
+         class="btn btn-ghost btn-sm border border-base-content/10 self-end">Limpar</a>
+      {% endif %}
+    </div>
+  </form>
+
+  <!-- Tabela -->
+  <div class="card bg-base-200 border border-base-300 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="table table-sm w-full">
+        <thead>
+          <tr class="text-xs font-bold uppercase tracking-wider text-base-content/40 border-b border-base-300">
+            <th class="py-3">Data/Hora</th>
+            <th>Ação</th>
+            <th>Usuário</th>
+            <th>Objeto</th>
+            <th>Descrição</th>
+            <th>IP</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in logs %}
+          <tr class="border-b border-base-300/40 hover:bg-base-300/20 transition-colors">
+            <td class="text-xs text-base-content/40 whitespace-nowrap">
+              {{ log.criado_em|date:"d/m/Y H:i:s" }}
+            </td>
+            <td>
+              <span class="badge badge-xs {{ log.acao_badge_class }}">{{ log.get_acao_display }}</span>
+            </td>
+            <td class="text-xs">
+              {% if log.usuario_email %}
+              <p class="font-mono text-base-content/60 truncate max-w-36">{{ log.usuario_email }}</p>
+              {% else %}
+              <span class="text-base-content/25">—</span>
+              {% endif %}
+            </td>
+            <td class="text-xs max-w-40">
+              {% if log.objeto_repr %}
+              <p class="text-base-content/60 truncate">{{ log.objeto_repr }}</p>
+              {% endif %}
+              {% if log.modelo %}
+              <p class="text-base-content/30 font-mono text-[10px]">{{ log.modelo }}</p>
+              {% endif %}
+            </td>
+            <td class="text-sm max-w-52">
+              <p class="text-base-content/60 truncate">{{ log.descricao|default:"—" }}</p>
+            </td>
+            <td class="text-xs font-mono text-base-content/30 whitespace-nowrap">
+              {{ log.ip_address|default:"—" }}
+            </td>
+            <td>
+              <a href="{% url 'auditoria:log_detalhe' log.pk %}"
+                 class="btn btn-ghost btn-xs border border-base-content/10">
+                <i class="bi bi-eye text-xs"></i>
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="7" class="text-center py-14 text-base-content/25">
+              <i class="bi bi-shield-check text-4xl block mb-3"></i>
+              <p class="text-sm">Nenhum registro encontrado.</p>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Paginação -->
+  {% if logs.has_other_pages %}
+  <div class="flex justify-center">
+    <div class="join">
+      {% if logs.has_previous %}
+      <a href="?page={{ logs.previous_page_number }}&acao={{ acao_filtro }}&modelo={{ modelo_filtro }}&q={{ q }}&data_de={{ data_de }}&data_ate={{ data_ate }}"
+         class="join-item btn btn-sm btn-ghost border border-base-content/10">‹</a>
+      {% endif %}
+      <span class="join-item btn btn-sm btn-ghost border border-base-content/10 pointer-events-none">
+        {{ logs.number }} / {{ logs.paginator.num_pages }}
+      </span>
+      {% if logs.has_next %}
+      <a href="?page={{ logs.next_page_number }}&acao={{ acao_filtro }}&modelo={{ modelo_filtro }}&q={{ q }}&data_de={{ data_de }}&data_ate={{ data_ate }}"
+         class="join-item btn btn-sm btn-ghost border border-base-content/10">›</a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

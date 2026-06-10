@@ -1,0 +1,221 @@
+{% extends 'base/indice.html' %}
+{% block titulo %}Escala Inteligente — {{ jogo.equipe_casa }} × {{ jogo.equipe_fora }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-base-content/40">
+    <ul>
+      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-base-content/70">Dashboard</a></li>
+      <li><a href="{% url 'competicao:jogo_detalhe' jogo.pk %}" class="hover:text-base-content/70">
+        {{ jogo.equipe_casa.nome_equipe }} × {{ jogo.equipe_fora.nome_equipe }}
+      </a></li>
+      <li><span class="text-base-content/60">Escala Inteligente</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block conteudo %}
+<div class="p-4 md:p-6 max-w-[1200px] mx-auto space-y-5">
+
+  <!-- Cabeçalho -->
+  <div class="flex items-end justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2 mb-1">
+        <i class="bi bi-cpu-fill text-warning text-sm"></i>
+        <span class="text-xs font-bold uppercase tracking-widest text-base-content/40">Arbitragem Profissional</span>
+      </div>
+      <h1 class="section-heading text-4xl text-base-content leading-none">ESCALA INTELIGENTE</h1>
+      <p class="text-sm text-base-content/40 mt-1">
+        {{ jogo.equipe_casa.nome_equipe }} × {{ jogo.equipe_fora.nome_equipe }}
+        {% if jogo.data_hora %}· {{ jogo.data_hora|date:"d/m/Y H:i" }}{% endif %}
+      </p>
+    </div>
+    <a href="{% url 'competicao:jogo_detalhe' jogo.pk %}"
+       class="btn btn-ghost btn-sm border border-base-content/10">
+      <i class="bi bi-arrow-left text-sm"></i> Voltar
+    </a>
+  </div>
+
+  <!-- Árbitros já designados -->
+  {% if arbitros_jogo %}
+  <div class="card bg-base-200 border border-warning/20 overflow-hidden">
+    <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-warning/5">
+      <i class="bi bi-check2-circle text-warning text-sm"></i>
+      <span class="section-heading text-sm text-base-content/70 tracking-widest">DESIGNADOS PARA ESTE JOGO</span>
+      <span class="badge badge-warning badge-sm ml-auto">{{ arbitros_jogo|length }}</span>
+    </div>
+    <div class="p-3 flex flex-wrap gap-2">
+      {% for aj in arbitros_jogo %}
+      <div class="flex items-center gap-2 px-3 py-2 bg-base-300/50 rounded-xl">
+        {% if aj.arbitro.foto %}
+          <img src="{{ aj.arbitro.foto.thumbnail.url }}" class="w-6 h-6 rounded-full object-cover">
+        {% else %}
+          <div class="w-6 h-6 rounded-full bg-warning/20 flex items-center justify-center">
+            <span class="text-xs font-bold text-warning">{{ aj.arbitro.nome|first|upper }}</span>
+          </div>
+        {% endif %}
+        <span class="text-sm font-medium">{{ aj.arbitro.nome }}</span>
+        <span class="badge badge-ghost badge-xs">{{ aj.get_tipo_display }}</span>
+        <form method="post" action="{% url 'competicao:arbitros_jogo_excluir' aj.pk %}" class="inline">
+          {% csrf_token %}
+          <button type="submit" class="text-error/50 hover:text-error transition-colors">
+            <i class="bi bi-x text-sm"></i>
+          </button>
+        </form>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Formulário de designação -->
+  <div class="card bg-base-200 border border-base-300 overflow-hidden">
+    <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
+      <i class="bi bi-person-plus-fill text-warning text-sm"></i>
+      <span class="section-heading text-sm text-base-content/70 tracking-widest">DESIGNAR ÁRBITRO</span>
+    </div>
+    <div class="p-4">
+      <form method="post" action="{% url 'competicao:arbitros_jogo_criar' jogo.pk %}" class="flex flex-wrap gap-3 items-end">
+        {% csrf_token %}
+        <div class="flex-1 min-w-48">
+          <label class="label py-0 mb-1">
+            <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Árbitro</span>
+          </label>
+          {{ form.arbitro }}
+        </div>
+        <div class="w-48">
+          <label class="label py-0 mb-1">
+            <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Função</span>
+          </label>
+          {{ form.tipo }}
+        </div>
+        <button type="submit" class="btn btn-warning gap-1.5 font-semibold shadow-sm shadow-warning/20">
+          <i class="bi bi-plus-circle"></i> Designar
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Árbitros sugeridos -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+    <!-- Disponíveis -->
+    <div class="card bg-base-200 border border-success/20 overflow-hidden">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-success/5">
+        <span class="w-2 h-2 rounded-full bg-success"></span>
+        <span class="section-heading text-sm text-base-content/70 tracking-widest">DISPONÍVEIS E SEM CONFLITO</span>
+        <span class="badge badge-success badge-sm ml-auto">{{ sugeridos|length }}</span>
+      </div>
+      <div class="p-3 space-y-1.5">
+        {% for arb in sugeridos %}
+        <div class="flex items-center gap-3 p-3 bg-base-300/30 rounded-xl hover:bg-base-300/60 transition-colors group">
+
+          <!-- Avatar -->
+          {% if arb.foto %}
+            <img src="{{ arb.foto.thumbnail.url }}" class="w-10 h-10 rounded-full object-cover border border-base-300 shrink-0">
+          {% else %}
+            <div class="w-10 h-10 rounded-full bg-warning/10 border border-base-300
+                        flex items-center justify-center shrink-0">
+              <span class="font-bold text-warning/70 text-sm">{{ arb.nome|first|upper }}</span>
+            </div>
+          {% endif %}
+
+          <!-- Info -->
+          <div class="flex-1 min-w-0">
+            <p class="font-semibold text-sm text-base-content truncate">{{ arb.nome }}</p>
+            <div class="flex items-center gap-2 mt-0.5">
+              {% if arb.categoria == 'fifa' %}
+                <span class="badge badge-warning badge-xs uppercase font-bold">FIFA</span>
+              {% elif arb.categoria == 'nacional' %}
+                <span class="badge badge-info badge-xs uppercase">Nacional</span>
+              {% elif arb.categoria == 'regional' %}
+                <span class="badge badge-ghost badge-xs uppercase">Regional</span>
+              {% else %}
+                <span class="badge badge-ghost badge-xs text-base-content/40 uppercase">Aspirante</span>
+              {% endif %}
+              {% if arb.taxa_por_partida %}
+              <span class="text-xs text-base-content/40">R$ {{ arb.taxa_por_partida }}/jogo</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Ação rápida: designar como principal -->
+          <form method="post" action="{% url 'competicao:arbitros_jogo_criar' jogo.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="arbitro" value="{{ arb.pk }}">
+            <input type="hidden" name="tipo" value="principal">
+            <button type="submit"
+                    class="btn btn-ghost btn-xs border border-success/30 text-success/70
+                           hover:bg-success/10 hover:text-success hover:border-success/50
+                           opacity-0 group-hover:opacity-100 transition-all"
+                    title="Designar como árbitro principal">
+              <i class="bi bi-plus-circle text-sm"></i>
+            </button>
+          </form>
+          <a href="{% url 'competicao:arbitro_detalhe' arb.pk %}"
+             class="btn btn-ghost btn-xs opacity-0 group-hover:opacity-100 transition-all"
+             title="Ver perfil">
+            <i class="bi bi-person text-sm"></i>
+          </a>
+
+        </div>
+        {% empty %}
+        <div class="flex flex-col items-center justify-center py-8 gap-2 text-base-content/30">
+          <i class="bi bi-check-circle text-3xl"></i>
+          <p class="text-sm">Nenhum árbitro disponível no momento</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Indisponíveis / com conflito -->
+    <div class="card bg-base-200 border border-error/10 overflow-hidden">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-error/5">
+        <span class="w-2 h-2 rounded-full bg-error"></span>
+        <span class="section-heading text-sm text-base-content/70 tracking-widest">INDISPONÍVEIS / CONFLITO</span>
+        <span class="badge badge-error badge-sm ml-auto">{{ indisponiveis|length }}</span>
+      </div>
+      <div class="p-3 space-y-1.5">
+        {% for arb in indisponiveis %}
+        <div class="flex items-center gap-3 p-3 bg-base-300/20 rounded-xl opacity-60">
+
+          {% if arb.foto %}
+            <img src="{{ arb.foto.thumbnail.url }}" class="w-10 h-10 rounded-full object-cover border border-base-300 shrink-0 grayscale">
+          {% else %}
+            <div class="w-10 h-10 rounded-full bg-base-300 border border-base-300
+                        flex items-center justify-center shrink-0">
+              <span class="font-bold text-base-content/30 text-sm">{{ arb.nome|first|upper }}</span>
+            </div>
+          {% endif %}
+
+          <div class="flex-1 min-w-0">
+            <p class="font-semibold text-sm text-base-content/60 truncate">{{ arb.nome }}</p>
+            <div class="flex items-center gap-2 mt-0.5">
+              {% if arb.disponibilidade != 'disponivel' %}
+                <span class="text-xs text-error/70 font-medium">{{ arb.get_disponibilidade_display }}</span>
+              {% else %}
+                <span class="text-xs text-warning/70 font-medium">Conflito de horário</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <a href="{% url 'competicao:arbitro_detalhe' arb.pk %}"
+             class="btn btn-ghost btn-xs">
+            <i class="bi bi-person text-sm"></i>
+          </a>
+
+        </div>
+        {% empty %}
+        <div class="flex flex-col items-center justify-center py-8 gap-2 text-base-content/30">
+          <i class="bi bi-emoji-smile text-3xl"></i>
+          <p class="text-sm">Todos os árbitros estão disponíveis</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

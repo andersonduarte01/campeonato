@@ -1,0 +1,440 @@
+{% extends 'base/indice.html' %}
+{% block titulo %}Súmula Digital — {{ jogo.equipe_casa }} × {{ jogo.equipe_fora }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-base-content/40">
+    <ul>
+      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-base-content/70">Dashboard</a></li>
+      <li><a href="{% url 'competicao:jogo_detalhe' jogo.pk %}" class="hover:text-base-content/70">
+        {{ jogo.equipe_casa.nome_equipe }} × {{ jogo.equipe_fora.nome_equipe }}
+      </a></li>
+      <li><span class="text-base-content/60">Súmula Digital</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block conteudo %}
+<div class="p-4 md:p-6 max-w-[1200px] mx-auto space-y-5">
+
+  <!-- ── Cabeçalho ── -->
+  <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2 mb-1">
+        <i class="bi bi-file-earmark-check-fill text-warning text-sm"></i>
+        <span class="text-xs font-bold uppercase tracking-widest text-base-content/40">Súmula Digital Profissional</span>
+        {% if sumula.finalizada %}
+          <span class="badge badge-success badge-sm gap-1 font-semibold">
+            <i class="bi bi-shield-fill-check text-xs"></i> Finalizada
+          </span>
+        {% else %}
+          <span class="badge badge-warning badge-sm gap-1 font-semibold">
+            <i class="bi bi-pencil text-xs"></i> Em edição
+          </span>
+        {% endif %}
+      </div>
+      <h1 class="section-heading text-4xl text-base-content leading-none">SÚMULA DIGITAL</h1>
+      <p class="text-sm text-base-content/40 mt-1">
+        <span class="font-semibold text-base-content/60">{{ jogo.equipe_casa.nome_equipe }}</span>
+        <span class="mx-2 text-warning font-bold stat-number">{{ jogo.gols_casa }} × {{ jogo.gols_fora }}</span>
+        <span class="font-semibold text-base-content/60">{{ jogo.equipe_fora.nome_equipe }}</span>
+        {% if jogo.data_hora %}· {{ jogo.data_hora|date:"d/m/Y H:i" }}{% endif %}
+      </p>
+    </div>
+    <div class="flex items-center gap-2">
+      <a href="{% url 'competicao:pdf_sumula' jogo.pk %}" target="_blank"
+         class="btn btn-ghost btn-sm border border-base-content/10 gap-1.5">
+        <i class="bi bi-printer text-sm"></i> Imprimir
+      </a>
+      <a href="{% url 'competicao:jogo_detalhe' jogo.pk %}"
+         class="btn btn-ghost btn-sm border border-base-content/10">
+        <i class="bi bi-arrow-left text-sm"></i> Voltar
+      </a>
+    </div>
+  </div>
+
+  <!-- ── Hash de integridade (finalizada) ── -->
+  {% if sumula.finalizada %}
+  <div class="card bg-success/5 border border-success/20 overflow-hidden">
+    <div class="flex items-start gap-3 p-4">
+      <div class="w-10 h-10 rounded-xl bg-success/15 flex items-center justify-center shrink-0 mt-0.5">
+        <i class="bi bi-shield-lock-fill text-success text-lg"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="font-bold text-success text-sm mb-1">Documento Finalizado e Íntegro</p>
+        <p class="text-xs text-base-content/50 mb-2">
+          Finalizado em {{ sumula.finalizada_em|date:"d/m/Y \à\s H:i" }} ·
+          {{ sumula.assinaturas.count }} assinatura{{ sumula.assinaturas.count|pluralize }}
+        </p>
+        <p class="font-mono text-xs text-base-content/40 break-all bg-base-300/50 px-3 py-2 rounded-lg">
+          SHA-256: {{ sumula.hash_integridade }}
+        </p>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ── Tabs ── -->
+  <div role="tablist" class="tabs tabs-lifted tabs-lg">
+
+    <!-- Tab 1: Relatório -->
+    <input type="radio" name="sumula_tabs" role="tab" class="tab font-semibold"
+           aria-label="Relatório" id="tab-relatorio" checked>
+    <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-5 space-y-5">
+
+      <!-- Condições da partida + narrativo -->
+      <form method="post" action="{% url 'competicao:sumula_digital' jogo.pk %}">
+        {% csrf_token %}
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+
+          <!-- Condição climática -->
+          <div>
+            <label class="label py-0 mb-1">
+              <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">
+                <i class="bi bi-cloud-sun mr-1"></i>Condição Climática
+              </span>
+            </label>
+            {{ form.condicao_climatica }}
+          </div>
+
+          <!-- Condição do campo -->
+          <div>
+            <label class="label py-0 mb-1">
+              <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">
+                <i class="bi bi-grid-3x3-gap mr-1"></i>Condição do Campo
+              </span>
+            </label>
+            {{ form.condicao_campo }}
+          </div>
+
+        </div>
+
+        <!-- Relatório narrativo -->
+        <div class="mb-4">
+          <label class="label py-0 mb-1">
+            <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">
+              <i class="bi bi-journal-text mr-1"></i>Relatório Narrativo do Árbitro
+            </span>
+          </label>
+          {{ form.relatorio_narrativo }}
+          {% if form.relatorio_narrativo.errors %}
+            <p class="text-error text-xs mt-1">{{ form.relatorio_narrativo.errors|join:", " }}</p>
+          {% endif %}
+        </div>
+
+        {% if not sumula.finalizada %}
+        <div class="flex justify-end">
+          <button type="submit" class="btn btn-warning btn-sm gap-1.5 font-semibold shadow-sm shadow-warning/20">
+            <i class="bi bi-floppy2"></i> Salvar Relatório
+          </button>
+        </div>
+        {% endif %}
+      </form>
+
+    </div>
+
+    <!-- Tab 2: Ocorrências -->
+    <input type="radio" name="sumula_tabs" role="tab" class="tab font-semibold"
+           aria-label="Ocorrências ({{ sumula.ocorrencias.count }})" id="tab-ocorrencias">
+    <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-5 space-y-4">
+
+      {% if not sumula.finalizada %}
+      <!-- Formulário de nova ocorrência -->
+      <form method="post" action="{% url 'competicao:sumula_ocorrencia_criar' jogo.pk %}"
+            class="card bg-base-200 border border-warning/20 overflow-hidden">
+        {% csrf_token %}
+        <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-warning/5">
+          <i class="bi bi-exclamation-triangle-fill text-warning text-sm"></i>
+          <span class="section-heading text-sm text-base-content/70 tracking-widest">REGISTRAR OCORRÊNCIA</span>
+        </div>
+        <div class="p-4 space-y-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="label py-0 mb-1">
+                <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Tipo</span>
+              </label>
+              {{ ocorrencia_form.tipo }}
+            </div>
+            <div>
+              <label class="label py-0 mb-1">
+                <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Minuto (opcional)</span>
+              </label>
+              {{ ocorrencia_form.minuto }}
+            </div>
+          </div>
+          <div>
+            <label class="label py-0 mb-1">
+              <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Descrição detalhada</span>
+            </label>
+            {{ ocorrencia_form.descricao }}
+          </div>
+          <div class="flex justify-end">
+            <button type="submit" class="btn btn-warning btn-sm gap-1.5 font-semibold">
+              <i class="bi bi-plus-circle"></i> Registrar
+            </button>
+          </div>
+        </div>
+      </form>
+      {% endif %}
+
+      <!-- Lista de ocorrências -->
+      <div class="space-y-2">
+        {% for oc in sumula.ocorrencias.all %}
+        <div class="flex items-start gap-3 p-4 bg-base-200 rounded-xl border border-base-300
+                    {% if oc.tipo == 'invasao' or oc.tipo == 'tumulto' %}border-error/20 bg-error/5{% endif %}">
+
+          <!-- Ícone do tipo -->
+          <div class="w-9 h-9 rounded-xl shrink-0 flex items-center justify-center
+                      {% if oc.tipo == 'invasao' or oc.tipo == 'tumulto' %}bg-error/15{% elif oc.tipo == 'wo' %}bg-warning/15{% else %}bg-base-300{% endif %}">
+            {% if oc.tipo == 'invasao' %}
+              <i class="bi bi-person-exclamation {% if oc.tipo == 'invasao' %}text-error{% else %}text-base-content/50{% endif %} text-base"></i>
+            {% elif oc.tipo == 'tumulto' %}
+              <i class="bi bi-people-fill text-error text-base"></i>
+            {% elif oc.tipo == 'objetos' %}
+              <i class="bi bi-arrow-down-circle text-warning text-base"></i>
+            {% elif oc.tipo == 'interrupcao' %}
+              <i class="bi bi-pause-circle text-info text-base"></i>
+            {% elif oc.tipo == 'falta_energia' %}
+              <i class="bi bi-lightning-charge text-warning text-base"></i>
+            {% elif oc.tipo == 'climatica' %}
+              <i class="bi bi-cloud-lightning-rain text-info text-base"></i>
+            {% elif oc.tipo == 'wo' %}
+              <i class="bi bi-flag text-warning text-base"></i>
+            {% else %}
+              <i class="bi bi-dot text-base-content/50 text-base"></i>
+            {% endif %}
+          </div>
+
+          <!-- Conteúdo -->
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-1 flex-wrap">
+              <span class="font-bold text-sm text-base-content">{{ oc.get_tipo_display }}</span>
+              {% if oc.minuto %}
+                <span class="badge badge-ghost badge-xs font-mono font-bold">{{ oc.minuto }}'</span>
+              {% endif %}
+              <span class="text-xs text-base-content/30 ml-auto">{{ oc.registrado_em|date:"d/m H:i" }}</span>
+            </div>
+            <p class="text-sm text-base-content/70">{{ oc.descricao }}</p>
+          </div>
+
+          <!-- Excluir -->
+          {% if not sumula.finalizada %}
+          <form method="post" action="{% url 'competicao:sumula_ocorrencia_excluir' oc.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-ghost btn-xs text-error/50 hover:text-error mt-0.5"
+                    onclick="return confirm('Remover esta ocorrência?')">
+              <i class="bi bi-trash text-sm"></i>
+            </button>
+          </form>
+          {% endif %}
+
+        </div>
+        {% empty %}
+        <div class="flex flex-col items-center justify-center py-12 gap-2 text-base-content/30">
+          <i class="bi bi-check-circle text-4xl"></i>
+          <p class="text-sm font-medium">Nenhuma ocorrência registrada</p>
+          <p class="text-xs">Partida sem intercorrências</p>
+        </div>
+        {% endfor %}
+      </div>
+
+    </div>
+
+    <!-- Tab 3: Anexos -->
+    <input type="radio" name="sumula_tabs" role="tab" class="tab font-semibold"
+           aria-label="Anexos ({{ sumula.anexos.count }})" id="tab-anexos">
+    <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-5 space-y-4">
+
+      {% if not sumula.finalizada %}
+      <form method="post" action="{% url 'competicao:sumula_anexo_criar' jogo.pk %}"
+            enctype="multipart/form-data"
+            class="card bg-base-200 border border-info/20 overflow-hidden">
+        {% csrf_token %}
+        <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-info/5">
+          <i class="bi bi-paperclip text-info text-sm"></i>
+          <span class="section-heading text-sm text-base-content/70 tracking-widest">ADICIONAR ANEXO</span>
+        </div>
+        <div class="p-4 space-y-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="label py-0 mb-1">
+                <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Tipo</span>
+              </label>
+              {{ anexo_form.tipo }}
+            </div>
+            <div>
+              <label class="label py-0 mb-1">
+                <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Descrição</span>
+              </label>
+              {{ anexo_form.descricao }}
+            </div>
+          </div>
+          <div>
+            <label class="label py-0 mb-1">
+              <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Arquivo</span>
+            </label>
+            {{ anexo_form.arquivo }}
+            <p class="text-xs text-base-content/30 mt-1">Formatos aceitos: JPG, PNG, MP4, MOV, PDF</p>
+          </div>
+          <div class="flex justify-end">
+            <button type="submit" class="btn btn-info btn-sm gap-1.5 font-semibold">
+              <i class="bi bi-cloud-upload"></i> Enviar
+            </button>
+          </div>
+        </div>
+      </form>
+      {% endif %}
+
+      <!-- Grid de anexos -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+        {% for anexo in sumula.anexos.all %}
+        <div class="card bg-base-200 border border-base-300 overflow-hidden group">
+
+          <!-- Preview ou ícone -->
+          {% if anexo.is_imagem %}
+          <figure class="aspect-video overflow-hidden">
+            <img src="{{ anexo.arquivo.url }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
+          </figure>
+          {% else %}
+          <div class="aspect-video flex flex-col items-center justify-center bg-base-300/50 gap-2">
+            {% if anexo.tipo == 'video' %}
+              <i class="bi bi-play-circle text-4xl text-base-content/30"></i>
+            {% else %}
+              <i class="bi bi-file-earmark-pdf text-4xl text-error/50"></i>
+            {% endif %}
+            <span class="text-xs text-base-content/40 font-medium">{{ anexo.extensao|upper|slice:"1:" }}</span>
+          </div>
+          {% endif %}
+
+          <div class="p-2">
+            <p class="text-xs font-semibold text-base-content truncate">{{ anexo.descricao|default:anexo.get_tipo_display }}</p>
+            <p class="text-xs text-base-content/30">{{ anexo.enviado_em|date:"d/m H:i" }}</p>
+            <div class="flex gap-1 mt-1.5">
+              <a href="{{ anexo.arquivo.url }}" target="_blank"
+                 class="btn btn-ghost btn-xs flex-1 gap-1">
+                <i class="bi bi-box-arrow-up-right text-xs"></i>
+              </a>
+              {% if not sumula.finalizada %}
+              <form method="post" action="{% url 'competicao:sumula_anexo_excluir' anexo.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-ghost btn-xs text-error/50 hover:text-error"
+                        onclick="return confirm('Remover este anexo?')">
+                  <i class="bi bi-trash text-xs"></i>
+                </button>
+              </form>
+              {% endif %}
+            </div>
+          </div>
+
+        </div>
+        {% empty %}
+        <div class="col-span-full flex flex-col items-center justify-center py-12 gap-2 text-base-content/30">
+          <i class="bi bi-images text-4xl"></i>
+          <p class="text-sm font-medium">Nenhum anexo enviado</p>
+        </div>
+        {% endfor %}
+      </div>
+
+    </div>
+
+    <!-- Tab 4: Assinaturas -->
+    <input type="radio" name="sumula_tabs" role="tab" class="tab font-semibold"
+           aria-label="Assinaturas ({{ sumula.assinaturas.count }}/{{ total_papeis }})" id="tab-assinaturas">
+    <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-5 space-y-4">
+
+      <!-- Barra de progresso -->
+      <div class="card bg-base-200 border border-base-300 overflow-hidden">
+        <div class="px-4 py-3 flex items-center justify-between border-b border-base-300">
+          <span class="text-xs font-bold uppercase tracking-wider text-base-content/50">Progresso das Assinaturas</span>
+          <span class="stat-number text-lg text-warning">{{ sumula.assinaturas.count }}<span class="text-sm text-base-content/30">/{{ total_papeis }}</span></span>
+        </div>
+        <div class="p-3">
+          <div class="w-full bg-base-300 rounded-full h-2">
+            {% with pct=sumula.assinaturas.count|floatformat:0 %}
+            <div class="bg-warning h-2 rounded-full transition-all"
+                 style="width: {% widthratio sumula.assinaturas.count total_papeis 100 %}%"></div>
+            {% endwith %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Assinaturas existentes -->
+      {% for ass in sumula.assinaturas.all %}
+      <div class="flex items-center gap-3 p-4 bg-success/5 border border-success/20 rounded-xl">
+        <div class="w-10 h-10 rounded-full bg-success/15 flex items-center justify-center shrink-0">
+          <i class="bi bi-pen-fill text-success text-base"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="font-bold text-sm text-base-content">{{ ass.get_papel_display }}</p>
+          <p class="text-sm text-base-content/70">{{ ass.nome_assinante }}</p>
+          <p class="text-xs text-base-content/30 mt-0.5 font-mono">
+            {{ ass.assinado_em|date:"d/m/Y H:i:s" }} · IP: {{ ass.ip_address }}
+          </p>
+        </div>
+        <div class="w-6 h-6 rounded-full bg-success flex items-center justify-center shrink-0">
+          <i class="bi bi-check text-white text-xs font-bold"></i>
+        </div>
+      </div>
+      {% endfor %}
+
+      <!-- Papéis pendentes -->
+      {% if not sumula.finalizada %}
+        {% for papel, label in papeis_pendentes %}
+        <div class="card bg-base-200 border border-base-300 overflow-hidden">
+          <div class="flex items-center gap-3 px-4 py-3 border-b border-base-300 bg-base-300/30">
+            <div class="w-8 h-8 rounded-full bg-base-300 flex items-center justify-center">
+              <i class="bi bi-pen text-base-content/40 text-sm"></i>
+            </div>
+            <div>
+              <p class="font-bold text-sm text-base-content/60">{{ label }}</p>
+              <p class="text-xs text-base-content/30">Assinatura pendente</p>
+            </div>
+          </div>
+          <form method="post" action="{% url 'competicao:sumula_assinar' jogo.pk papel %}" class="p-3 flex gap-2 items-end">
+            {% csrf_token %}
+            <div class="flex-1">
+              <label class="label py-0 mb-1">
+                <span class="label-text text-xs text-base-content/40">Nome completo</span>
+              </label>
+              {{ assinatura_form.nome_assinante }}
+            </div>
+            <button type="submit" class="btn btn-ghost btn-sm border border-base-content/15 gap-1.5">
+              <i class="bi bi-pen text-sm"></i> Assinar
+            </button>
+          </form>
+        </div>
+        {% endfor %}
+      {% endif %}
+
+    </div>
+
+  </div>
+
+  <!-- ── Finalizar Súmula ── -->
+  {% if not sumula.finalizada %}
+  <div class="card bg-base-200 border border-warning/30 overflow-hidden">
+    <div class="p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
+      <div>
+        <h3 class="font-bold text-base-content mb-1">Finalizar e Selar Súmula</h3>
+        <p class="text-sm text-base-content/50">
+          Ao finalizar, o documento será bloqueado para edições e um hash SHA-256 será gerado como prova de integridade.
+          Esta ação é irreversível.
+        </p>
+      </div>
+      <form method="post" action="{% url 'competicao:sumula_finalizar' jogo.pk %}">
+        {% csrf_token %}
+        <button type="submit"
+                class="btn btn-warning gap-2 font-bold shadow shadow-warning/20 shrink-0"
+                onclick="return confirm('Finalizar a súmula? Esta ação não pode ser desfeita.')">
+          <i class="bi bi-shield-lock-fill"></i>
+          Finalizar Súmula
+        </button>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,300 @@
+{% extends 'base/indice.html' %}
+{% block titulo %}{{ processo.numero }} — Tribunal{% endblock %}
+
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-base-content/40">
+    <ul>
+      <li><a href="{% url 'competicao:tribunal_dashboard' %}" class="hover:text-base-content/70">Tribunal</a></li>
+      <li><a href="{% url 'competicao:processo_lista' %}" class="hover:text-base-content/70">Processos</a></li>
+      <li><span class="text-base-content/60">{{ processo.numero }}</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block conteudo %}
+<div class="p-4 md:p-6 max-w-[1200px] mx-auto space-y-5">
+
+  <!-- ── Cabeçalho ── -->
+  <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2 mb-1 flex-wrap">
+        <i class="bi bi-hammer text-warning text-sm"></i>
+        <span class="text-xs font-bold uppercase tracking-widest text-base-content/40">Processo Desportivo</span>
+        <span class="badge {{ processo.status_badge_class }} badge-sm">{{ processo.get_status_display }}</span>
+      </div>
+      <h1 class="section-heading text-4xl text-base-content leading-none font-mono">{{ processo.numero }}</h1>
+      <p class="text-sm text-base-content/40 mt-1">
+        {{ processo.get_tipo_display }}
+        {% if processo.competicao %}· {{ processo.competicao.nome }}{% endif %}
+        · Aberto em {{ processo.criado_em|date:"d/m/Y" }}
+      </p>
+    </div>
+    <div class="flex items-center gap-2 flex-wrap">
+      {% if processo.status != 'arquivado' %}
+      <a href="{% url 'competicao:processo_editar' processo.pk %}"
+         class="btn btn-ghost btn-sm border border-base-content/10 gap-1">
+        <i class="bi bi-pencil text-sm"></i> Editar
+      </a>
+      {% endif %}
+      {% if not julgamento and processo.status != 'arquivado' %}
+      <a href="{% url 'competicao:julgamento_criar' processo.pk %}"
+         class="btn btn-warning btn-sm gap-1.5 font-semibold shadow shadow-warning/20">
+        <i class="bi bi-hammer text-sm"></i> Julgar
+      </a>
+      {% endif %}
+      {% if processo.status != 'arquivado' %}
+      <form method="post" action="{% url 'competicao:processo_arquivar' processo.pk %}" class="inline">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-ghost btn-sm border border-base-content/10 text-base-content/40 hover:text-error hover:border-error/30"
+                onclick="return confirm('Arquivar este processo?')">
+          <i class="bi bi-archive text-sm"></i>
+        </button>
+      </form>
+      {% else %}
+      <form method="post" action="{% url 'competicao:processo_reabrir' processo.pk %}" class="inline">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-ghost btn-sm border border-base-content/10 gap-1">
+          <i class="bi bi-folder2-open text-sm"></i> Reabrir
+        </button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ── Tabs ── -->
+  <div role="tablist" class="tabs tabs-lifted tabs-lg">
+
+    <!-- ── Tab 1: Processo ── -->
+    <input type="radio" name="proc_tabs" role="tab" class="tab font-semibold" aria-label="Processo" checked>
+    <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-5 space-y-4">
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <!-- Denunciante -->
+        <div class="space-y-3">
+          <div class="card bg-base-200 border border-base-300 p-4">
+            <p class="text-xs font-bold uppercase tracking-wider text-base-content/40 mb-2">Denunciante / Requerente</p>
+            <p class="font-semibold text-base-content">{{ processo.denunciante }}</p>
+          </div>
+
+          <!-- Denunciado -->
+          <div class="card bg-base-200 border border-base-300 p-4">
+            <p class="text-xs font-bold uppercase tracking-wider text-base-content/40 mb-2">Denunciado</p>
+            {% if processo.denunciado_atleta %}
+              <div class="flex items-center gap-2">
+                <i class="bi bi-person-fill text-warning/60"></i>
+                <span class="font-semibold">{{ processo.denunciado_atleta.nome }}</span>
+                <span class="badge badge-ghost badge-xs">Atleta</span>
+              </div>
+            {% elif processo.denunciado_equipe %}
+              <div class="flex items-center gap-2">
+                <i class="bi bi-shield-fill text-warning/60"></i>
+                <span class="font-semibold">{{ processo.denunciado_equipe.nome_equipe }}</span>
+                <span class="badge badge-ghost badge-xs">Equipe</span>
+              </div>
+            {% else %}
+              <p class="text-base-content/40 text-sm">Não especificado</p>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Partida / Competição -->
+        <div class="space-y-3">
+          {% if processo.competicao %}
+          <div class="card bg-base-200 border border-base-300 p-4">
+            <p class="text-xs font-bold uppercase tracking-wider text-base-content/40 mb-2">Competição</p>
+            <p class="font-semibold text-base-content">{{ processo.competicao.nome }}</p>
+          </div>
+          {% endif %}
+
+          {% if processo.jogo %}
+          <div class="card bg-base-200 border border-base-300 p-4">
+            <p class="text-xs font-bold uppercase tracking-wider text-base-content/40 mb-2">Partida Relacionada</p>
+            <a href="{% url 'competicao:jogo_detalhe' processo.jogo.pk %}" class="font-semibold text-base-content hover:text-warning transition-colors">
+              {{ processo.jogo.equipe_casa }} × {{ processo.jogo.equipe_fora }}
+              {% if processo.jogo.data_hora %}<span class="text-sm text-base-content/40 ml-1">{{ processo.jogo.data_hora|date:"d/m/Y" }}</span>{% endif %}
+            </a>
+          </div>
+          {% endif %}
+
+          {% if processo.prazo_defesa %}
+          <div class="card bg-base-200 border border-base-300 p-4">
+            <p class="text-xs font-bold uppercase tracking-wider text-base-content/40 mb-2">Prazo para Defesa</p>
+            <p class="font-semibold text-base-content">{{ processo.prazo_defesa|date:"d/m/Y" }}</p>
+          </div>
+          {% endif %}
+        </div>
+
+      </div>
+
+      <!-- Descrição -->
+      <div class="card bg-base-200 border border-base-300 p-4">
+        <p class="text-xs font-bold uppercase tracking-wider text-base-content/40 mb-2">Descrição dos Fatos</p>
+        <p class="text-sm text-base-content leading-relaxed whitespace-pre-line">{{ processo.descricao }}</p>
+      </div>
+
+    </div>
+
+    <!-- ── Tab 2: Julgamento ── -->
+    <input type="radio" name="proc_tabs" role="tab" class="tab font-semibold"
+           aria-label="Julgamento {% if julgamento %}✓{% endif %}">
+    <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-5 space-y-4">
+
+      {% if julgamento %}
+      <!-- Decisão registrada -->
+      <div class="card {% if julgamento.penalidade == 'absolvido' %}bg-success/5 border-success/20{% elif julgamento.penalidade == 'exclusao' %}bg-error/5 border-error/20{% else %}bg-warning/5 border-warning/20{% endif %} border overflow-hidden">
+        <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300">
+          <i class="bi bi-hammer text-warning text-sm"></i>
+          <span class="section-heading text-sm text-base-content/70 tracking-widest">DECISÃO DO TRIBUNAL</span>
+          <span class="badge badge-sm ml-auto
+                {% if julgamento.penalidade == 'absolvido' %}badge-success{% elif julgamento.penalidade == 'exclusao' %}badge-error{% else %}badge-warning{% endif %}">
+            {{ julgamento.get_penalidade_display }}
+          </span>
+        </div>
+        <div class="p-4 space-y-3">
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div>
+              <p class="text-xs text-base-content/40 font-bold uppercase tracking-wider mb-1">Relator</p>
+              <p class="font-semibold text-sm">{{ julgamento.relator }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-base-content/40 font-bold uppercase tracking-wider mb-1">Data</p>
+              <p class="font-semibold text-sm">{{ julgamento.julgado_em|date:"d/m/Y H:i" }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-base-content/40 font-bold uppercase tracking-wider mb-1">Penalidade</p>
+              <p class="font-semibold text-sm">{{ julgamento.get_penalidade_display }}</p>
+            </div>
+          </div>
+
+          {% if julgamento.valor_multa %}
+          <div class="stat-number text-2xl text-warning">R$ {{ julgamento.valor_multa }}</div>
+          {% endif %}
+          {% if julgamento.jogos_suspensao %}
+          <p class="text-sm font-semibold text-warning">{{ julgamento.jogos_suspensao }} partida{{ julgamento.jogos_suspensao|pluralize }} de suspensão</p>
+          {% endif %}
+          {% if julgamento.pontos_perdidos %}
+          <p class="text-sm font-semibold text-error">-{{ julgamento.pontos_perdidos }} ponto{{ julgamento.pontos_perdidos|pluralize }}</p>
+          {% endif %}
+
+          <div class="mt-2">
+            <p class="text-xs text-base-content/40 font-bold uppercase tracking-wider mb-2">Fundamentação</p>
+            <p class="text-sm text-base-content leading-relaxed whitespace-pre-line bg-base-300/40 p-3 rounded-xl">{{ julgamento.descricao }}</p>
+          </div>
+        </div>
+      </div>
+
+      {% else %}
+      <!-- Sem julgamento ainda -->
+      <div class="flex flex-col items-center justify-center py-12 gap-3 text-base-content/30">
+        <i class="bi bi-hourglass text-5xl"></i>
+        <p class="text-base font-medium">Aguardando julgamento</p>
+        {% if processo.status != 'arquivado' %}
+        <a href="{% url 'competicao:julgamento_criar' processo.pk %}"
+           class="btn btn-warning gap-2 font-semibold shadow shadow-warning/20 mt-2">
+          <i class="bi bi-hammer"></i> Iniciar Julgamento
+        </a>
+        {% endif %}
+      </div>
+      {% endif %}
+
+    </div>
+
+    <!-- ── Tab 3: Recursos ── -->
+    <input type="radio" name="proc_tabs" role="tab" class="tab font-semibold"
+           aria-label="Recursos ({{ recursos.count }})">
+    <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-5 space-y-4">
+
+      <!-- Formulário de novo recurso -->
+      {% if julgamento and processo.status != 'arquivado' %}
+      <form method="post" action="{% url 'competicao:recurso_criar' processo.pk %}"
+            class="card bg-base-200 border border-error/20 overflow-hidden">
+        {% csrf_token %}
+        <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-error/5">
+          <i class="bi bi-arrow-counterclockwise text-error text-sm"></i>
+          <span class="section-heading text-sm text-base-content/70 tracking-widest">INTERPOR RECURSO</span>
+        </div>
+        <div class="p-4 space-y-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="label py-0 mb-1">
+                <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Recorrente *</span>
+              </label>
+              {{ recurso_form.recorrente }}
+            </div>
+            <div>
+              <label class="label py-0 mb-1">
+                <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Prazo para decisão</span>
+              </label>
+              {{ recurso_form.data_prazo }}
+            </div>
+          </div>
+          <div>
+            <label class="label py-0 mb-1">
+              <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Fundamentos do recurso *</span>
+            </label>
+            {{ recurso_form.motivo }}
+          </div>
+          <div class="flex justify-end">
+            <button type="submit" class="btn btn-error btn-sm gap-1.5 font-semibold">
+              <i class="bi bi-arrow-counterclockwise"></i> Interpor Recurso
+            </button>
+          </div>
+        </div>
+      </form>
+      {% elif not julgamento %}
+      <div class="alert alert-warning alert-soft">
+        <i class="bi bi-info-circle"></i>
+        Recursos só podem ser interpostos após o julgamento.
+      </div>
+      {% endif %}
+
+      <!-- Lista de recursos -->
+      <div class="space-y-3">
+        {% for rec in recursos %}
+        <div class="card bg-base-200 border border-base-300 overflow-hidden">
+          <div class="flex items-center gap-3 px-4 py-3 border-b border-base-300">
+            <div class="w-8 h-8 rounded-full {{ rec.status_badge_class }} flex items-center justify-center">
+              <i class="bi bi-arrow-counterclockwise text-xs"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="font-bold text-sm">Recurso de {{ rec.recorrente }}</p>
+              <p class="text-xs text-base-content/40">Interposto em {{ rec.criado_em|date:"d/m/Y" }}</p>
+            </div>
+            <span class="badge {{ rec.status_badge_class }} badge-sm">{{ rec.get_status_display }}</span>
+          </div>
+          <div class="p-4 space-y-2">
+            <p class="text-sm text-base-content/70 whitespace-pre-line">{{ rec.motivo }}</p>
+            {% if rec.decisao %}
+            <div class="mt-3 p-3 bg-base-300/40 rounded-xl">
+              <p class="text-xs text-base-content/40 font-bold uppercase tracking-wider mb-1">Decisão</p>
+              <p class="text-sm whitespace-pre-line">{{ rec.decisao }}</p>
+              <p class="text-xs text-base-content/30 mt-1">{{ rec.decidido_em|date:"d/m/Y H:i" }}</p>
+            </div>
+            {% endif %}
+            {% if rec.status in 'aguardando em_analise' %}
+            <div class="flex justify-end mt-2">
+              <a href="{% url 'competicao:recurso_decidir' rec.pk %}"
+                 class="btn btn-ghost btn-xs border border-base-content/10 gap-1">
+                <i class="bi bi-gavel text-xs"></i> Decidir
+              </a>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        {% empty %}
+        <div class="flex flex-col items-center justify-center py-12 gap-2 text-base-content/30">
+          <i class="bi bi-check-circle text-4xl"></i>
+          <p class="text-sm font-medium">Nenhum recurso interposto</p>
+        </div>
+        {% endfor %}
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

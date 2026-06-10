@@ -1,0 +1,196 @@
+{% extends 'portal/base.html' %}
+{% block titulo %}{{ equipe.nome_equipe }}{% endblock %}
+
+{% block conteudo %}
+
+<!-- Cabeçalho do clube -->
+<section class="bg-base-200 border-b border-base-300 relative overflow-hidden">
+  <div class="absolute inset-0 opacity-[0.03]"
+       style="background-image: repeating-linear-gradient(45deg, oklch(80% 0.18 85) 0px, transparent 1px, transparent 24px, oklch(80% 0.18 85) 25px, transparent 26px);">
+  </div>
+  <div class="max-w-6xl mx-auto px-4 py-10 relative">
+    <div class="flex items-center gap-6">
+      {% if equipe.escudo %}
+      <div class="w-24 h-24 rounded-2xl overflow-hidden bg-base-300/50 border border-base-300 shrink-0">
+        <img src="{{ equipe.escudo.url }}" alt="{{ equipe.nome_equipe }}" class="w-full h-full object-contain p-2">
+      </div>
+      {% else %}
+      <div class="w-24 h-24 rounded-2xl bg-warning/10 border border-warning/20 flex items-center justify-center shrink-0">
+        <i class="bi bi-shield-fill text-warning text-4xl"></i>
+      </div>
+      {% endif %}
+      <div>
+        <div class="flex items-center gap-2 mb-1">
+          <i class="bi bi-shield text-warning text-xs"></i>
+          <span class="text-xs font-bold uppercase tracking-widest text-base-content/40">Clube</span>
+        </div>
+        <h1 class="font-title text-5xl text-base-content leading-none">{{ equipe.nome_equipe|upper }}</h1>
+        {% if equipe.cidade %}
+        <p class="text-sm text-base-content/40 mt-1">
+          <i class="bi bi-geo-alt text-xs"></i>
+          {{ equipe.cidade }}{% if equipe.estado %} — {{ equipe.estado }}{% endif %}
+        </p>
+        {% endif %}
+        {% if equipe.fundacao %}
+        <p class="text-xs text-base-content/30 mt-0.5">Fundado em {{ equipe.fundacao|date:"Y" }}</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="max-w-6xl mx-auto px-4 py-8 space-y-8">
+
+  <!-- KPIs -->
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+    <div class="card bg-base-200 border border-base-300 p-5 text-center">
+      <p class="stat-number text-3xl text-warning">{{ total_jogos }}</p>
+      <p class="text-xs text-base-content/40 mt-1 font-semibold uppercase tracking-wider">Partidas</p>
+    </div>
+    <div class="card bg-base-200 border border-base-300 p-5 text-center">
+      <p class="stat-number text-3xl text-success">{{ total_gols }}</p>
+      <p class="text-xs text-base-content/40 mt-1 font-semibold uppercase tracking-wider">Gols</p>
+    </div>
+    <div class="card bg-base-200 border border-base-300 p-5 text-center">
+      <p class="stat-number text-3xl text-warning/70">{{ total_amarelos }}</p>
+      <p class="text-xs text-base-content/40 mt-1 font-semibold uppercase tracking-wider">Amarelos</p>
+    </div>
+    <div class="card bg-base-200 border border-base-300 p-5 text-center">
+      <p class="stat-number text-3xl text-error/70">{{ total_vermelhos }}</p>
+      <p class="text-xs text-base-content/40 mt-1 font-semibold uppercase tracking-wider">Vermelhos</p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+    <!-- Elenco atual -->
+    <div class="lg:col-span-2 space-y-4">
+
+      {% if inscricoes %}
+      <div class="flex items-center gap-2">
+        <i class="bi bi-people-fill text-warning text-sm"></i>
+        <h2 class="section-heading text-2xl text-base-content">ELENCO</h2>
+      </div>
+      <div class="card bg-base-200 border border-base-300 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="table table-sm w-full">
+            <thead>
+              <tr class="text-xs font-bold uppercase tracking-wider text-base-content/40 border-b border-base-300">
+                <th class="py-3 w-10">#</th>
+                <th>Atleta</th>
+                <th>Posição</th>
+                <th>Competição</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for ins in inscricoes %}
+              <tr class="border-b border-base-300/40 hover:bg-base-300/20 transition-colors">
+                <td class="font-mono text-xs text-warning/60 font-bold">
+                  {% if ins.numero_camisa %}{{ ins.numero_camisa }}{% else %}—{% endif %}
+                </td>
+                <td>
+                  <a href="{% url 'competicao:portal_atleta' ins.atleta.pk %}"
+                     class="flex items-center gap-2 hover:text-warning transition-colors group">
+                    {% if ins.atleta.foto %}
+                    <div class="w-7 h-7 rounded-full overflow-hidden border border-base-300">
+                      <img src="{{ ins.atleta.foto.thumbnail.url }}" alt="" class="w-full h-full object-cover">
+                    </div>
+                    {% else %}
+                    <div class="w-7 h-7 rounded-full bg-base-300/60 flex items-center justify-center">
+                      <i class="bi bi-person-fill text-xs text-base-content/30"></i>
+                    </div>
+                    {% endif %}
+                    <span class="text-sm font-medium group-hover:text-warning">{{ ins.atleta.nome }}</span>
+                  </a>
+                </td>
+                <td class="text-xs text-base-content/40">{{ ins.atleta.get_posicao_display|default:"—" }}</td>
+                <td class="text-xs text-base-content/30 truncate max-w-32">{{ ins.competicao.nome }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Partidas recentes -->
+      {% if jogos_recentes %}
+      <div class="flex items-center gap-2 mt-6">
+        <i class="bi bi-calendar3 text-warning text-sm"></i>
+        <h2 class="section-heading text-2xl text-base-content">PARTIDAS RECENTES</h2>
+      </div>
+      <div class="space-y-2">
+        {% for jogo in jogos_recentes %}
+        <div class="flex items-center gap-3 p-3 bg-base-200 border border-base-300 rounded-xl">
+          <div class="text-center min-w-[56px]">
+            <p class="text-xs text-base-content/30">{{ jogo.data_hora|date:"d/m" }}</p>
+          </div>
+          <div class="flex-1 flex items-center justify-between gap-2">
+            <span class="text-sm font-semibold text-base-content truncate flex-1 text-right
+                         {% if jogo.equipe_casa == equipe %}text-warning{% endif %}">
+              {{ jogo.equipe_casa.nome_equipe }}
+            </span>
+            <div class="shrink-0 px-3 py-1 bg-base-300/50 rounded-lg text-sm font-mono font-bold text-base-content">
+              {{ jogo.gols_casa }} × {{ jogo.gols_fora }}
+            </div>
+            <span class="text-sm font-semibold text-base-content truncate flex-1
+                         {% if jogo.equipe_fora == equipe %}text-warning{% endif %}">
+              {{ jogo.equipe_fora.nome_equipe }}
+            </span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+    </div>
+
+    <!-- Sidebar: competições -->
+    <aside class="space-y-5">
+      {% if competicoes %}
+      <div class="card bg-base-200 border border-base-300 overflow-hidden">
+        <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300">
+          <i class="bi bi-trophy text-warning text-sm"></i>
+          <span class="section-heading text-sm text-base-content/70 tracking-widest">COMPETIÇÕES</span>
+        </div>
+        <div class="divide-y divide-base-300">
+          {% for comp in competicoes %}
+          <a href="{% url 'competicao:public_classificacao' comp.pk %}"
+             class="flex items-center gap-3 px-4 py-3 hover:bg-base-300/30 transition-colors group">
+            <div class="w-7 h-7 rounded-lg bg-warning/10 flex items-center justify-center shrink-0">
+              <i class="bi bi-trophy-fill text-warning text-xs"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-base-content group-hover:text-warning transition-colors truncate">
+                {{ comp.nome }}
+              </p>
+              {% if comp.data_inicio %}
+              <p class="text-xs text-base-content/30">{{ comp.data_inicio|date:"Y" }}</p>
+              {% endif %}
+            </div>
+            <i class="bi bi-bar-chart-line text-base-content/20 text-sm shrink-0"></i>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      {% if equipe.estadio %}
+      <div class="card bg-base-200 border border-base-300 p-4">
+        <p class="text-xs font-bold uppercase tracking-wider text-base-content/40 mb-1">Estádio</p>
+        <p class="text-sm font-semibold text-base-content">{{ equipe.estadio }}</p>
+      </div>
+      {% endif %}
+
+      {% if equipe.tecnico %}
+      <div class="card bg-base-200 border border-base-300 p-4">
+        <p class="text-xs font-bold uppercase tracking-wider text-base-content/40 mb-1">Técnico</p>
+        <p class="text-sm font-semibold text-base-content">{{ equipe.tecnico }}</p>
+      </div>
+      {% endif %}
+
+    </aside>
+
+  </div>
+</div>
+{% endblock %}

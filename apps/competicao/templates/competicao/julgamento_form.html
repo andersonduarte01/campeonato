@@ -1,0 +1,131 @@
+{% extends 'base/indice.html' %}
+{% block titulo %}Julgar Processo {{ processo.numero }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-base-content/40">
+    <ul>
+      <li><a href="{% url 'competicao:tribunal_dashboard' %}" class="hover:text-base-content/70">Tribunal</a></li>
+      <li><a href="{% url 'competicao:processo_detalhe' processo.pk %}" class="hover:text-base-content/70">{{ processo.numero }}</a></li>
+      <li><span class="text-base-content/60">Julgamento</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block conteudo %}
+<div class="p-4 md:p-6 max-w-[860px] mx-auto space-y-5">
+
+  <div class="flex items-end justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2 mb-1">
+        <i class="bi bi-hammer text-warning text-sm"></i>
+        <span class="text-xs font-bold uppercase tracking-widest text-base-content/40">Tribunal Desportivo</span>
+      </div>
+      <h1 class="section-heading text-4xl text-base-content leading-none">JULGAMENTO</h1>
+      <p class="text-sm text-base-content/40 mt-1 font-mono">{{ processo.numero }} — {{ processo.get_tipo_display }}</p>
+    </div>
+    <a href="{% url 'competicao:processo_detalhe' processo.pk %}"
+       class="btn btn-ghost btn-sm border border-base-content/10">
+      <i class="bi bi-arrow-left text-sm"></i> Voltar
+    </a>
+  </div>
+
+  <!-- Resumo do processo -->
+  <div class="card bg-warning/5 border border-warning/20 p-4">
+    <p class="text-xs font-bold uppercase tracking-wider text-warning/60 mb-2">Processo em Julgamento</p>
+    <p class="text-sm text-base-content font-semibold mb-1">
+      {{ processo.denunciado_str }}
+      <span class="text-base-content/40 font-normal">— denunciado por {{ processo.denunciante }}</span>
+    </p>
+    <p class="text-sm text-base-content/60 line-clamp-2">{{ processo.descricao }}</p>
+  </div>
+
+  <form method="post" class="space-y-4">
+    {% csrf_token %}
+
+    <!-- Relator e penalidade -->
+    <div class="card bg-base-200 border border-base-300 overflow-hidden">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
+        <i class="bi bi-person-fill text-warning text-sm"></i>
+        <span class="section-heading text-sm text-base-content/70 tracking-widest">DECISÃO</span>
+      </div>
+      <div class="p-4 space-y-4">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="label py-0 mb-1">
+              <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Relator / Juiz *</span>
+            </label>
+            {{ form.relator }}
+          </div>
+          <div>
+            <label class="label py-0 mb-1">
+              <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Penalidade aplicada *</span>
+            </label>
+            {{ form.penalidade }}
+          </div>
+        </div>
+
+        <!-- Campos condicionais por penalidade -->
+        <div id="campo-multa" class="hidden">
+          <label class="label py-0 mb-1">
+            <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Valor da multa (R$)</span>
+          </label>
+          {{ form.valor_multa }}
+        </div>
+
+        <div id="campo-suspensao" class="hidden">
+          <label class="label py-0 mb-1">
+            <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Número de partidas de suspensão</span>
+          </label>
+          {{ form.jogos_suspensao }}
+          <div class="mt-2 flex items-center gap-2">
+            {{ form.aplicar_suspensao }}
+            <span class="label-text text-xs text-base-content/50">{{ form.aplicar_suspensao.label }}</span>
+          </div>
+        </div>
+
+        <div id="campo-pontos" class="hidden">
+          <label class="label py-0 mb-1">
+            <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Pontos a deduzir</span>
+          </label>
+          {{ form.pontos_perdidos }}
+        </div>
+
+        <div>
+          <label class="label py-0 mb-1">
+            <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Fundamentação e decisão *</span>
+          </label>
+          {{ form.descricao }}
+        </div>
+
+      </div>
+    </div>
+
+    <div class="flex justify-end gap-2">
+      <a href="{% url 'competicao:processo_detalhe' processo.pk %}"
+         class="btn btn-ghost btn-sm border border-base-content/10">Cancelar</a>
+      <button type="submit" class="btn btn-warning gap-1.5 font-semibold shadow shadow-warning/20">
+        <i class="bi bi-hammer"></i> Registrar Julgamento
+      </button>
+    </div>
+  </form>
+
+</div>
+
+<script>
+  (function () {
+    const sel = document.querySelector('#id_penalidade');
+    if (!sel) return;
+    function toggle() {
+      const v = sel.value;
+      document.getElementById('campo-multa').classList.toggle('hidden', v !== 'multa');
+      document.getElementById('campo-suspensao').classList.toggle('hidden', v !== 'suspensao');
+      document.getElementById('campo-pontos').classList.toggle('hidden', v !== 'perda_pontos');
+    }
+    sel.addEventListener('change', toggle);
+    toggle();
+  })();
+</script>
+{% endblock %}

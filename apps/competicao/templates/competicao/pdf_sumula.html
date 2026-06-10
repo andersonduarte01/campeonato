@@ -234,25 +234,103 @@
   {% endif %}
 
   {% if jogo.observacoes %}
-  <div class="section-title">Observações / Ocorrências</div>
+  <div class="section-title">Observações Gerais</div>
   <p class="small">{{ jogo.observacoes }}</p>
   {% endif %}
 
-  <div class="section-title no-print" style="margin-top:32px">Assinaturas</div>
-  <div class="row g-2 no-print" style="margin-top:24px">
+  {% if sumula %}
+  <!-- Condições da partida -->
+  <div class="section-title">Condições da Partida</div>
+  <table class="table table-bordered table-sm">
+    <tbody>
+      <tr>
+        <th style="width:50%">Condição Climática</th>
+        <td>{{ sumula.get_condicao_climatica_display }}</td>
+        <th style="width:25%">Condição do Campo</th>
+        <td>{{ sumula.get_condicao_campo_display }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  {% if sumula.relatorio_narrativo %}
+  <div class="section-title">Relatório Narrativo do Árbitro</div>
+  <p class="small" style="line-height:1.6; border:1px solid #dee2e6; padding:8px; border-radius:4px;">{{ sumula.relatorio_narrativo }}</p>
+  {% endif %}
+
+  {% if ocorrencias %}
+  <div class="section-title">Ocorrências Registradas</div>
+  <table class="table table-bordered table-sm">
+    <thead><tr><th>Min.</th><th>Tipo</th><th>Descrição</th></tr></thead>
+    <tbody>
+      {% for oc in ocorrencias %}
+      <tr>
+        <td style="white-space:nowrap">{% if oc.minuto %}{{ oc.minuto }}'{% else %}—{% endif %}</td>
+        <td style="white-space:nowrap; font-weight:600;">{{ oc.get_tipo_display }}</td>
+        <td>{{ oc.descricao }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  <!-- Assinaturas digitais -->
+  <div class="section-title" style="margin-top:32px">Assinaturas Digitais</div>
+  {% if assinaturas %}
+  <table class="table table-bordered table-sm">
+    <thead><tr><th>Papel</th><th>Nome</th><th>Data/Hora</th><th>IP</th></tr></thead>
+    <tbody>
+      {% for ass in assinaturas %}
+      <tr>
+        <td style="font-weight:600">{{ ass.get_papel_display }}</td>
+        <td>{{ ass.nome_assinante }}</td>
+        <td style="font-size:.75rem; white-space:nowrap">{{ ass.assinado_em|date:"d/m/Y H:i:s" }}</td>
+        <td style="font-size:.75rem; font-family:monospace">{{ ass.ip_address }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% if sumula.finalizada %}
+  <p class="small text-muted" style="margin-top:6px">
+    <strong>Integridade SHA-256:</strong>
+    <span style="font-family:monospace; word-break:break-all">{{ sumula.hash_integridade }}</span>
+  </p>
+  <p class="small text-muted">Finalizada em: {{ sumula.finalizada_em|date:"d/m/Y H:i:s" }}</p>
+  {% endif %}
+  {% else %}
+  <div class="row g-2" style="margin-top:8px">
+    <div class="col-4 text-center">
+      <div class="assinatura-box" style="margin-bottom:4px"></div>
+      <small>Árbitro Principal</small>
+    </div>
+    <div class="col-4 text-center">
+      <div class="assinatura-box" style="margin-bottom:4px"></div>
+      <small>Capitão — {{ jogo.equipe_casa.nome_equipe }}</small>
+    </div>
+    <div class="col-4 text-center">
+      <div class="assinatura-box" style="margin-bottom:4px"></div>
+      <small>Capitão — {{ jogo.equipe_fora.nome_equipe }}</small>
+    </div>
+  </div>
+  {% endif %}
+
+  {% else %}
+  <!-- Sumula clássica sem assinatura digital -->
+  <div class="section-title" style="margin-top:32px">Assinaturas</div>
+  <div class="row g-2" style="margin-top:8px">
     <div class="col-4 text-center">
       <div class="assinatura-box" style="margin-bottom:4px"></div>
       <small>Árbitro{% if jogo.arbitro %}: {{ jogo.arbitro.nome }}{% endif %}</small>
     </div>
     <div class="col-4 text-center">
       <div class="assinatura-box" style="margin-bottom:4px"></div>
-      <small>Delegado — {{ jogo.equipe_casa.nome_equipe }}</small>
+      <small>Capitão — {{ jogo.equipe_casa.nome_equipe }}</small>
     </div>
     <div class="col-4 text-center">
       <div class="assinatura-box" style="margin-bottom:4px"></div>
-      <small>Delegado — {{ jogo.equipe_fora.nome_equipe }}</small>
+      <small>Capitão — {{ jogo.equipe_fora.nome_equipe }}</small>
     </div>
   </div>
+  {% endif %}
 
 </div>
 

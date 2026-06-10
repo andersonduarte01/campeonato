@@ -14,12 +14,19 @@ from .forms import (
     FaseForm, GrupoForm, ConfrontoPenaltisForm,
     LocalForm, ArbitroForm, EscalacaoJogoForm, SubstituicaoForm,
     ArbitrosJogoForm, AvaliacaoArbitroForm,
+    SumulaDigitalForm, OcorrenciaForm, AnexoSumulaForm, AssinaturaForm,
+    ProcessoDesportivoForm, JulgamentoForm, RecursoDesportivoForm, RecursoDecisaoForm,
+    LancamentoFinanceiroForm, BaixarPagamentoForm,
+    PublicacaoForm,
 )
 from ..competicao.models import (
     Competicao, Rodada, Jogo, Classificacao, Gol, Cartao, InscricaoAtleta,
     Fase, Grupo, ClassificacaoGrupo, ConfrontoMatamate, Suspensao,
     Local, Arbitro, EscalacaoJogo, Substituicao, ArbitrosJogo,
     AvaliacaoArbitro, Notificacao,
+    SumulaDigital, OcorrenciaSumula, AnexoSumula, AssinaturaDigital,
+    ProcessoDesportivo, Julgamento, RecursoDesportivo,
+    LancamentoFinanceiro, Publicacao,
 )
 from ..equipe.models import Equipe, Atleta
 from .gerador_de_jogos import (
@@ -201,6 +208,31 @@ class JogoUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
         ctx = super().get_context_data(**kwargs)
         ctx['jogo'] = self.object
         return ctx
+
+    def form_valid(self, form):
+        antes = {
+            'gols_casa': self.object.gols_casa,
+            'gols_fora': self.object.gols_fora,
+            'finalizado': self.object.finalizado,
+        }
+        response = super().form_valid(form)
+        depois = {
+            'gols_casa': self.object.gols_casa,
+            'gols_fora': self.object.gols_fora,
+            'finalizado': self.object.finalizado,
+        }
+        try:
+            from apps.auditoria.utils import registrar_auditoria
+            registrar_auditoria(
+                self.request, 'editar',
+                descricao=f'Resultado do jogo atualizado: {self.object}',
+                objeto=self.object,
+                dados_anteriores=antes,
+                dados_novos=depois,
+            )
+        except Exception:
+            pass
+        return response
 
 
 # ---------------------------------------------------------------------------
@@ -697,45 +729,74 @@ class ArbitroListView(LoginRequiredMixin, ListView):
     context_object_name = 'arbitros'
 
     def get_queryset(self):
-        q = self.request.GET.get('q', '')
+        q        = self.request.GET.get('q', '')
+        filtro_d = self.request.GET.get('disp', '')
+        filtro_c = self.request.GET.get('cat', '')
         qs = Arbitro.objects.all()
         if q:
             qs = qs.filter(nome__icontains=q)
+        if filtro_d:
+            qs = qs.filter(disponibilidade=filtro_d)
+        if filtro_c:
+            qs = qs.filter(categoria=filtro_c)
         return qs
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['form'] = ArbitroForm()
-        ctx['q'] = self.request.GET.get('q', '')
+        todos = Arbitro.objects.all()
+        ctx['q']                  = self.request.GET.get('q', '')
+        ctx['filtro_disp']        = self.request.GET.get('disp', '')
+        ctx['filtro_cat']         = self.request.GET.get('cat', '')
+        ctx['categorias']         = Arbitro.CATEGORIA_CHOICES
+        ctx['disponíveis_count']  = todos.filter(disponibilidade=Arbitro.DISPONIVEL, ativo=True).count()
+        ctx['indisponiveis_count']= todos.exclude(disponibilidade=Arbitro.DISPONIVEL).count()
+        ctx['fifa_count']         = todos.filter(categoria=Arbitro.FIFA).count()
+        ctx['total_jogos_count']  = ArbitrosJogo.objects.count()
         return ctx
+
+
+def _arbitro_form_ctx(form):
+    """Monta contexto extra para o template arbitro_form.html."""
+    custo_fields = [
+        (form['taxa_por_partida'], 'Taxa',        'receipt'),
+        (form['diaria'],           'Diária',      'moon'),
+        (form['alimentacao'],      'Alimentação', 'cup-hot'),
+        (form['hospedagem'],       'Hospedagem',  'building'),
+        (form['deslocamento'],     'Deslocamento','car-front'),
+    ]
+    return {'custo_fields': custo_fields}
 
 
 @login_required
 def arbitro_criar_view(request):
     if request.method == 'POST':
-        form = ArbitroForm(request.POST)
+        form = ArbitroForm(request.POST, request.FILES)
         if form.is_valid():
             arb = form.save()
             messages.success(request, f"Árbitro '{arb.nome}' criado com sucesso.")
-        else:
-            for errs in form.errors.values():
-                for e in errs:
-                    messages.warning(request, e)
-    return redirect(reverse('competicao:arbitro_lista'))
+            return redirect(reverse('competicao:arbitro_detalhe', kwargs={'pk': arb.pk}))
+        for errs in form.errors.values():
+            for e in errs:
+                messages.warning(request, e)
+    else:
+        form = ArbitroForm()
+    ctx = {'form': form, **_arbitro_form_ctx(form)}
+    return render(request, 'competicao/arbitro_form.html', ctx)
 
 
 @login_required
 def arbitro_editar_view(request, pk):
     arbitro = get_object_or_404(Arbitro, pk=pk)
     if request.method == 'POST':
-        form = ArbitroForm(request.POST, instance=arbitro)
+        form = ArbitroForm(request.POST, request.FILES, instance=arbitro)
         if form.is_valid():
             form.save()
             messages.success(request, f"Árbitro '{arbitro.nome}' atualizado.")
-            return redirect(reverse('competicao:arbitro_lista'))
+            return redirect(reverse('competicao:arbitro_detalhe', kwargs={'pk': pk}))
     else:
         form = ArbitroForm(instance=arbitro)
-    return render(request, 'competicao/arbitro_form.html', {'form': form, 'arbitro': arbitro})
+    ctx = {'form': form, 'arbitro': arbitro, **_arbitro_form_ctx(form)}
+    return render(request, 'competicao/arbitro_form.html', ctx)
 
 
 @login_required
@@ -746,6 +807,82 @@ def arbitro_excluir_view(request, pk):
         arbitro.delete()
         messages.success(request, f"Árbitro '{nome}' excluído.")
     return redirect(reverse('competicao:arbitro_lista'))
+
+
+@login_required
+def arbitro_detalhe_view(request, pk):
+    from django.db.models import Avg
+    arbitro = get_object_or_404(Arbitro, pk=pk)
+
+    jogos_arbitrados = (
+        arbitro.jogos_arbitrados
+        .select_related('jogo__equipe_casa', 'jogo__equipe_fora', 'jogo__rodada__competicao')
+        .order_by('-jogo__data_hora')
+    )
+    total_jogos = jogos_arbitrados.count()
+
+    try:
+        from ..competicao.models import AvaliacaoArbitro
+        media_nota = AvaliacaoArbitro.objects.filter(
+            jogo__arbitros_jogo__arbitro=arbitro
+        ).aggregate(media=Avg('nota'))['media']
+    except Exception:
+        media_nota = None
+
+    ctx = {
+        'arbitro': arbitro,
+        'jogos_arbitrados': jogos_arbitrados[:20],
+        'total_jogos': total_jogos,
+        'media_nota': media_nota,
+    }
+    return render(request, 'competicao/arbitro_detalhe.html', ctx)
+
+
+@login_required
+def escala_inteligente_view(request, jogo_pk):
+    """Sugere árbitros disponíveis e sem conflito de horário para o jogo."""
+    from datetime import timedelta
+    jogo = get_object_or_404(Jogo, pk=jogo_pk)
+
+    # IDs já designados neste jogo
+    ja_designados = set(
+        jogo.arbitros_jogo.values_list('arbitro_id', flat=True)
+    )
+
+    # Árbitros com conflito (mesmo dia, outro jogo)
+    conflito_ids: set = set()
+    if jogo.data_hora:
+        inicio = jogo.data_hora - timedelta(hours=4)
+        fim    = jogo.data_hora + timedelta(hours=4)
+        conflito_ids = set(
+            ArbitrosJogo.objects.filter(
+                jogo__data_hora__range=(inicio, fim),
+            ).exclude(jogo=jogo).values_list('arbitro_id', flat=True)
+        )
+
+    categoria_ordem = {
+        Arbitro.FIFA: 1, Arbitro.NACIONAL: 2,
+        Arbitro.REGIONAL: 3, Arbitro.ASPIRANTE: 4,
+    }
+
+    todos = list(
+        Arbitro.objects.filter(ativo=True)
+        .exclude(id__in=ja_designados)
+        .order_by('disponibilidade', 'nome')
+    )
+    todos.sort(key=lambda a: (categoria_ordem.get(a.categoria, 5), a.nome))
+
+    sugeridos   = [a for a in todos if a.disponivel and a.id not in conflito_ids]
+    indisponiveis = [a for a in todos if not a.disponivel or a.id in conflito_ids]
+
+    ctx = {
+        'jogo': jogo,
+        'sugeridos': sugeridos,
+        'indisponiveis': indisponiveis,
+        'form': ArbitrosJogoForm(),
+        'arbitros_jogo': jogo.arbitros_jogo.select_related('arbitro').all(),
+    }
+    return render(request, 'competicao/escala_inteligente.html', ctx)
 
 
 # ---------------------------------------------------------------------------
@@ -1153,8 +1290,12 @@ def pdf_sumula_view(request, pk):
     escalacao_casa = jogo.escalacao.filter(equipe=jogo.equipe_casa).select_related('atleta').order_by('-titular', 'numero_camisa')
     escalacao_fora = jogo.escalacao.filter(equipe=jogo.equipe_fora).select_related('atleta').order_by('-titular', 'numero_camisa')
     substituicoes = jogo.substituicoes.select_related('atleta_entra', 'atleta_sai', 'equipe').order_by('minuto')
-
     arbitros_jogo = jogo.arbitros_jogo.select_related('arbitro').all()
+
+    sumula = getattr(jogo, 'sumula_digital', None)
+    ocorrencias = sumula.ocorrencias.all() if sumula else []
+    assinaturas = sumula.assinaturas.all() if sumula else []
+
     return render(request, 'competicao/pdf_sumula.html', {
         'jogo': jogo,
         'gols_casa': gols_casa,
@@ -1164,7 +1305,186 @@ def pdf_sumula_view(request, pk):
         'escalacao_fora': escalacao_fora,
         'substituicoes': substituicoes,
         'arbitros_jogo': arbitros_jogo,
+        'sumula': sumula,
+        'ocorrencias': ocorrencias,
+        'assinaturas': assinaturas,
     })
+
+
+# ---------------------------------------------------------------------------
+# Súmula Digital Profissional — Fase 3
+# ---------------------------------------------------------------------------
+
+def _get_client_ip(request):
+    xff = request.META.get('HTTP_X_FORWARDED_FOR')
+    if xff:
+        return xff.split(',')[0].strip()
+    return request.META.get('REMOTE_ADDR')
+
+
+@login_required
+def sumula_digital_view(request, jogo_pk):
+    jogo = get_object_or_404(Jogo, pk=jogo_pk)
+    sumula, _ = SumulaDigital.objects.get_or_create(jogo=jogo)
+
+    if request.method == 'POST' and not sumula.finalizada:
+        form = SumulaDigitalForm(request.POST, instance=sumula)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Súmula atualizada.')
+            return redirect(reverse('competicao:sumula_digital', kwargs={'jogo_pk': jogo_pk}))
+    else:
+        form = SumulaDigitalForm(instance=sumula)
+
+    papeis_existentes = set(sumula.assinaturas.values_list('papel', flat=True))
+    papeis_pendentes = [
+        (p, label) for p, label in AssinaturaDigital.PAPEIS
+        if p not in papeis_existentes
+    ]
+
+    ctx = {
+        'jogo': jogo,
+        'sumula': sumula,
+        'form': form,
+        'ocorrencia_form': OcorrenciaForm(),
+        'anexo_form': AnexoSumulaForm(),
+        'assinatura_form': AssinaturaForm(),
+        'papeis_pendentes': papeis_pendentes,
+        'total_papeis': len(AssinaturaDigital.PAPEIS),
+    }
+    return render(request, 'competicao/sumula_digital.html', ctx)
+
+
+@login_required
+def sumula_ocorrencia_criar_view(request, jogo_pk):
+    jogo = get_object_or_404(Jogo, pk=jogo_pk)
+    sumula, _ = SumulaDigital.objects.get_or_create(jogo=jogo)
+
+    if sumula.finalizada:
+        messages.error(request, 'Súmula finalizada. Não é possível adicionar ocorrências.')
+        return redirect(reverse('competicao:sumula_digital', kwargs={'jogo_pk': jogo_pk}))
+
+    if request.method == 'POST':
+        form = OcorrenciaForm(request.POST)
+        if form.is_valid():
+            ocorrencia = form.save(commit=False)
+            ocorrencia.sumula = sumula
+            ocorrencia.save()
+            messages.success(request, f"Ocorrência '{ocorrencia.get_tipo_display()}' registrada.")
+        else:
+            for errs in form.errors.values():
+                for e in errs:
+                    messages.warning(request, e)
+    return redirect(reverse('competicao:sumula_digital', kwargs={'jogo_pk': jogo_pk}))
+
+
+@login_required
+def sumula_ocorrencia_excluir_view(request, pk):
+    ocorrencia = get_object_or_404(OcorrenciaSumula, pk=pk)
+    jogo_pk = ocorrencia.sumula.jogo_id
+    if not ocorrencia.sumula.finalizada and request.method == 'POST':
+        ocorrencia.delete()
+        messages.success(request, 'Ocorrência removida.')
+    return redirect(reverse('competicao:sumula_digital', kwargs={'jogo_pk': jogo_pk}))
+
+
+@login_required
+def sumula_anexo_criar_view(request, jogo_pk):
+    jogo = get_object_or_404(Jogo, pk=jogo_pk)
+    sumula, _ = SumulaDigital.objects.get_or_create(jogo=jogo)
+
+    if sumula.finalizada:
+        messages.error(request, 'Súmula finalizada. Não é possível adicionar anexos.')
+        return redirect(reverse('competicao:sumula_digital', kwargs={'jogo_pk': jogo_pk}))
+
+    if request.method == 'POST':
+        form = AnexoSumulaForm(request.POST, request.FILES)
+        if form.is_valid():
+            anexo = form.save(commit=False)
+            anexo.sumula = sumula
+            anexo.save()
+            messages.success(request, f"Anexo '{anexo.get_tipo_display()}' enviado.")
+        else:
+            for errs in form.errors.values():
+                for e in errs:
+                    messages.warning(request, e)
+    return redirect(reverse('competicao:sumula_digital', kwargs={'jogo_pk': jogo_pk}))
+
+
+@login_required
+def sumula_anexo_excluir_view(request, pk):
+    anexo = get_object_or_404(AnexoSumula, pk=pk)
+    jogo_pk = anexo.sumula.jogo_id
+    if not anexo.sumula.finalizada and request.method == 'POST':
+        anexo.arquivo.delete(save=False)
+        anexo.delete()
+        messages.success(request, 'Anexo removido.')
+    return redirect(reverse('competicao:sumula_digital', kwargs={'jogo_pk': jogo_pk}))
+
+
+@login_required
+def sumula_assinar_view(request, jogo_pk, papel):
+    from django.utils import timezone
+    jogo = get_object_or_404(Jogo, pk=jogo_pk)
+    sumula, _ = SumulaDigital.objects.get_or_create(jogo=jogo)
+
+    papel_valido = dict(AssinaturaDigital.PAPEIS)
+    if papel not in papel_valido:
+        messages.error(request, 'Papel de assinatura inválido.')
+        return redirect(reverse('competicao:sumula_digital', kwargs={'jogo_pk': jogo_pk}))
+
+    if sumula.finalizada:
+        messages.error(request, 'Súmula já finalizada e assinada.')
+        return redirect(reverse('competicao:sumula_digital', kwargs={'jogo_pk': jogo_pk}))
+
+    if sumula.assinaturas.filter(papel=papel).exists():
+        messages.warning(request, f"Este papel ({papel_valido[papel]}) já foi assinado.")
+        return redirect(reverse('competicao:sumula_digital', kwargs={'jogo_pk': jogo_pk}))
+
+    if request.method == 'POST':
+        form = AssinaturaForm(request.POST)
+        if form.is_valid():
+            AssinaturaDigital.objects.create(
+                sumula=sumula,
+                papel=papel,
+                nome_assinante=form.cleaned_data['nome_assinante'],
+                ip_address=_get_client_ip(request),
+                user_agent=request.META.get('HTTP_USER_AGENT', '')[:500],
+            )
+            messages.success(request, f"Assinatura de {papel_valido[papel]} registrada.")
+        else:
+            for errs in form.errors.values():
+                for e in errs:
+                    messages.warning(request, e)
+    return redirect(reverse('competicao:sumula_digital', kwargs={'jogo_pk': jogo_pk}))
+
+
+@login_required
+def sumula_finalizar_view(request, jogo_pk):
+    from django.utils import timezone
+    jogo = get_object_or_404(Jogo, pk=jogo_pk)
+    sumula = get_object_or_404(SumulaDigital, jogo=jogo)
+
+    if sumula.finalizada:
+        messages.info(request, 'Súmula já estava finalizada.')
+        return redirect(reverse('competicao:sumula_digital', kwargs={'jogo_pk': jogo_pk}))
+
+    if request.method == 'POST':
+        sumula.hash_integridade = sumula.gerar_hash()
+        sumula.finalizada = True
+        sumula.finalizada_em = timezone.now()
+        sumula.save()
+        messages.success(request, 'Súmula finalizada e assinada digitalmente. Hash de integridade gerado.')
+        try:
+            from apps.auditoria.utils import registrar_auditoria
+            registrar_auditoria(
+                request, 'finalizar',
+                descricao=f'Súmula digital finalizada: {jogo}',
+                objeto=sumula,
+            )
+        except Exception:
+            pass
+    return redirect(reverse('competicao:sumula_digital', kwargs={'jogo_pk': jogo_pk}))
 
 
 # ---------------------------------------------------------------------------
@@ -1473,3 +1793,676 @@ def calendario_view(request):
         'competicao_id': competicao_id,
         'periodo': periodo,
     })
+
+
+# ---------------------------------------------------------------------------
+# Tribunal Desportivo — Fase 4
+# ---------------------------------------------------------------------------
+
+@login_required
+def tribunal_dashboard_view(request):
+    total   = ProcessoDesportivo.objects.count()
+    abertos = ProcessoDesportivo.objects.filter(status='aberto').count()
+    em_julg = ProcessoDesportivo.objects.filter(status='em_julgamento').count()
+    julgados = ProcessoDesportivo.objects.filter(status='julgado').count()
+    arquivados = ProcessoDesportivo.objects.filter(status='arquivado').count()
+    recentes = (
+        ProcessoDesportivo.objects
+        .select_related('competicao', 'denunciado_atleta', 'denunciado_equipe')
+        .order_by('-criado_em')[:10]
+    )
+    recursos_pendentes = RecursoDesportivo.objects.filter(
+        status__in=['aguardando', 'em_analise']
+    ).count()
+    return render(request, 'competicao/tribunal_dashboard.html', {
+        'total': total,
+        'abertos': abertos,
+        'em_julgamento': em_julg,
+        'julgados': julgados,
+        'arquivados': arquivados,
+        'recursos_pendentes': recursos_pendentes,
+        'recentes': recentes,
+    })
+
+
+class ProcessoListView(LoginRequiredMixin, ListView):
+    template_name = 'competicao/processo_lista.html'
+    context_object_name = 'processos'
+    paginate_by = 20
+
+    def get_queryset(self):
+        qs = (
+            ProcessoDesportivo.objects
+            .select_related('competicao', 'denunciado_atleta', 'denunciado_equipe')
+            .order_by('-criado_em')
+        )
+        status = self.request.GET.get('status', '')
+        tipo   = self.request.GET.get('tipo', '')
+        q      = self.request.GET.get('q', '')
+        if status:
+            qs = qs.filter(status=status)
+        if tipo:
+            qs = qs.filter(tipo=tipo)
+        if q:
+            qs = qs.filter(
+                Q(numero__icontains=q) |
+                Q(denunciante__icontains=q) |
+                Q(descricao__icontains=q) |
+                Q(denunciado_atleta__nome__icontains=q) |
+                Q(denunciado_equipe__nome_equipe__icontains=q)
+            )
+        return qs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['filtro_status'] = self.request.GET.get('status', '')
+        ctx['filtro_tipo']   = self.request.GET.get('tipo', '')
+        ctx['q']             = self.request.GET.get('q', '')
+        ctx['status_choices'] = ProcessoDesportivo.STATUS_CHOICES
+        ctx['tipo_choices']   = ProcessoDesportivo.TIPO_CHOICES
+        ctx['total_abertos']  = ProcessoDesportivo.objects.filter(status='aberto').count()
+        ctx['total_em_julgamento'] = ProcessoDesportivo.objects.filter(status='em_julgamento').count()
+        return ctx
+
+
+@login_required
+def processo_criar_view(request):
+    if request.method == 'POST':
+        form = ProcessoDesportivoForm(request.POST)
+        if form.is_valid():
+            processo = form.save()
+            messages.success(request, f"Processo {processo.numero} aberto com sucesso.")
+            return redirect(reverse('competicao:processo_detalhe', kwargs={'pk': processo.pk}))
+        for errs in form.errors.values():
+            for e in errs:
+                messages.warning(request, e)
+    else:
+        form = ProcessoDesportivoForm()
+    return render(request, 'competicao/processo_form.html', {'form': form})
+
+
+@login_required
+def processo_editar_view(request, pk):
+    processo = get_object_or_404(ProcessoDesportivo, pk=pk)
+    if request.method == 'POST':
+        form = ProcessoDesportivoForm(request.POST, instance=processo)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Processo atualizado.')
+            return redirect(reverse('competicao:processo_detalhe', kwargs={'pk': pk}))
+        for errs in form.errors.values():
+            for e in errs:
+                messages.warning(request, e)
+    else:
+        form = ProcessoDesportivoForm(instance=processo)
+    return render(request, 'competicao/processo_form.html', {'form': form, 'processo': processo})
+
+
+@login_required
+def processo_detalhe_view(request, pk):
+    processo = get_object_or_404(
+        ProcessoDesportivo.objects.select_related(
+            'competicao', 'jogo', 'denunciado_atleta', 'denunciado_equipe'
+        ),
+        pk=pk,
+    )
+    julgamento = getattr(processo, 'julgamento', None)
+    recursos = processo.recursos.order_by('-criado_em')
+    recurso_form = RecursoDesportivoForm()
+    return render(request, 'competicao/processo_detalhe.html', {
+        'processo': processo,
+        'julgamento': julgamento,
+        'recursos': recursos,
+        'recurso_form': recurso_form,
+    })
+
+
+@login_required
+def processo_arquivar_view(request, pk):
+    processo = get_object_or_404(ProcessoDesportivo, pk=pk)
+    if request.method == 'POST':
+        processo.status = 'arquivado'
+        processo.save(update_fields=['status', 'atualizado_em'])
+        messages.success(request, f"Processo {processo.numero} arquivado.")
+    return redirect(reverse('competicao:processo_detalhe', kwargs={'pk': pk}))
+
+
+@login_required
+def processo_reabrir_view(request, pk):
+    processo = get_object_or_404(ProcessoDesportivo, pk=pk)
+    if request.method == 'POST' and processo.status == 'arquivado':
+        processo.status = 'aberto'
+        processo.save(update_fields=['status', 'atualizado_em'])
+        messages.success(request, f"Processo {processo.numero} reaberto.")
+    return redirect(reverse('competicao:processo_detalhe', kwargs={'pk': pk}))
+
+
+@login_required
+def julgamento_criar_view(request, processo_pk):
+    from django.utils import timezone
+    processo = get_object_or_404(ProcessoDesportivo, pk=processo_pk)
+
+    if hasattr(processo, 'julgamento'):
+        messages.warning(request, 'Este processo já possui um julgamento.')
+        return redirect(reverse('competicao:processo_detalhe', kwargs={'pk': processo_pk}))
+
+    if request.method == 'POST':
+        form = JulgamentoForm(request.POST)
+        if form.is_valid():
+            julgamento = form.save(commit=False)
+            julgamento.processo = processo
+            julgamento.save()
+
+            # Atualiza status do processo
+            processo.status = 'julgado'
+            processo.save(update_fields=['status', 'atualizado_em'])
+
+            # Gera suspensão automática se necessário
+            if (
+                julgamento.penalidade == 'suspensao'
+                and julgamento.aplicar_suspensao
+                and processo.denunciado_atleta
+                and processo.competicao
+                and julgamento.jogos_suspensao
+            ):
+                for _ in range(julgamento.jogos_suspensao):
+                    Suspensao.objects.create(
+                        atleta=processo.denunciado_atleta,
+                        competicao=processo.competicao,
+                        motivo='tribunal',
+                        cumprida=False,
+                    )
+
+            messages.success(request, f"Processo julgado: {julgamento.get_penalidade_display()}.")
+            try:
+                from apps.auditoria.utils import registrar_auditoria
+                registrar_auditoria(
+                    request, 'julgar',
+                    descricao=f'Julgamento registrado no processo {processo.numero}: {julgamento.get_penalidade_display()}',
+                    objeto=julgamento,
+                )
+            except Exception:
+                pass
+            return redirect(reverse('competicao:processo_detalhe', kwargs={'pk': processo_pk}))
+        for errs in form.errors.values():
+            for e in errs:
+                messages.warning(request, e)
+    else:
+        form = JulgamentoForm()
+
+    return render(request, 'competicao/julgamento_form.html', {
+        'form': form,
+        'processo': processo,
+    })
+
+
+@login_required
+def recurso_criar_view(request, processo_pk):
+    processo = get_object_or_404(ProcessoDesportivo, pk=processo_pk)
+
+    if request.method == 'POST':
+        form = RecursoDesportivoForm(request.POST)
+        if form.is_valid():
+            recurso = form.save(commit=False)
+            recurso.processo = processo
+            recurso.save()
+            # Reabrir o processo para julgamento do recurso
+            if processo.status == 'julgado':
+                processo.status = 'em_julgamento'
+                processo.save(update_fields=['status', 'atualizado_em'])
+            messages.success(request, 'Recurso interposto com sucesso.')
+            return redirect(reverse('competicao:processo_detalhe', kwargs={'pk': processo_pk}))
+        for errs in form.errors.values():
+            for e in errs:
+                messages.warning(request, e)
+    return redirect(reverse('competicao:processo_detalhe', kwargs={'pk': processo_pk}))
+
+
+@login_required
+def recurso_decidir_view(request, pk):
+    from django.utils import timezone
+    recurso = get_object_or_404(RecursoDesportivo, pk=pk)
+    processo_pk = recurso.processo_id
+
+    if request.method == 'POST':
+        form = RecursoDecisaoForm(request.POST, instance=recurso)
+        if form.is_valid():
+            recurso = form.save(commit=False)
+            recurso.decidido_em = timezone.now()
+            recurso.save()
+            messages.success(request, f"Recurso decidido: {recurso.get_status_display()}.")
+            return redirect(reverse('competicao:processo_detalhe', kwargs={'pk': processo_pk}))
+        for errs in form.errors.values():
+            for e in errs:
+                messages.warning(request, e)
+
+    return render(request, 'competicao/recurso_decidir.html', {
+        'recurso': recurso,
+        'form': RecursoDecisaoForm(instance=recurso),
+    })
+
+
+# ---------------------------------------------------------------------------
+# Financeiro Federativo — Fase 5
+# ---------------------------------------------------------------------------
+
+@login_required
+def financeiro_dashboard_view(request):
+    from datetime import date
+    from django.db.models import Sum
+    hoje = date.today()
+    mes_ini = hoje.replace(day=1)
+
+    def _soma(qs):
+        return qs.aggregate(v=Sum('valor'))['v'] or 0
+
+    base = LancamentoFinanceiro.objects
+    receitas_pagas   = _soma(base.filter(tipo='receita', status='pago', data_pagamento__gte=mes_ini))
+    despesas_pagas   = _soma(base.filter(tipo='despesa', status='pago', data_pagamento__gte=mes_ini))
+    saldo_mes        = receitas_pagas - despesas_pagas
+
+    total_a_receber  = _soma(base.filter(tipo='receita', status='pendente'))
+    total_a_pagar    = _soma(base.filter(tipo='despesa', status='pendente'))
+
+    atrasados_count  = sum(1 for l in base.filter(status='pendente') if l.is_atrasado)
+
+    # Últimos 6 meses: receitas e despesas confirmadas
+    meses_labels, meses_rec, meses_des = [], [], []
+    for delta in range(5, -1, -1):
+        import calendar
+        from datetime import date as dt
+        ano = hoje.year if hoje.month - delta > 0 else hoje.year - 1
+        mes = (hoje.month - delta - 1) % 12 + 1
+        _, ultimo_dia = calendar.monthrange(ano, mes)
+        ini = dt(ano, mes, 1)
+        fim = dt(ano, mes, ultimo_dia)
+        meses_labels.append(f"{mes:02d}/{ano}")
+        meses_rec.append(float(_soma(base.filter(tipo='receita', status='pago',
+                                                  data_pagamento__gte=ini, data_pagamento__lte=fim))))
+        meses_des.append(float(_soma(base.filter(tipo='despesa', status='pago',
+                                                  data_pagamento__gte=ini, data_pagamento__lte=fim))))
+
+    recentes = base.select_related('competicao', 'equipe', 'atleta').order_by('-criado_em')[:12]
+
+    pendentes_urgentes = [
+        l for l in base.filter(status='pendente').order_by('data_vencimento')[:20]
+        if l.is_atrasado or (l.data_vencimento - hoje).days <= 7
+    ][:8]
+
+    return render(request, 'competicao/financeiro_dashboard.html', {
+        'receitas_pagas':   receitas_pagas,
+        'despesas_pagas':   despesas_pagas,
+        'saldo_mes':        saldo_mes,
+        'total_a_receber':  total_a_receber,
+        'total_a_pagar':    total_a_pagar,
+        'atrasados_count':  atrasados_count,
+        'meses_labels':     meses_labels,
+        'meses_rec':        meses_rec,
+        'meses_des':        meses_des,
+        'recentes':         recentes,
+        'pendentes_urgentes': pendentes_urgentes,
+    })
+
+
+class LancamentoListView(LoginRequiredMixin, ListView):
+    template_name       = 'competicao/lancamento_lista.html'
+    context_object_name = 'lancamentos'
+    paginate_by         = 30
+
+    def get_queryset(self):
+        qs = LancamentoFinanceiro.objects.select_related('competicao', 'equipe', 'atleta')
+        tipo   = self.request.GET.get('tipo', '')
+        status = self.request.GET.get('status', '')
+        cat    = self.request.GET.get('cat', '')
+        q      = self.request.GET.get('q', '')
+        comp   = self.request.GET.get('comp', '')
+        if tipo:
+            qs = qs.filter(tipo=tipo)
+        if status == 'atrasado':
+            from datetime import date
+            qs = qs.filter(status='pendente', data_vencimento__lt=date.today())
+        elif status:
+            qs = qs.filter(status=status)
+        if cat:
+            qs = qs.filter(categoria=cat)
+        if comp:
+            qs = qs.filter(competicao_id=comp)
+        if q:
+            qs = qs.filter(
+                Q(numero__icontains=q) | Q(descricao__icontains=q) |
+                Q(equipe__nome_equipe__icontains=q) | Q(atleta__nome__icontains=q)
+            )
+        return qs.order_by('-data_vencimento', '-criado_em')
+
+    def get_context_data(self, **kwargs):
+        from django.db.models import Sum
+        ctx = super().get_context_data(**kwargs)
+        ctx.update({
+            'filtro_tipo':   self.request.GET.get('tipo', ''),
+            'filtro_status': self.request.GET.get('status', ''),
+            'filtro_cat':    self.request.GET.get('cat', ''),
+            'filtro_comp':   self.request.GET.get('comp', ''),
+            'q':             self.request.GET.get('q', ''),
+            'tipo_choices':  LancamentoFinanceiro.TIPO_CHOICES,
+            'cat_choices':   LancamentoFinanceiro.CATEGORIA_CHOICES,
+            'competicoes':   Competicao.objects.order_by('nome'),
+            'total_filtrado':self.get_queryset().aggregate(v=Sum('valor'))['v'] or 0,
+        })
+        return ctx
+
+
+@login_required
+def lancamento_criar_view(request, tipo=None):
+    initial = {'tipo': tipo} if tipo else {}
+    if request.method == 'POST':
+        form = LancamentoFinanceiroForm(request.POST)
+        if form.is_valid():
+            lan = form.save()
+            messages.success(request, f"Lançamento {lan.numero} criado.")
+            return redirect(reverse('competicao:lancamento_detalhe', kwargs={'pk': lan.pk}))
+        for errs in form.errors.values():
+            for e in errs:
+                messages.warning(request, e)
+    else:
+        form = LancamentoFinanceiroForm(initial=initial)
+    return render(request, 'competicao/lancamento_form.html', {
+        'form': form,
+        'cat_receita': [v for v, _ in LancamentoFinanceiro.CAT_RECEITA],
+        'cat_despesa': [v for v, _ in LancamentoFinanceiro.CAT_DESPESA],
+    })
+
+
+@login_required
+def lancamento_editar_view(request, pk):
+    lan = get_object_or_404(LancamentoFinanceiro, pk=pk)
+    if request.method == 'POST':
+        form = LancamentoFinanceiroForm(request.POST, instance=lan)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Lançamento atualizado.')
+            return redirect(reverse('competicao:lancamento_detalhe', kwargs={'pk': pk}))
+        for errs in form.errors.values():
+            for e in errs:
+                messages.warning(request, e)
+    else:
+        form = LancamentoFinanceiroForm(instance=lan)
+    return render(request, 'competicao/lancamento_form.html', {
+        'form': form,
+        'lancamento': lan,
+        'cat_receita': [v for v, _ in LancamentoFinanceiro.CAT_RECEITA],
+        'cat_despesa': [v for v, _ in LancamentoFinanceiro.CAT_DESPESA],
+    })
+
+
+@login_required
+def lancamento_detalhe_view(request, pk):
+    lan = get_object_or_404(
+        LancamentoFinanceiro.objects.select_related('competicao', 'equipe', 'atleta'), pk=pk
+    )
+    baixar_form = BaixarPagamentoForm(instance=lan)
+    return render(request, 'competicao/lancamento_detalhe.html', {
+        'lan': lan,
+        'baixar_form': baixar_form,
+    })
+
+
+@login_required
+def lancamento_excluir_view(request, pk):
+    lan = get_object_or_404(LancamentoFinanceiro, pk=pk)
+    if request.method == 'POST':
+        numero = lan.numero
+        if lan.comprovante:
+            lan.comprovante.delete(save=False)
+        lan.delete()
+        messages.success(request, f"Lançamento {numero} excluído.")
+    return redirect(reverse('competicao:lancamento_lista'))
+
+
+@login_required
+def lancamento_baixar_view(request, pk):
+    """Registra o pagamento/recebimento de um lançamento pendente."""
+    lan = get_object_or_404(LancamentoFinanceiro, pk=pk)
+    if lan.status == 'pago':
+        messages.info(request, 'Este lançamento já está pago.')
+        return redirect(reverse('competicao:lancamento_detalhe', kwargs={'pk': pk}))
+
+    if request.method == 'POST':
+        form = BaixarPagamentoForm(request.POST, request.FILES, instance=lan)
+        if form.is_valid():
+            lancamento = form.save(commit=False)
+            lancamento.status = 'pago'
+            lancamento.save()
+            messages.success(request, f"Pagamento de {lan.numero} registrado.")
+            return redirect(reverse('competicao:lancamento_detalhe', kwargs={'pk': pk}))
+        for errs in form.errors.values():
+            for e in errs:
+                messages.warning(request, e)
+    return redirect(reverse('competicao:lancamento_detalhe', kwargs={'pk': pk}))
+
+
+@login_required
+def conciliacao_view(request):
+    """Baixa em lote de múltiplos lançamentos pendentes."""
+    from datetime import date
+    if request.method == 'POST':
+        ids   = request.POST.getlist('ids')
+        dt_pag = request.POST.get('data_pagamento') or str(date.today())
+        forma  = request.POST.get('forma_pagamento', '')
+        count  = 0
+        for lan in LancamentoFinanceiro.objects.filter(pk__in=ids, status='pendente'):
+            lan.status          = 'pago'
+            lan.data_pagamento  = dt_pag
+            lan.forma_pagamento = forma or lan.forma_pagamento
+            lan.save(update_fields=['status', 'data_pagamento', 'forma_pagamento', 'atualizado_em'])
+            count += 1
+        messages.success(request, f"{count} lançamento(s) baixado(s).")
+        return redirect(reverse('competicao:conciliacao'))
+
+    pendentes = LancamentoFinanceiro.objects.filter(status='pendente').order_by('data_vencimento')
+    return render(request, 'competicao/conciliacao.html', {
+        'pendentes': pendentes,
+        'forma_choices': LancamentoFinanceiro.FORMA_CHOICES,
+        'hoje': date.today(),
+    })
+
+
+@login_required
+def pdf_comprovante_view(request, pk):
+    lan = get_object_or_404(
+        LancamentoFinanceiro.objects.select_related('competicao', 'equipe', 'atleta'), pk=pk
+    )
+    return render(request, 'competicao/pdf_comprovante.html', {'lan': lan})
+
+
+# ===========================================================================
+# FASE 6 — Portal Público
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# Portal: views públicas (sem login)
+# ---------------------------------------------------------------------------
+
+def portal_home_view(request):
+    destaques     = Publicacao.objects.filter(publicado=True, destaque=True).order_by('-publicado_em')[:3]
+    ultimas       = Publicacao.objects.filter(publicado=True).order_by('-publicado_em')[:6]
+    comunicados   = Publicacao.objects.filter(publicado=True, tipo='comunicado').order_by('-publicado_em')[:5]
+    competicoes   = Competicao.objects.all().order_by('-data_inicio')[:6]
+    return render(request, 'portal/home.html', {
+        'destaques':   destaques,
+        'ultimas':     ultimas,
+        'comunicados': comunicados,
+        'competicoes': competicoes,
+    })
+
+
+def portal_publicacao_lista_view(request):
+    tipo = request.GET.get('tipo', '')
+    qs   = Publicacao.objects.filter(publicado=True)
+    if tipo:
+        qs = qs.filter(tipo=tipo)
+    qs = qs.order_by('-publicado_em')
+    return render(request, 'portal/publicacao_lista.html', {
+        'publicacoes':    qs,
+        'tipo_filtro':    tipo,
+        'tipo_choices':   Publicacao.TIPO_CHOICES,
+    })
+
+
+def portal_publicacao_detalhe_view(request, slug):
+    pub = get_object_or_404(Publicacao, slug=slug, publicado=True)
+    relacionadas = Publicacao.objects.filter(
+        publicado=True, tipo=pub.tipo
+    ).exclude(pk=pub.pk).order_by('-publicado_em')[:4]
+    return render(request, 'portal/publicacao_detalhe.html', {
+        'pub':         pub,
+        'relacionadas': relacionadas,
+    })
+
+
+def portal_clube_view(request, pk):
+    equipe = get_object_or_404(Equipe, pk=pk)
+    from django.db.models import Avg
+
+    jogos_qs = Jogo.objects.filter(
+        Q(equipe_casa=equipe) | Q(equipe_fora=equipe), finalizado=True
+    ).select_related('equipe_casa', 'equipe_fora', 'rodada__competicao')
+
+    total_jogos   = jogos_qs.count()
+    total_gols    = Gol.objects.filter(equipe=equipe).count()
+    total_amarelos = Cartao.objects.filter(atleta__equipe=equipe, tipo='Amarelo').count()
+    total_vermelhos = Cartao.objects.filter(atleta__equipe=equipe, tipo='Vermelho').count()
+
+    competicoes = Competicao.objects.filter(equipes=equipe).distinct().order_by('-data_inicio')
+
+    inscricoes = InscricaoAtleta.objects.filter(
+        competicao__equipes=equipe, atleta__equipe=equipe
+    ).select_related('atleta', 'competicao').distinct().order_by('numero_camisa')
+
+    jogos_recentes = jogos_qs.order_by('-data_hora')[:10]
+
+    return render(request, 'portal/clube.html', {
+        'equipe':          equipe,
+        'total_jogos':     total_jogos,
+        'total_gols':      total_gols,
+        'total_amarelos':  total_amarelos,
+        'total_vermelhos': total_vermelhos,
+        'competicoes':     competicoes,
+        'inscricoes':      inscricoes,
+        'jogos_recentes':  jogos_recentes,
+    })
+
+
+def portal_atleta_view(request, pk):
+    from django.db.models import Avg
+    atleta = get_object_or_404(Atleta.objects.select_related('equipe'), pk=pk)
+
+    total_gols      = Gol.objects.filter(atleta=atleta).count()
+    total_amarelos  = Cartao.objects.filter(atleta=atleta, tipo='Amarelo').count()
+    total_vermelhos = Cartao.objects.filter(atleta=atleta, tipo='Vermelho').count()
+    total_assistencias = Gol.objects.filter(assistencia=atleta).count()
+
+    jogos_com_atleta = EscalacaoJogo.objects.filter(
+        atleta=atleta
+    ).select_related('jogo__equipe_casa', 'jogo__equipe_fora', 'jogo__rodada__competicao').count()
+
+    competicoes = InscricaoAtleta.objects.filter(
+        atleta=atleta
+    ).select_related('competicao').order_by('-competicao__data_inicio')
+
+    gols_recentes = Gol.objects.filter(
+        atleta=atleta
+    ).select_related('jogo__equipe_casa', 'jogo__equipe_fora', 'equipe').order_by('-jogo__data_hora')[:10]
+
+    return render(request, 'portal/atleta.html', {
+        'atleta':           atleta,
+        'total_gols':       total_gols,
+        'total_amarelos':   total_amarelos,
+        'total_vermelhos':  total_vermelhos,
+        'total_assistencias': total_assistencias,
+        'total_jogos':      jogos_com_atleta,
+        'competicoes':      competicoes,
+        'gols_recentes':    gols_recentes,
+    })
+
+
+def portal_arbitro_view(request, pk):
+    from django.db.models import Avg
+    arbitro = get_object_or_404(Arbitro, pk=pk)
+
+    jogos_arbitrados = ArbitrosJogo.objects.filter(
+        arbitro=arbitro
+    ).select_related('jogo__equipe_casa', 'jogo__equipe_fora', 'jogo__rodada__competicao').order_by('-jogo__data_hora')
+
+    total_jogos  = jogos_arbitrados.count()
+    media_nota   = AvaliacaoArbitro.objects.filter(
+        jogo__arbitros_jogo__arbitro=arbitro
+    ).aggregate(media=Avg('nota'))['media']
+
+    jogos_recentes = jogos_arbitrados[:10]
+
+    return render(request, 'portal/arbitro.html', {
+        'arbitro':       arbitro,
+        'total_jogos':   total_jogos,
+        'media_nota':    media_nota,
+        'jogos_recentes': jogos_recentes,
+    })
+
+
+# ---------------------------------------------------------------------------
+# Portal: gestão (com login)
+# ---------------------------------------------------------------------------
+
+@login_required
+def publicacao_admin_lista_view(request):
+    tipo = request.GET.get('tipo', '')
+    q    = request.GET.get('q', '')
+    qs   = Publicacao.objects.all()
+    if tipo:
+        qs = qs.filter(tipo=tipo)
+    if q:
+        qs = qs.filter(Q(titulo__icontains=q) | Q(resumo__icontains=q))
+    qs = qs.order_by('-criado_em')
+    return render(request, 'competicao/publicacao_admin.html', {
+        'publicacoes':  qs,
+        'tipo_filtro':  tipo,
+        'q':            q,
+        'tipo_choices': Publicacao.TIPO_CHOICES,
+    })
+
+
+@login_required
+def publicacao_criar_view(request):
+    form = PublicacaoForm(request.POST or None, request.FILES or None)
+    if form.is_valid():
+        pub = form.save()
+        messages.success(request, 'Publicação criada com sucesso.')
+        return redirect(reverse('competicao:publicacao_admin_lista'))
+    return render(request, 'competicao/publicacao_form.html', {
+        'form':  form,
+        'titulo_pagina': 'Nova Publicação',
+    })
+
+
+@login_required
+def publicacao_editar_view(request, pk):
+    pub  = get_object_or_404(Publicacao, pk=pk)
+    form = PublicacaoForm(request.POST or None, request.FILES or None, instance=pub)
+    if form.is_valid():
+        form.save()
+        messages.success(request, 'Publicação atualizada.')
+        return redirect(reverse('competicao:publicacao_admin_lista'))
+    return render(request, 'competicao/publicacao_form.html', {
+        'form':           form,
+        'pub':            pub,
+        'titulo_pagina':  'Editar Publicação',
+    })
+
+
+@login_required
+def publicacao_excluir_view(request, pk):
+    pub = get_object_or_404(Publicacao, pk=pk)
+    if request.method == 'POST':
+        pub.delete()
+        messages.success(request, 'Publicação excluída.')
+        return redirect(reverse('competicao:publicacao_admin_lista'))
+    return redirect(reverse('competicao:publicacao_admin_lista'))

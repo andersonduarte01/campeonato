@@ -1,0 +1,91 @@
+{% extends 'portal/base.html' %}
+{% block titulo %}
+  {% if tipo_filtro %}{{ tipo_filtro|capfirst }}{% else %}Publicações{% endif %}
+{% endblock %}
+
+{% block conteudo %}
+
+<!-- Header da seção -->
+<section class="bg-base-200 border-b border-base-300">
+  <div class="max-w-6xl mx-auto px-4 py-8">
+    <div class="flex items-center gap-2 mb-1">
+      <i class="bi bi-newspaper text-warning text-sm"></i>
+      <span class="text-xs font-bold uppercase tracking-widest text-base-content/40">Portal Federativo</span>
+    </div>
+    <h1 class="section-heading text-5xl text-base-content leading-none">
+      {% if tipo_filtro == 'noticia' %}NOTÍCIAS
+      {% elif tipo_filtro == 'comunicado' %}COMUNICADOS
+      {% elif tipo_filtro == 'regulamento' %}REGULAMENTOS
+      {% elif tipo_filtro == 'documento_oficial' %}DOCUMENTOS OFICIAIS
+      {% else %}PUBLICAÇÕES{% endif %}
+    </h1>
+  </div>
+</section>
+
+<div class="max-w-6xl mx-auto px-4 py-8 space-y-6">
+
+  <!-- Filtro por tipo -->
+  <div class="flex flex-wrap gap-2">
+    <a href="{% url 'competicao:portal_publicacao_lista' %}"
+       class="btn btn-sm {% if not tipo_filtro %}btn-warning{% else %}btn-ghost border border-base-content/15{% endif %}">
+      Todos
+    </a>
+    {% for v, l in tipo_choices %}
+    <a href="{% url 'competicao:portal_publicacao_lista' %}?tipo={{ v }}"
+       class="btn btn-sm {% if tipo_filtro == v %}btn-warning{% else %}btn-ghost border border-base-content/15{% endif %}">
+      {{ l }}
+    </a>
+    {% endfor %}
+  </div>
+
+  <!-- Lista -->
+  <div class="space-y-3">
+    {% for pub in publicacoes %}
+    <a href="{% url 'competicao:portal_publicacao_detalhe' pub.slug %}"
+       class="flex gap-5 p-5 bg-base-200 border border-base-300 rounded-xl hover:border-warning/30 transition-colors group">
+      {% if pub.imagem_capa %}
+      <div class="w-24 h-20 rounded-lg overflow-hidden shrink-0">
+        <img src="{{ pub.imagem_capa.url }}" alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+      </div>
+      {% else %}
+      <div class="w-24 h-20 rounded-lg bg-base-300/50 flex items-center justify-center shrink-0">
+        <i class="bi bi-{% if pub.tipo == 'noticia' %}newspaper{% elif pub.tipo == 'comunicado' %}megaphone{% elif pub.tipo == 'regulamento' %}journal-text{% else %}file-earmark-text{% endif %} text-3xl text-base-content/15"></i>
+      </div>
+      {% endif %}
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="badge badge-xs badge-warning">{{ pub.get_tipo_display }}</span>
+          {% if pub.publicado_em %}
+          <span class="text-xs text-base-content/30">{{ pub.publicado_em|date:"d/m/Y" }}</span>
+          {% endif %}
+          {% if pub.destaque %}
+          <span class="badge badge-xs badge-outline text-warning/60 border-warning/30">Destaque</span>
+          {% endif %}
+        </div>
+        <h3 class="font-semibold text-base text-base-content group-hover:text-warning transition-colors leading-snug">
+          {{ pub.titulo }}
+        </h3>
+        {% if pub.resumo %}
+        <p class="text-sm text-base-content/40 mt-1 line-clamp-2">{{ pub.resumo }}</p>
+        {% endif %}
+        {% if pub.arquivo %}
+        <div class="flex items-center gap-1 mt-2 text-xs text-base-content/30">
+          <i class="bi bi-paperclip"></i> Possui arquivo em anexo
+        </div>
+        {% endif %}
+      </div>
+      <i class="bi bi-arrow-right text-base-content/20 group-hover:text-warning transition-colors self-center text-sm shrink-0"></i>
+    </a>
+    {% empty %}
+    <div class="text-center py-16 text-base-content/25">
+      <i class="bi bi-newspaper text-5xl block mb-3"></i>
+      <p class="text-sm">Nenhuma publicação encontrada.</p>
+      {% if tipo_filtro %}
+      <a href="{% url 'competicao:portal_publicacao_lista' %}" class="text-xs text-warning mt-2 inline-block">Ver todas</a>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}

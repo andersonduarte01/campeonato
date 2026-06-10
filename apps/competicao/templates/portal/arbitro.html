@@ -1,0 +1,134 @@
+{% extends 'portal/base.html' %}
+{% block titulo %}Árbitro {{ arbitro.nome }}{% endblock %}
+
+{% block conteudo %}
+
+<!-- Cabeçalho do árbitro -->
+<section class="bg-base-200 border-b border-base-300 relative overflow-hidden">
+  <div class="absolute inset-0 opacity-[0.03]"
+       style="background-image: repeating-linear-gradient(45deg, oklch(80% 0.18 85) 0px, transparent 1px, transparent 24px, oklch(80% 0.18 85) 25px, transparent 26px);">
+  </div>
+  <div class="max-w-6xl mx-auto px-4 py-10 relative">
+    <div class="flex items-center gap-6">
+      {% if arbitro.foto %}
+      <div class="w-24 h-24 rounded-2xl overflow-hidden border border-base-300 bg-base-300/50 shrink-0">
+        <img src="{{ arbitro.foto.url }}" alt="{{ arbitro.nome }}" class="w-full h-full object-cover">
+      </div>
+      {% else %}
+      <div class="w-24 h-24 rounded-2xl bg-base-300/50 border border-base-300 flex items-center justify-center shrink-0">
+        <i class="bi bi-person-fill text-5xl text-base-content/20"></i>
+      </div>
+      {% endif %}
+      <div>
+        <div class="flex items-center gap-2 mb-1">
+          <i class="bi bi-whistle text-warning text-xs"></i>
+          <span class="text-xs font-bold uppercase tracking-widest text-base-content/40">Árbitro</span>
+          {% if arbitro.categoria %}
+          <span class="badge badge-xs badge-warning">{{ arbitro.get_categoria_display }}</span>
+          {% endif %}
+        </div>
+        <h1 class="font-title text-5xl text-base-content leading-none">{{ arbitro.nome|upper }}</h1>
+        {% if arbitro.data_nascimento %}
+        <p class="text-xs text-base-content/30 mt-1">{{ arbitro.data_nascimento|date:"d/m/Y" }}</p>
+        {% endif %}
+        {% if not arbitro.ativo %}
+        <span class="badge badge-xs badge-error mt-1">Inativo</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="max-w-6xl mx-auto px-4 py-8 space-y-8">
+
+  <!-- KPIs -->
+  <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+    <div class="card bg-base-200 border border-base-300 p-5 text-center">
+      <p class="stat-number text-3xl text-warning">{{ total_jogos }}</p>
+      <p class="text-xs text-base-content/40 mt-1 font-semibold uppercase tracking-wider">Jogos Apitados</p>
+    </div>
+    <div class="card bg-base-200 border border-base-300 p-5 text-center">
+      {% if media_nota %}
+      <p class="stat-number text-3xl text-success">{{ media_nota|floatformat:1 }}</p>
+      {% else %}
+      <p class="stat-number text-3xl text-base-content/20">—</p>
+      {% endif %}
+      <p class="text-xs text-base-content/40 mt-1 font-semibold uppercase tracking-wider">Avaliação Média</p>
+    </div>
+    <div class="card bg-base-200 border border-base-300 p-5 text-center col-span-2 sm:col-span-1">
+      <p class="stat-number text-3xl text-info/70 capitalize">{{ arbitro.get_categoria_display|default:"—" }}</p>
+      <p class="text-xs text-base-content/40 mt-1 font-semibold uppercase tracking-wider">Categoria</p>
+    </div>
+  </div>
+
+  <!-- Partidas recentes -->
+  {% if jogos_recentes %}
+  <div class="space-y-4">
+    <div class="flex items-center gap-2">
+      <i class="bi bi-whistle-fill text-warning text-sm"></i>
+      <h2 class="section-heading text-2xl text-base-content">PARTIDAS APITADAS</h2>
+    </div>
+    <div class="card bg-base-200 border border-base-300 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="table table-sm w-full">
+          <thead>
+            <tr class="text-xs font-bold uppercase tracking-wider text-base-content/40 border-b border-base-300">
+              <th class="py-3">Data</th>
+              <th>Partida</th>
+              <th>Competição</th>
+              <th>Função</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for aj in jogos_recentes %}
+            <tr class="border-b border-base-300/40 hover:bg-base-300/20 transition-colors">
+              <td class="text-xs text-base-content/40 whitespace-nowrap">
+                {{ aj.jogo.data_hora|date:"d/m/Y" }}
+              </td>
+              <td class="text-sm">
+                <p class="font-medium text-base-content truncate max-w-48">
+                  {{ aj.jogo.equipe_casa.nome_equipe }}
+                  <span class="text-base-content/30 mx-1">×</span>
+                  {{ aj.jogo.equipe_fora.nome_equipe }}
+                </p>
+                {% if aj.jogo.finalizado %}
+                <p class="text-xs text-base-content/30 font-mono">
+                  {{ aj.jogo.gols_casa }} – {{ aj.jogo.gols_fora }}
+                </p>
+                {% endif %}
+              </td>
+              <td class="text-xs text-base-content/40 truncate max-w-28">
+                {{ aj.jogo.rodada.competicao.nome }}
+              </td>
+              <td>
+                <span class="badge badge-xs badge-outline text-base-content/40">{{ aj.get_tipo_display }}</span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="text-center py-12 text-base-content/20">
+    <i class="bi bi-whistle text-5xl block mb-3"></i>
+    <p class="text-sm">Nenhuma partida registrada.</p>
+  </div>
+  {% endif %}
+
+  <!-- Certificações -->
+  {% if arbitro.certificacoes %}
+  <div class="space-y-3">
+    <div class="flex items-center gap-2">
+      <i class="bi bi-award text-warning text-sm"></i>
+      <h2 class="section-heading text-2xl text-base-content">CERTIFICAÇÕES</h2>
+    </div>
+    <div class="card bg-base-200 border border-base-300 p-4">
+      <p class="text-sm text-base-content/60 leading-relaxed">{{ arbitro.certificacoes }}</p>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

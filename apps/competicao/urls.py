@@ -70,8 +70,19 @@ urlpatterns = [
     path('locais/<int:pk>/excluir/', views.local_excluir_view, name='local_excluir'),
     path('arbitros/', views.ArbitroListView.as_view(), name='arbitro_lista'),
     path('arbitros/criar/', views.arbitro_criar_view, name='arbitro_criar'),
+    path('arbitros/<int:pk>/', views.arbitro_detalhe_view, name='arbitro_detalhe'),
     path('arbitros/<int:pk>/editar/', views.arbitro_editar_view, name='arbitro_editar'),
     path('arbitros/<int:pk>/excluir/', views.arbitro_excluir_view, name='arbitro_excluir'),
+    path('jogo/<int:jogo_pk>/escala-inteligente/', views.escala_inteligente_view, name='escala_inteligente'),
+
+    # Súmula Digital — Fase 3
+    path('jogo/<int:jogo_pk>/sumula/', views.sumula_digital_view, name='sumula_digital'),
+    path('jogo/<int:jogo_pk>/sumula/ocorrencia/', views.sumula_ocorrencia_criar_view, name='sumula_ocorrencia_criar'),
+    path('jogo/sumula/ocorrencia/<int:pk>/excluir/', views.sumula_ocorrencia_excluir_view, name='sumula_ocorrencia_excluir'),
+    path('jogo/<int:jogo_pk>/sumula/anexo/', views.sumula_anexo_criar_view, name='sumula_anexo_criar'),
+    path('jogo/sumula/anexo/<int:pk>/excluir/', views.sumula_anexo_excluir_view, name='sumula_anexo_excluir'),
+    path('jogo/<int:jogo_pk>/sumula/assinar/<str:papel>/', views.sumula_assinar_view, name='sumula_assinar'),
+    path('jogo/<int:jogo_pk>/sumula/finalizar/', views.sumula_finalizar_view, name='sumula_finalizar'),
 
     # PDF extras (M)
     path('<int:competicao_pk>/equipe/<int:equipe_pk>/pdf/elenco/', views.pdf_elenco_view, name='pdf_elenco'),
@@ -88,6 +99,31 @@ urlpatterns = [
 
     # 3º lugar (R)
     path('fases/<int:fase_pk>/terceiro-lugar/', views.terceiro_lugar_criar_view, name='terceiro_lugar_criar'),
+
+    # Tribunal Desportivo — Fase 4
+    path('tribunal/', views.tribunal_dashboard_view, name='tribunal_dashboard'),
+    path('tribunal/processos/', views.ProcessoListView.as_view(), name='processo_lista'),
+    path('tribunal/processos/criar/', views.processo_criar_view, name='processo_criar'),
+    path('tribunal/processos/<int:pk>/', views.processo_detalhe_view, name='processo_detalhe'),
+    path('tribunal/processos/<int:pk>/editar/', views.processo_editar_view, name='processo_editar'),
+    path('tribunal/processos/<int:pk>/arquivar/', views.processo_arquivar_view, name='processo_arquivar'),
+    path('tribunal/processos/<int:pk>/reabrir/', views.processo_reabrir_view, name='processo_reabrir'),
+    path('tribunal/processos/<int:processo_pk>/julgar/', views.julgamento_criar_view, name='julgamento_criar'),
+    path('tribunal/processos/<int:processo_pk>/recurso/', views.recurso_criar_view, name='recurso_criar'),
+    path('tribunal/recurso/<int:pk>/decidir/', views.recurso_decidir_view, name='recurso_decidir'),
+
+    # Financeiro Federativo — Fase 5
+    path('financeiro/', views.financeiro_dashboard_view, name='financeiro_dashboard'),
+    path('financeiro/lancamentos/', views.LancamentoListView.as_view(), name='lancamento_lista'),
+    path('financeiro/lancamentos/criar/', views.lancamento_criar_view, name='lancamento_criar'),
+    path('financeiro/lancamentos/criar/receita/', views.lancamento_criar_view, {'tipo': 'receita'}, name='lancamento_criar_receita'),
+    path('financeiro/lancamentos/criar/despesa/', views.lancamento_criar_view, {'tipo': 'despesa'}, name='lancamento_criar_despesa'),
+    path('financeiro/lancamentos/<int:pk>/', views.lancamento_detalhe_view, name='lancamento_detalhe'),
+    path('financeiro/lancamentos/<int:pk>/editar/', views.lancamento_editar_view, name='lancamento_editar'),
+    path('financeiro/lancamentos/<int:pk>/excluir/', views.lancamento_excluir_view, name='lancamento_excluir'),
+    path('financeiro/lancamentos/<int:pk>/baixar/', views.lancamento_baixar_view, name='lancamento_baixar'),
+    path('financeiro/conciliacao/', views.conciliacao_view, name='conciliacao'),
+    path('financeiro/lancamentos/<int:pk>/comprovante/', views.pdf_comprovante_view, name='pdf_comprovante'),
 
     # Busca global (T)
     path('busca/', views.busca_global_view, name='busca_global'),
@@ -106,4 +142,18 @@ urlpatterns = [
     path('api/<int:pk>/classificacao/', views.api_classificacao_view, name='api_classificacao'),
     path('api/<int:pk>/jogos/', views.api_jogos_view, name='api_jogos'),
     path('api/<int:pk>/artilheiros/', views.api_artilheiros_view, name='api_artilheiros'),
+
+    # Portal Público — Fase 6 (público, sem login)
+    path('portal/', views.portal_home_view, name='portal_home'),
+    path('portal/publicacoes/', views.portal_publicacao_lista_view, name='portal_publicacao_lista'),
+    path('portal/publicacoes/<slug:slug>/', views.portal_publicacao_detalhe_view, name='portal_publicacao_detalhe'),
+    path('portal/clube/<int:pk>/', views.portal_clube_view, name='portal_clube'),
+    path('portal/atleta/<int:pk>/', views.portal_atleta_view, name='portal_atleta'),
+    path('portal/arbitro/<int:pk>/', views.portal_arbitro_view, name='portal_arbitro'),
+
+    # Portal: gestão de conteúdo (com login)
+    path('portal/admin/', views.publicacao_admin_lista_view, name='publicacao_admin_lista'),
+    path('portal/admin/criar/', views.publicacao_criar_view, name='publicacao_criar'),
+    path('portal/admin/<int:pk>/editar/', views.publicacao_editar_view, name='publicacao_editar'),
+    path('portal/admin/<int:pk>/excluir/', views.publicacao_excluir_view, name='publicacao_excluir'),
 ]

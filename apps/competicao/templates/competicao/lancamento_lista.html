@@ -1,0 +1,163 @@
+{% extends 'base/indice.html' %}
+{% block titulo %}Lançamentos Financeiros{% endblock %}
+
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-base-content/40">
+    <ul>
+      <li><a href="{% url 'competicao:financeiro_dashboard' %}" class="hover:text-base-content/70">Financeiro</a></li>
+      <li><span class="text-base-content/60">Lançamentos</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block conteudo %}
+<div class="p-4 md:p-6 max-w-[1200px] mx-auto space-y-5">
+
+  <!-- Cabeçalho -->
+  <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+    <div>
+      <h1 class="section-heading text-4xl text-base-content leading-none">LANÇAMENTOS</h1>
+      {% if total_filtrado %}
+      <p class="text-sm text-base-content/40 mt-1 font-mono">
+        Total filtrado: <span class="font-bold text-base-content">R$ {{ total_filtrado|floatformat:2 }}</span>
+      </p>
+      {% endif %}
+    </div>
+    <div class="flex items-center gap-2">
+      <a href="{% url 'competicao:conciliacao' %}" class="btn btn-ghost btn-sm border border-base-content/10 gap-1">
+        <i class="bi bi-check2-square text-sm"></i> Conciliar
+      </a>
+      <a href="{% url 'competicao:lancamento_criar_despesa' %}"
+         class="btn btn-ghost btn-sm border border-error/30 text-error hover:bg-error/10 gap-1">
+        <i class="bi bi-dash-circle-fill text-sm"></i> Despesa
+      </a>
+      <a href="{% url 'competicao:lancamento_criar_receita' %}"
+         class="btn btn-warning btn-sm gap-1.5 font-semibold shadow shadow-warning/20">
+        <i class="bi bi-plus-circle-fill text-sm"></i> Receita
+      </a>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <form method="get" class="flex flex-wrap items-end gap-2">
+    <label class="input input-sm input-bordered flex items-center gap-2 flex-1 min-w-48">
+      <i class="bi bi-search text-xs text-base-content/30"></i>
+      <input type="search" name="q" value="{{ q }}" placeholder="Buscar por número, descrição..." class="grow bg-transparent outline-none text-sm">
+    </label>
+    <select name="tipo" class="select select-sm select-bordered">
+      <option value="">Tipo</option>
+      {% for v, l in tipo_choices %}<option value="{{ v }}" {% if filtro_tipo == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
+    </select>
+    <select name="status" class="select select-sm select-bordered">
+      <option value="">Status</option>
+      <option value="pendente"  {% if filtro_status == 'pendente' %}selected{% endif %}>Pendente</option>
+      <option value="pago"      {% if filtro_status == 'pago' %}selected{% endif %}>Pago</option>
+      <option value="atrasado"  {% if filtro_status == 'atrasado' %}selected{% endif %}>Atrasado</option>
+      <option value="cancelado" {% if filtro_status == 'cancelado' %}selected{% endif %}>Cancelado</option>
+    </select>
+    <select name="cat" class="select select-sm select-bordered">
+      <option value="">Categoria</option>
+      {% for v, l in cat_choices %}<option value="{{ v }}" {% if filtro_cat == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
+    </select>
+    <select name="comp" class="select select-sm select-bordered">
+      <option value="">Competição</option>
+      {% for c in competicoes %}<option value="{{ c.pk }}" {% if filtro_comp == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.nome }}</option>{% endfor %}
+    </select>
+    <button type="submit" class="btn btn-sm btn-ghost border border-base-content/10">
+      <i class="bi bi-funnel text-sm"></i>
+    </button>
+    {% if q or filtro_tipo or filtro_status or filtro_cat or filtro_comp %}
+    <a href="{% url 'competicao:lancamento_lista' %}" class="btn btn-sm btn-ghost text-error/60 hover:text-error">
+      <i class="bi bi-x text-sm"></i>
+    </a>
+    {% endif %}
+  </form>
+
+  <!-- Tabela -->
+  <div class="card bg-base-200 border border-base-300 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="table table-sm w-full">
+        <thead>
+          <tr class="text-xs font-bold uppercase tracking-wider text-base-content/40 border-b border-base-300">
+            <th class="py-3">Nº</th>
+            <th>Tipo / Categoria</th>
+            <th>Descrição</th>
+            <th>Vencimento</th>
+            <th>Pagamento</th>
+            <th class="text-right">Valor</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for l in lancamentos %}
+          <tr class="hover:bg-base-300/30 transition-colors border-b border-base-300/50">
+            <td class="font-mono text-xs text-base-content/50 py-3">
+              <a href="{% url 'competicao:lancamento_detalhe' l.pk %}" class="hover:text-warning font-semibold">{{ l.numero }}</a>
+            </td>
+            <td>
+              <div class="flex flex-col gap-0.5">
+                <span class="badge badge-xs {% if l.tipo == 'receita' %}badge-success{% else %}badge-error{% endif %}">{{ l.get_tipo_display }}</span>
+                <span class="text-xs text-base-content/40">{{ l.get_categoria_display }}</span>
+              </div>
+            </td>
+            <td class="text-sm max-w-48">
+              <p class="truncate">{{ l.descricao }}</p>
+              {% if l.competicao %}<p class="text-xs text-base-content/30 truncate">{{ l.competicao.nome }}</p>{% endif %}
+            </td>
+            <td class="text-xs {% if l.is_atrasado %}text-error font-bold{% else %}text-base-content/50{% endif %}">
+              {{ l.data_vencimento|date:"d/m/Y" }}
+            </td>
+            <td class="text-xs text-base-content/50">
+              {{ l.data_pagamento|date:"d/m/Y"|default:"—" }}
+            </td>
+            <td class="text-right font-mono font-bold {% if l.tipo == 'receita' %}text-success{% else %}text-error{% endif %}">
+              {% if l.tipo == 'receita' %}+{% else %}-{% endif %}R$ {{ l.valor|floatformat:2 }}
+            </td>
+            <td>
+              <span class="badge {{ l.status_badge_class }} badge-xs whitespace-nowrap">
+                {% if l.is_atrasado %}Atrasado{% else %}{{ l.get_status_display }}{% endif %}
+              </span>
+            </td>
+            <td>
+              <div class="flex items-center gap-1">
+                {% if l.status == 'pendente' %}
+                <a href="{% url 'competicao:lancamento_detalhe' l.pk %}"
+                   class="btn btn-ghost btn-xs border border-success/30 text-success/70 hover:bg-success/10 hover:text-success"
+                   title="Registrar pagamento">
+                  <i class="bi bi-check-circle text-xs"></i>
+                </a>
+                {% endif %}
+                <a href="{% url 'competicao:lancamento_editar' l.pk %}" class="btn btn-ghost btn-xs" title="Editar">
+                  <i class="bi bi-pencil text-xs"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="8" class="text-center py-12 text-base-content/30 text-sm">Nenhum lançamento encontrado</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Paginação -->
+  {% if is_paginated %}
+  <div class="flex justify-center">
+    <div class="join">
+      {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}&tipo={{ filtro_tipo }}&status={{ filtro_status }}&cat={{ filtro_cat }}&q={{ q }}" class="join-item btn btn-sm">«</a>
+      {% endif %}
+      <button class="join-item btn btn-sm">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</button>
+      {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}&tipo={{ filtro_tipo }}&status={{ filtro_status }}&cat={{ filtro_cat }}&q={{ q }}" class="join-item btn btn-sm">»</a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

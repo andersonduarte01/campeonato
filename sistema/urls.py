@@ -10,4 +10,5 @@ urlpatterns = [
     path('competicao/', include('apps.competicao.urls', namespace='competicao')),
     path('criterios/', include('apps.criterios.urls', namespace='criterios')),
     path('federacao/', include('apps.federacao.urls', namespace='federacao')),
+    path('auditoria/', include('apps.auditoria.urls', namespace='auditoria')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

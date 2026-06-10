@@ -1,0 +1,156 @@
+{% extends 'base/indice.html' %}
+{% block titulo %}Tribunal Desportivo{% endblock %}
+
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-base-content/40">
+    <ul>
+      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-base-content/70">Dashboard</a></li>
+      <li><span class="text-base-content/60">Tribunal Desportivo</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block conteudo %}
+<div class="p-4 md:p-6 max-w-[1200px] mx-auto space-y-5">
+
+  <!-- ── Cabeçalho ── -->
+  <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2 mb-1">
+        <i class="bi bi-hammer text-warning text-sm"></i>
+        <span class="text-xs font-bold uppercase tracking-widest text-base-content/40">Fase 4 — Tribunal Desportivo</span>
+      </div>
+      <h1 class="section-heading text-4xl text-base-content leading-none">TRIBUNAL DESPORTIVO</h1>
+      <p class="text-sm text-base-content/40 mt-1">Gestão de processos, julgamentos, penalidades e recursos</p>
+    </div>
+    <a href="{% url 'competicao:processo_criar' %}"
+       class="btn btn-warning gap-2 font-bold shadow shadow-warning/20 shrink-0">
+      <i class="bi bi-plus-circle-fill"></i> Novo Processo
+    </a>
+  </div>
+
+  <!-- ── KPIs ── -->
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+
+    <div class="card bg-base-200 border border-base-300 p-4 text-center col-span-1">
+      <p class="stat-number text-3xl text-base-content">{{ total }}</p>
+      <p class="text-xs text-base-content/40 font-medium uppercase tracking-wider mt-1">Total</p>
+    </div>
+
+    <div class="card bg-warning/5 border border-warning/20 p-4 text-center">
+      <p class="stat-number text-3xl text-warning">{{ abertos }}</p>
+      <p class="text-xs text-warning/60 font-medium uppercase tracking-wider mt-1">Abertos</p>
+    </div>
+
+    <div class="card bg-info/5 border border-info/20 p-4 text-center">
+      <p class="stat-number text-3xl text-info">{{ em_julgamento }}</p>
+      <p class="text-xs text-info/60 font-medium uppercase tracking-wider mt-1">Em Julgamento</p>
+    </div>
+
+    <div class="card bg-success/5 border border-success/20 p-4 text-center">
+      <p class="stat-number text-3xl text-success">{{ julgados }}</p>
+      <p class="text-xs text-success/60 font-medium uppercase tracking-wider mt-1">Julgados</p>
+    </div>
+
+    <div class="card bg-base-200 border border-base-300 p-4 text-center">
+      <p class="stat-number text-3xl text-base-content/40">{{ arquivados }}</p>
+      <p class="text-xs text-base-content/30 font-medium uppercase tracking-wider mt-1">Arquivados</p>
+    </div>
+
+    <div class="card bg-error/5 border border-error/20 p-4 text-center">
+      <p class="stat-number text-3xl text-error">{{ recursos_pendentes }}</p>
+      <p class="text-xs text-error/60 font-medium uppercase tracking-wider mt-1">Recursos Pend.</p>
+    </div>
+
+  </div>
+
+  <!-- ── Processos recentes ── -->
+  <div class="card bg-base-200 border border-base-300 overflow-hidden">
+    <div class="flex items-center justify-between px-4 py-3 border-b border-base-300">
+      <div class="flex items-center gap-2">
+        <i class="bi bi-clock-history text-warning text-sm"></i>
+        <span class="section-heading text-sm text-base-content/70 tracking-widest">PROCESSOS RECENTES</span>
+      </div>
+      <a href="{% url 'competicao:processo_lista' %}"
+         class="btn btn-ghost btn-xs gap-1 text-xs">
+        Ver todos <i class="bi bi-arrow-right text-xs"></i>
+      </a>
+    </div>
+
+    <div class="divide-y divide-base-300">
+      {% for proc in recentes %}
+      <a href="{% url 'competicao:processo_detalhe' proc.pk %}"
+         class="flex items-center gap-3 px-4 py-3 hover:bg-base-300/40 transition-colors group">
+
+        <!-- Ícone tipo -->
+        <div class="w-9 h-9 rounded-xl shrink-0 flex items-center justify-center
+                    {% if proc.status == 'aberto' %}bg-warning/15{% elif proc.status == 'em_julgamento' %}bg-info/15{% elif proc.status == 'julgado' %}bg-success/15{% else %}bg-base-300{% endif %}">
+          <i class="bi bi-hammer text-base
+                    {% if proc.status == 'aberto' %}text-warning{% elif proc.status == 'em_julgamento' %}text-info{% elif proc.status == 'julgado' %}text-success{% else %}text-base-content/30{% endif %}"></i>
+        </div>
+
+        <!-- Info -->
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 mb-0.5 flex-wrap">
+            <span class="font-bold text-sm text-base-content font-mono">{{ proc.numero }}</span>
+            <span class="badge {{ proc.status_badge_class }} badge-sm">{{ proc.get_status_display }}</span>
+          </div>
+          <p class="text-sm text-base-content/60 truncate">
+            {{ proc.get_tipo_display }}
+            {% if proc.denunciado_str != '—' %}· {{ proc.denunciado_str }}{% endif %}
+          </p>
+        </div>
+
+        <span class="text-xs text-base-content/30 shrink-0 group-hover:text-warning transition-colors">
+          {{ proc.criado_em|date:"d/m/Y" }}
+        </span>
+
+      </a>
+      {% empty %}
+      <div class="flex flex-col items-center justify-center py-12 gap-2 text-base-content/30">
+        <i class="bi bi-check-circle text-4xl"></i>
+        <p class="text-sm font-medium">Nenhum processo registrado</p>
+      </div>
+      {% endfor %}
+    </div>
+
+  </div>
+
+  <!-- ── Atalhos ── -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+    <a href="{% url 'competicao:processo_lista' %}?status=aberto"
+       class="card bg-warning/5 border border-warning/20 p-4 hover:border-warning/40 transition-colors group">
+      <div class="flex items-center gap-3">
+        <i class="bi bi-folder2-open text-2xl text-warning/60 group-hover:text-warning transition-colors"></i>
+        <div>
+          <p class="font-bold text-sm text-base-content">Processos Abertos</p>
+          <p class="text-xs text-base-content/40">{{ abertos }} aguardando julgamento</p>
+        </div>
+      </div>
+    </a>
+    <a href="{% url 'competicao:processo_lista' %}?status=em_julgamento"
+       class="card bg-info/5 border border-info/20 p-4 hover:border-info/40 transition-colors group">
+      <div class="flex items-center gap-3">
+        <i class="bi bi-hourglass-split text-2xl text-info/60 group-hover:text-info transition-colors"></i>
+        <div>
+          <p class="font-bold text-sm text-base-content">Em Julgamento</p>
+          <p class="text-xs text-base-content/40">{{ em_julgamento }} com recursos em análise</p>
+        </div>
+      </div>
+    </a>
+    <a href="{% url 'competicao:processo_criar' %}"
+       class="card bg-base-200 border border-base-300 p-4 hover:border-warning/30 transition-colors group">
+      <div class="flex items-center gap-3">
+        <i class="bi bi-plus-circle text-2xl text-base-content/30 group-hover:text-warning transition-colors"></i>
+        <div>
+          <p class="font-bold text-sm text-base-content">Abrir Processo</p>
+          <p class="text-xs text-base-content/40">Registrar novo processo desportivo</p>
+        </div>
+      </div>
+    </a>
+  </div>
+
+</div>
+{% endblock %}
