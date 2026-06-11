@@ -1,10 +1,14 @@
 {% extends 'base/indice.html' %}
 {% block titulo %}Dashboard{% endblock %}
 
+{% block estatico %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+{% endblock %}
+
 {% block conteudo %}
 <div class="p-4 md:p-6 space-y-6 max-w-[1400px] mx-auto">
 
-  <!-- ── Cabeçalho da página ───────────────────────────────────────── -->
+  <!-- ── Cabeçalho ───────────────────────────────────────────────────── -->
   <div class="flex items-end justify-between gap-4">
     <div>
       <h1 class="section-heading text-4xl text-base-content leading-none">DASHBOARD</h1>
@@ -20,80 +24,129 @@
     {% endif %}
   </div>
 
-  <!-- ── KPI Cards ──────────────────────────────────────────────────── -->
+  <!-- ── KPI Cards ───────────────────────────────────────────────────── -->
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
 
-    <!-- Competições -->
     <div class="card bg-base-200 border border-base-300 card-sport group overflow-hidden relative">
       <div class="absolute inset-0 bg-gradient-to-br from-warning/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
       <div class="card-body p-4 md:p-5">
         <div class="flex items-start justify-between mb-3">
-          <div class="w-10 h-10 rounded-2xl bg-warning/10 border border-warning/20
-                      flex items-center justify-center
-                      group-hover:bg-warning/20 group-hover:border-warning/40 transition-all duration-200">
+          <div class="w-10 h-10 rounded-2xl bg-warning/10 border border-warning/20 flex items-center justify-center group-hover:bg-warning/20 transition-all">
             <i class="bi bi-trophy-fill text-warning text-base"></i>
           </div>
           <span class="text-xs font-bold uppercase tracking-[0.12em] text-base-content/35 mt-1">Total</span>
         </div>
-        <div class="stat-number text-4xl md:text-5xl text-base-content leading-none">{{ total_competicoes }}</div>
+        <div class="stat-number text-4xl md:text-5xl text-base-content leading-none counter" data-target="{{ total_competicoes }}">{{ total_competicoes }}</div>
         <p class="text-xs text-base-content/40 mt-2 font-medium">Competições</p>
       </div>
     </div>
 
-    <!-- Equipes -->
     <div class="card bg-base-200 border border-base-300 card-sport group overflow-hidden relative">
       <div class="absolute inset-0 bg-gradient-to-br from-success/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
       <div class="card-body p-4 md:p-5">
         <div class="flex items-start justify-between mb-3">
-          <div class="w-10 h-10 rounded-2xl bg-success/10 border border-success/20
-                      flex items-center justify-center
-                      group-hover:bg-success/20 group-hover:border-success/40 transition-all duration-200">
+          <div class="w-10 h-10 rounded-2xl bg-success/10 border border-success/20 flex items-center justify-center group-hover:bg-success/20 transition-all">
             <i class="bi bi-shield-fill text-success text-base"></i>
           </div>
           <span class="text-xs font-bold uppercase tracking-[0.12em] text-base-content/35 mt-1">Total</span>
         </div>
-        <div class="stat-number text-4xl md:text-5xl text-base-content leading-none">{{ total_equipes }}</div>
+        <div class="stat-number text-4xl md:text-5xl text-base-content leading-none counter" data-target="{{ total_equipes }}">{{ total_equipes }}</div>
         <p class="text-xs text-base-content/40 mt-2 font-medium">Equipes</p>
       </div>
     </div>
 
-    <!-- Atletas -->
     <div class="card bg-base-200 border border-base-300 card-sport group overflow-hidden relative">
       <div class="absolute inset-0 bg-gradient-to-br from-info/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
       <div class="card-body p-4 md:p-5">
         <div class="flex items-start justify-between mb-3">
-          <div class="w-10 h-10 rounded-2xl bg-info/10 border border-info/20
-                      flex items-center justify-center
-                      group-hover:bg-info/20 group-hover:border-info/40 transition-all duration-200">
+          <div class="w-10 h-10 rounded-2xl bg-info/10 border border-info/20 flex items-center justify-center group-hover:bg-info/20 transition-all">
             <i class="bi bi-people-fill text-info text-base"></i>
           </div>
           <span class="text-xs font-bold uppercase tracking-[0.12em] text-base-content/35 mt-1">Total</span>
         </div>
-        <div class="stat-number text-4xl md:text-5xl text-base-content leading-none">{{ total_atletas }}</div>
+        <div class="stat-number text-4xl md:text-5xl text-base-content leading-none counter" data-target="{{ total_atletas }}">{{ total_atletas }}</div>
         <p class="text-xs text-base-content/40 mt-2 font-medium">Atletas</p>
       </div>
     </div>
 
-    <!-- Gols -->
     <div class="card bg-base-200 border border-base-300 card-sport group overflow-hidden relative">
       <div class="absolute inset-0 bg-gradient-to-br from-error/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
       <div class="card-body p-4 md:p-5">
         <div class="flex items-start justify-between mb-3">
-          <div class="w-10 h-10 rounded-2xl bg-error/10 border border-error/20
-                      flex items-center justify-center
-                      group-hover:bg-error/20 group-hover:border-error/40 transition-all duration-200">
+          <div class="w-10 h-10 rounded-2xl bg-error/10 border border-error/20 flex items-center justify-center group-hover:bg-error/20 transition-all">
             <i class="bi bi-dribbble text-error text-base"></i>
           </div>
           <span class="text-xs font-bold uppercase tracking-[0.12em] text-base-content/35 mt-1">Total</span>
         </div>
-        <div class="stat-number text-4xl md:text-5xl text-base-content leading-none">{{ total_gols }}</div>
+        <div class="stat-number text-4xl md:text-5xl text-base-content leading-none counter" data-target="{{ total_gols }}">{{ total_gols }}</div>
         <p class="text-xs text-base-content/40 mt-2 font-medium">Gols marcados</p>
       </div>
     </div>
 
   </div>
 
-  <!-- ── Linha central: Em andamento | Próximos jogos | Resultados ── -->
+  <!-- ── Gráficos ─────────────────────────────────────────────────────── -->
+  <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
+
+    <!-- Chart 1: Gols por competição (barra horizontal) -->
+    <div class="lg:col-span-3 card bg-base-200 border border-base-300 overflow-hidden">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
+        <i class="bi bi-bar-chart-fill text-warning text-sm"></i>
+        <span class="section-heading text-sm text-base-content/70 tracking-widest">GOLS POR COMPETIÇÃO</span>
+      </div>
+      <div class="p-4 flex items-center justify-center" style="min-height:220px">
+        {% if chart_gols_comp_data != '[]' %}
+        <canvas id="chart-gols-comp" class="w-full" style="max-height:200px"></canvas>
+        {% else %}
+        <div class="text-center text-base-content/20 py-8">
+          <i class="bi bi-bar-chart text-4xl mb-2 block"></i>
+          <p class="text-sm">Nenhum gol registrado ainda</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Chart 2: Status das partidas (doughnut) -->
+    <div class="lg:col-span-2 card bg-base-200 border border-base-300 overflow-hidden">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
+        <i class="bi bi-pie-chart-fill text-info text-sm"></i>
+        <span class="section-heading text-sm text-base-content/70 tracking-widest">PARTIDAS</span>
+      </div>
+      <div class="p-4 flex flex-col items-center justify-center" style="min-height:220px">
+        {% with total_j=jogos_finalizados|add:jogos_andamento|add:jogos_agendados|add:jogos_anulados %}
+        {% if total_j %}
+        <canvas id="chart-status-jogos" style="max-height:180px; max-width:180px"></canvas>
+        <div class="grid grid-cols-2 gap-x-4 gap-y-1 mt-3 w-full max-w-xs">
+          <div class="flex items-center gap-1.5 text-xs text-base-content/60">
+            <span class="w-2.5 h-2.5 rounded-full bg-success shrink-0"></span> Finalizadas
+            <span class="ml-auto font-bold text-base-content">{{ jogos_finalizados }}</span>
+          </div>
+          <div class="flex items-center gap-1.5 text-xs text-base-content/60">
+            <span class="w-2.5 h-2.5 rounded-full bg-error shrink-0"></span> Ao vivo
+            <span class="ml-auto font-bold text-base-content">{{ jogos_andamento }}</span>
+          </div>
+          <div class="flex items-center gap-1.5 text-xs text-base-content/60">
+            <span class="w-2.5 h-2.5 rounded-full bg-info shrink-0"></span> Agendadas
+            <span class="ml-auto font-bold text-base-content">{{ jogos_agendados }}</span>
+          </div>
+          <div class="flex items-center gap-1.5 text-xs text-base-content/60">
+            <span class="w-2.5 h-2.5 rounded-full bg-base-content/20 shrink-0"></span> Anuladas
+            <span class="ml-auto font-bold text-base-content">{{ jogos_anulados }}</span>
+          </div>
+        </div>
+        {% else %}
+        <div class="text-center text-base-content/20 py-8">
+          <i class="bi bi-calendar-x text-4xl mb-2 block"></i>
+          <p class="text-sm">Nenhuma partida registrada</p>
+        </div>
+        {% endif %}
+        {% endwith %}
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── AO VIVO | PRÓXIMOS | RESULTADOS ─────────────────────────────── -->
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
     <!-- Competições em andamento -->
@@ -111,9 +164,7 @@
           <a href="{% url 'competicao:classificacao' c.pk %}"
              class="flex items-center gap-3 px-4 py-3 hover:bg-base-300/50 transition-colors group">
             <i class="bi bi-trophy-fill text-warning/60 text-xs shrink-0"></i>
-            <span class="text-sm font-semibold group-hover:text-warning transition-colors flex-1 truncate">
-              {{ c.nome }}
-            </span>
+            <span class="text-sm font-semibold group-hover:text-warning transition-colors flex-1 truncate">{{ c.nome }}</span>
             <span class="badge badge-warning badge-sm shrink-0">{{ c.get_modalidade_display }}</span>
           </a>
         </li>
@@ -143,19 +194,13 @@
             <span class="truncate">{{ j.rodada.competicao.nome }}</span>
           </div>
           <div class="flex items-center gap-2">
-            <span class="flex-1 text-right text-sm font-semibold text-base-content truncate">
-              {{ j.equipe_casa.nome_equipe }}
-            </span>
-            <span class="shrink-0 px-2.5 py-0.5 bg-base-300 rounded-md text-[10px] font-black
-                         text-base-content/40 tracking-widest">VS</span>
-            <span class="flex-1 text-sm font-semibold text-base-content truncate">
-              {{ j.equipe_fora.nome_equipe }}
-            </span>
+            <span class="flex-1 text-right text-sm font-semibold text-base-content truncate">{{ j.equipe_casa.nome_equipe }}</span>
+            <span class="shrink-0 px-2.5 py-0.5 bg-base-300 rounded-md text-[10px] font-black text-base-content/40 tracking-widest">VS</span>
+            <span class="flex-1 text-sm font-semibold text-base-content truncate">{{ j.equipe_fora.nome_equipe }}</span>
           </div>
           {% if j.local %}
           <div class="text-xs text-base-content/30 mt-1.5 flex items-center gap-1">
-            <i class="bi bi-geo-alt shrink-0"></i>
-            <span class="truncate">{{ j.local.nome }}</span>
+            <i class="bi bi-geo-alt shrink-0"></i><span class="truncate">{{ j.local.nome }}</span>
           </div>
           {% endif %}
         </li>
@@ -179,26 +224,13 @@
         <li class="px-4 py-3 hover:bg-base-300/50 transition-colors">
           <div class="text-xs text-base-content/40 mb-2 truncate">{{ j.rodada.competicao.nome }}</div>
           <div class="flex items-center gap-2">
-            <span class="flex-1 text-right text-sm font-semibold truncate
-              {% if j.gols_casa > j.gols_fora %}text-base-content{% else %}text-base-content/50{% endif %}">
-              {{ j.equipe_casa.nome_equipe }}
-            </span>
-            <!-- Placar -->
+            <span class="flex-1 text-right text-sm font-semibold truncate {% if j.gols_casa > j.gols_fora %}text-base-content{% else %}text-base-content/50{% endif %}">{{ j.equipe_casa.nome_equipe }}</span>
             <div class="shrink-0 flex items-center gap-1.5 px-3 py-1 bg-base-300 rounded-lg">
-              <span class="stat-number text-lg leading-none
-                {% if j.gols_casa > j.gols_fora %}text-win
-                {% elif j.gols_casa == j.gols_fora %}text-draw
-                {% else %}text-base-content/40{% endif %}">{{ j.gols_casa }}</span>
+              <span class="stat-number text-lg leading-none {% if j.gols_casa > j.gols_fora %}text-success{% elif j.gols_casa == j.gols_fora %}text-base-content/60{% else %}text-base-content/30{% endif %}">{{ j.gols_casa }}</span>
               <span class="text-base-content/20 text-xs font-bold">–</span>
-              <span class="stat-number text-lg leading-none
-                {% if j.gols_fora > j.gols_casa %}text-win
-                {% elif j.gols_casa == j.gols_fora %}text-draw
-                {% else %}text-base-content/40{% endif %}">{{ j.gols_fora }}</span>
+              <span class="stat-number text-lg leading-none {% if j.gols_fora > j.gols_casa %}text-success{% elif j.gols_casa == j.gols_fora %}text-base-content/60{% else %}text-base-content/30{% endif %}">{{ j.gols_fora }}</span>
             </div>
-            <span class="flex-1 text-sm font-semibold truncate
-              {% if j.gols_fora > j.gols_casa %}text-base-content{% else %}text-base-content/50{% endif %}">
-              {{ j.equipe_fora.nome_equipe }}
-            </span>
+            <span class="flex-1 text-sm font-semibold truncate {% if j.gols_fora > j.gols_casa %}text-base-content{% else %}text-base-content/50{% endif %}">{{ j.equipe_fora.nome_equipe }}</span>
           </div>
         </li>
         {% empty %}
@@ -212,10 +244,10 @@
 
   </div>
 
-  <!-- ── Linha inferior: Artilheiros | Suspensões ───────────────────── -->
+  <!-- ── Artilheiros + Cartões ──────────────────────────────────────── -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
-    <!-- Top Artilheiros -->
+    <!-- Top Artilheiros (lista + chart) -->
     <div class="card bg-base-200 border border-base-300 overflow-hidden">
       <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
         <i class="bi bi-bullseye text-warning text-sm"></i>
@@ -228,35 +260,20 @@
       <div class="divide-y divide-base-300">
         {% for a in artilheiros_globais %}
         <div class="flex items-center gap-3 px-4 py-2.5 hover:bg-base-300/50 transition-colors group">
-
-          <!-- Posição -->
           <div class="position-number w-6 text-center shrink-0
-            {% if forloop.counter == 1 %}text-warning
-            {% elif forloop.counter == 2 %}text-base-content/50
-            {% elif forloop.counter == 3 %}text-base-content/40
-            {% else %}text-base-content/25{% endif %}">
-            {% if forloop.counter == 1 %}<i class="bi bi-trophy-fill text-sm"></i>
-            {% else %}{{ forloop.counter }}{% endif %}
+            {% if forloop.counter == 1 %}text-warning{% elif forloop.counter == 2 %}text-base-content/50{% elif forloop.counter == 3 %}text-base-content/40{% else %}text-base-content/25{% endif %}">
+            {% if forloop.counter == 1 %}<i class="bi bi-trophy-fill text-sm"></i>{% else %}{{ forloop.counter }}{% endif %}
           </div>
-
-          <!-- Nome e equipe -->
           <div class="flex-1 min-w-0">
-            <p class="text-sm font-semibold text-base-content leading-snug truncate
-                       group-hover:text-warning transition-colors">{{ a.atleta__nome }}</p>
+            <p class="text-sm font-semibold text-base-content leading-snug truncate group-hover:text-warning transition-colors">{{ a.atleta__nome }}</p>
             <p class="text-xs text-base-content/40 truncate">{{ a.atleta__equipe__nome_equipe }}</p>
           </div>
-
-          <!-- Barra de gols -->
           <div class="hidden sm:flex items-center gap-2 w-24">
             <div class="flex-1 h-1.5 bg-base-300 rounded-full overflow-hidden">
-              <div class="h-full bg-warning rounded-full transition-all duration-500"
-                   style="width: {% widthratio a.total max_gols 100 %}%"></div>
+              <div class="h-full bg-warning rounded-full transition-all duration-500" style="width: {% widthratio a.total max_gols 100 %}%"></div>
             </div>
           </div>
-
-          <!-- Contagem -->
           <div class="stat-number text-xl text-warning shrink-0 w-7 text-right">{{ a.total }}</div>
-
         </div>
         {% endfor %}
       </div>
@@ -269,42 +286,227 @@
       {% endif %}
     </div>
 
-    <!-- Suspensões Pendentes -->
-    <div class="card bg-base-200 border border-base-300 overflow-hidden">
-      <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
-        <i class="bi bi-exclamation-triangle-fill text-error text-sm"></i>
-        <span class="section-heading text-base text-error/70 tracking-widest">SUSPENSÕES</span>
-        {% if suspensoes_pendentes %}
-        <span class="badge badge-error badge-sm ml-auto">{{ suspensoes_pendentes|length }}</span>
-        {% endif %}
+    <!-- Cartões + Suspensões -->
+    <div class="flex flex-col gap-4">
+
+      <!-- Chart 3: Cartões -->
+      <div class="card bg-base-200 border border-base-300 overflow-hidden">
+        <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
+          <i class="bi bi-square-fill text-warning text-sm"></i>
+          <span class="section-heading text-sm text-base-content/70 tracking-widest">CARTÕES</span>
+        </div>
+        <div class="p-4">
+          {% with total_c=chart_cartoes_amarelo|add:chart_cartoes_vermelho %}
+          {% if total_c %}
+          <div class="flex items-center gap-6">
+            <canvas id="chart-cartoes" style="max-height:110px; max-width:110px; flex-shrink:0"></canvas>
+            <div class="flex-1 space-y-3">
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-xs font-bold uppercase tracking-wider text-yellow-400">Amarelos</span>
+                  <span class="stat-number text-2xl text-yellow-400">{{ chart_cartoes_amarelo }}</span>
+                </div>
+                <div class="h-2 bg-base-300 rounded-full overflow-hidden">
+                  <div class="h-full bg-yellow-400 rounded-full" style="width:{% widthratio chart_cartoes_amarelo total_c 100 %}%"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-xs font-bold uppercase tracking-wider text-error">Vermelhos</span>
+                  <span class="stat-number text-2xl text-error">{{ chart_cartoes_vermelho }}</span>
+                </div>
+                <div class="h-2 bg-base-300 rounded-full overflow-hidden">
+                  <div class="h-full bg-error rounded-full" style="width:{% widthratio chart_cartoes_vermelho total_c 100 %}%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% else %}
+          <div class="flex flex-col items-center py-6 gap-2 text-base-content/20">
+            <i class="bi bi-square text-3xl"></i>
+            <p class="text-sm">Nenhum cartão registrado</p>
+          </div>
+          {% endif %}
+          {% endwith %}
+        </div>
       </div>
-      <ul class="divide-y divide-base-300">
-        {% for s in suspensoes_pendentes %}
-        <li class="flex items-start gap-3 px-4 py-3 hover:bg-base-300/50 transition-colors">
-          <div class="w-8 h-8 rounded-lg bg-error/10 border border-error/20 flex items-center justify-center shrink-0 mt-0.5">
-            <i class="bi bi-person-fill-slash text-error/70 text-xs"></i>
-          </div>
-          <div class="flex-1 min-w-0">
-            <p class="text-sm font-semibold text-base-content leading-snug">{{ s.atleta.nome }}</p>
-            <p class="text-xs text-base-content/50 truncate">
-              {{ s.atleta.equipe.nome_equipe }} · {{ s.competicao.nome }}
-            </p>
-            <span class="inline-block mt-1 px-2 py-0.5 bg-error/10 text-error/70 text-[10px] font-bold
-                         uppercase tracking-wider rounded-full border border-error/20">
-              {{ s.get_motivo_display }}
-            </span>
-          </div>
-        </li>
-        {% empty %}
-        <li class="flex flex-col items-center justify-center py-10 gap-2 text-base-content/30">
-          <i class="bi bi-shield-check text-3xl"></i>
-          <p class="text-sm font-medium">Nenhuma suspensão pendente</p>
-        </li>
-        {% endfor %}
-      </ul>
+
+      <!-- Suspensões Pendentes -->
+      <div class="card bg-base-200 border border-base-300 overflow-hidden flex-1">
+        <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
+          <i class="bi bi-exclamation-triangle-fill text-error text-sm"></i>
+          <span class="section-heading text-base text-error/70 tracking-widest">SUSPENSÕES</span>
+          {% if suspensoes_pendentes %}
+          <span class="badge badge-error badge-sm ml-auto">{{ suspensoes_pendentes|length }}</span>
+          {% endif %}
+        </div>
+        <ul class="divide-y divide-base-300">
+          {% for s in suspensoes_pendentes %}
+          <li class="flex items-start gap-3 px-4 py-3 hover:bg-base-300/50 transition-colors">
+            <div class="w-8 h-8 rounded-lg bg-error/10 border border-error/20 flex items-center justify-center shrink-0 mt-0.5">
+              <i class="bi bi-person-fill-slash text-error/70 text-xs"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-semibold text-base-content leading-snug">{{ s.atleta.nome }}</p>
+              <p class="text-xs text-base-content/50 truncate">{{ s.atleta.equipe.nome_equipe }} · {{ s.competicao.nome }}</p>
+              <span class="inline-block mt-1 px-2 py-0.5 bg-error/10 text-error/70 text-[10px] font-bold uppercase tracking-wider rounded-full border border-error/20">{{ s.get_motivo_display }}</span>
+            </div>
+          </li>
+          {% empty %}
+          <li class="flex flex-col items-center justify-center py-8 gap-2 text-base-content/30">
+            <i class="bi bi-shield-check text-3xl"></i>
+            <p class="text-sm font-medium">Nenhuma suspensão pendente</p>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+
     </div>
 
   </div>
 
 </div>
+{% endblock %}
+
+{% block script %}
+<script>
+(function () {
+  // Paleta luxury (DaisyUI dark theme)
+  const C = {
+    gold:    'rgba(201,151,46,0.85)',
+    goldB:   'rgba(201,151,46,1)',
+    green:   'rgba(34,197,94,0.85)',
+    red:     'rgba(239,68,68,0.85)',
+    blue:    'rgba(59,130,246,0.85)',
+    gray:    'rgba(148,163,184,0.35)',
+    yellow:  'rgba(250,204,21,0.85)',
+    text:    'rgba(255,255,255,0.45)',
+    grid:    'rgba(255,255,255,0.06)',
+  };
+
+  // Defaults globais
+  Chart.defaults.color = C.text;
+  Chart.defaults.font.family = 'Inter, Arial, sans-serif';
+  Chart.defaults.font.size = 11;
+  Chart.defaults.plugins.legend.display = false;
+
+  // ── Chart 1: Gols por competição (barra horizontal) ──────────────────
+  const elGols = document.getElementById('chart-gols-comp');
+  if (elGols) {
+    const labels = {{ chart_gols_comp_labels|safe }};
+    const data   = {{ chart_gols_comp_data|safe }};
+    new Chart(elGols, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          data,
+          backgroundColor: labels.map((_, i) => i === 0 ? C.goldB : C.gold),
+          borderRadius: 6,
+          borderSkipped: false,
+        }],
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: ctx => ` ${ctx.parsed.x} gol${ctx.parsed.x !== 1 ? 's' : ''}`,
+            },
+          },
+        },
+        scales: {
+          x: {
+            grid: { color: C.grid },
+            ticks: { precision: 0 },
+            border: { display: false },
+          },
+          y: {
+            grid: { display: false },
+            border: { display: false },
+            ticks: {
+              maxTicksLimit: 6,
+              callback(val) {
+                const label = this.getLabelForValue(val);
+                return label && label.length > 22 ? label.slice(0, 20) + '…' : label;
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  // ── Chart 2: Status das partidas (doughnut) ───────────────────────────
+  const elStatus = document.getElementById('chart-status-jogos');
+  if (elStatus) {
+    const fin = {{ jogos_finalizados }};
+    const and = {{ jogos_andamento }};
+    const agd = {{ jogos_agendados }};
+    const anu = {{ jogos_anulados }};
+    if (fin + and + agd + anu > 0) {
+      new Chart(elStatus, {
+        type: 'doughnut',
+        data: {
+          labels: ['Finalizadas', 'Ao vivo', 'Agendadas', 'Anuladas'],
+          datasets: [{
+            data: [fin, and, agd, anu],
+            backgroundColor: [C.green, C.red, C.blue, C.gray],
+            borderWidth: 2,
+            borderColor: 'transparent',
+            hoverBorderColor: 'rgba(255,255,255,0.15)',
+          }],
+        },
+        options: {
+          cutout: '72%',
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: ctx => ` ${ctx.label}: ${ctx.parsed}`,
+              },
+            },
+          },
+        },
+      });
+    }
+  }
+
+  // ── Chart 3: Cartões (doughnut) ───────────────────────────────────────
+  const elCartoes = document.getElementById('chart-cartoes');
+  if (elCartoes) {
+    const am = {{ chart_cartoes_amarelo }};
+    const ve = {{ chart_cartoes_vermelho }};
+    if (am + ve > 0) {
+      new Chart(elCartoes, {
+        type: 'doughnut',
+        data: {
+          labels: ['Amarelos', 'Vermelhos'],
+          datasets: [{
+            data: [am, ve],
+            backgroundColor: [C.yellow, C.red],
+            borderWidth: 2,
+            borderColor: 'transparent',
+          }],
+        },
+        options: {
+          cutout: '68%',
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: ctx => ` ${ctx.label}: ${ctx.parsed}`,
+              },
+            },
+          },
+        },
+      });
+    }
+  }
+})();
+</script>
 {% endblock %}

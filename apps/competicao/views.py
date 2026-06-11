@@ -34,13 +34,16 @@ from .gerador_de_jogos import (
     gerar_confrontos_mata_mata, avancar_classificados,
 )
 from .utils import aplicar_criterios
+from .pdf_utils import render_pdf
+from apps.core.permissions import requer_perfil, PerfilRequiredMixin, PODE_ORGANIZAR, PODE_GERIR_EQUIPE, PODE_LANCAMENTO, PODE_LANCAMENTO_DELE
 
 
 # ---------------------------------------------------------------------------
 # Competição
 # ---------------------------------------------------------------------------
 
-class CompeticaoCreate(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class CompeticaoCreate(PerfilRequiredMixin, LoginRequiredMixin, SuccessMessageMixin, CreateView):
+    perfis_permitidos = PODE_ORGANIZAR
     form_class = CompeticaoForm
     model = Competicao
     success_message = 'Competição criada com sucesso!'
@@ -56,7 +59,7 @@ class CompeticoesLista(LoginRequiredMixin, ListView):
         return Competicao.objects.select_related('formato', 'criterio_classificacao').all()
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def remover_equipe_view(request, pk, equipe_id):
     competicao = get_object_or_404(Competicao, pk=pk)
     equipe = get_object_or_404(Equipe, pk=equipe_id)
@@ -77,7 +80,7 @@ def buscar_equipes(request):
     return JsonResponse({'equipes': list(equipes)})
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def associar_equipe_view(request, pk):
     competicao = get_object_or_404(Competicao, pk=pk)
 
@@ -103,7 +106,7 @@ def associar_equipe_view(request, pk):
     return render(request, "competicao/buscar_equipe.html", {"form": form, "competicao": competicao})
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def criar_jogos_view(request, competicao_id):
     resultado = gerar_jogos_round_robin(competicao_id)
 
@@ -195,7 +198,8 @@ class RodadasView(LoginRequiredMixin, DetailView):
         return ctx
 
 
-class JogoUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+class JogoUpdateView(PerfilRequiredMixin, LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+    perfis_permitidos = PODE_ORGANIZAR
     model = Jogo
     form_class = JogoResultadoForm
     template_name = 'competicao/edit_jogo.html'
@@ -286,7 +290,7 @@ def _atletas_por_equipe(jogo, equipe):
     return _atletas_do_jogo(jogo).filter(equipe=equipe)
 
 
-@login_required
+@requer_perfil(*PODE_LANCAMENTO)
 def gol_criar_view(request, jogo_pk):
     jogo = get_object_or_404(Jogo, pk=jogo_pk)
     if request.method == 'POST':
@@ -303,7 +307,7 @@ def gol_criar_view(request, jogo_pk):
     return redirect(reverse('competicao:jogo_detalhe', kwargs={'pk': jogo_pk}))
 
 
-@login_required
+@requer_perfil(*PODE_LANCAMENTO)
 def gol_excluir_view(request, pk):
     gol = get_object_or_404(Gol, pk=pk)
     jogo_pk = gol.jogo_id
@@ -313,7 +317,7 @@ def gol_excluir_view(request, pk):
     return redirect(reverse('competicao:jogo_detalhe', kwargs={'pk': jogo_pk}))
 
 
-@login_required
+@requer_perfil(*PODE_LANCAMENTO)
 def cartao_criar_view(request, jogo_pk):
     jogo = get_object_or_404(Jogo, pk=jogo_pk)
     if request.method == 'POST':
@@ -330,7 +334,7 @@ def cartao_criar_view(request, jogo_pk):
     return redirect(reverse('competicao:jogo_detalhe', kwargs={'pk': jogo_pk}))
 
 
-@login_required
+@requer_perfil(*PODE_LANCAMENTO)
 def cartao_excluir_view(request, pk):
     cartao = get_object_or_404(Cartao, pk=pk)
     jogo_pk = cartao.jogo_id
@@ -392,7 +396,7 @@ class InscricaoView(LoginRequiredMixin, DetailView):
         return ctx
 
 
-@login_required
+@requer_perfil(*PODE_GERIR_EQUIPE)
 def inscricao_criar_view(request, competicao_pk, equipe_pk):
     from datetime import date
     competicao = get_object_or_404(Competicao, pk=competicao_pk)
@@ -428,7 +432,7 @@ def inscricao_criar_view(request, competicao_pk, equipe_pk):
     return redirect(reverse('competicao:inscricao', kwargs={'pk': competicao_pk}))
 
 
-@login_required
+@requer_perfil(*PODE_GERIR_EQUIPE)
 def inscricao_excluir_view(request, pk):
     inscricao = get_object_or_404(InscricaoAtleta, pk=pk)
     competicao_pk = inscricao.competicao_id
@@ -442,7 +446,7 @@ def inscricao_excluir_view(request, pk):
 # Suspensões
 # ---------------------------------------------------------------------------
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def suspensao_cumprir_view(request, pk):
     suspensao = get_object_or_404(Suspensao, pk=pk)
     competicao_pk = suspensao.competicao_id
@@ -468,7 +472,7 @@ class FasesView(LoginRequiredMixin, DetailView):
         return ctx
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def fase_criar_view(request, competicao_pk):
     competicao = get_object_or_404(Competicao, pk=competicao_pk)
     if request.method == 'POST':
@@ -485,7 +489,7 @@ def fase_criar_view(request, competicao_pk):
     return redirect(reverse('competicao:fases', kwargs={'pk': competicao_pk}))
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def fase_excluir_view(request, pk):
     fase = get_object_or_404(Fase, pk=pk)
     competicao_pk = fase.competicao_id
@@ -532,7 +536,7 @@ class GruposFaseView(LoginRequiredMixin, DetailView):
         return ctx
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def grupo_criar_view(request, fase_pk):
     fase = get_object_or_404(Fase, pk=fase_pk)
     if request.method == 'POST':
@@ -552,7 +556,7 @@ def grupo_criar_view(request, fase_pk):
     return redirect(reverse('competicao:grupos_fase', kwargs={'pk': fase_pk}))
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def grupo_excluir_view(request, pk):
     grupo = get_object_or_404(Grupo, pk=pk)
     fase_pk = grupo.fase_id
@@ -562,7 +566,7 @@ def grupo_excluir_view(request, pk):
     return redirect(reverse('competicao:grupos_fase', kwargs={'pk': fase_pk}))
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def grupo_atribuir_equipe_view(request, pk):
     grupo = get_object_or_404(Grupo, pk=pk)
     if request.method == 'POST':
@@ -573,7 +577,7 @@ def grupo_atribuir_equipe_view(request, pk):
     return redirect(reverse('competicao:grupos_fase', kwargs={'pk': grupo.fase_id}))
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def grupo_remover_equipe_view(request, pk, equipe_pk):
     grupo = get_object_or_404(Grupo, pk=pk)
     equipe = get_object_or_404(Equipe, pk=equipe_pk)
@@ -583,7 +587,7 @@ def grupo_remover_equipe_view(request, pk, equipe_pk):
     return redirect(reverse('competicao:grupos_fase', kwargs={'pk': grupo.fase_id}))
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def gerar_jogos_grupos_view(request, pk):
     fase = get_object_or_404(Fase, pk=pk, tipo=Fase.GRUPOS)
     if request.method == 'POST':
@@ -628,7 +632,7 @@ class ChaveamentoView(LoginRequiredMixin, DetailView):
         return ctx
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def confronto_penaltis_view(request, pk):
     confronto = get_object_or_404(ConfrontoMatamate, pk=pk)
     if request.method == 'POST':
@@ -645,7 +649,7 @@ def confronto_penaltis_view(request, pk):
     return redirect(reverse('competicao:chaveamento', kwargs={'pk': confronto.fase_id}))
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def avancar_classificados_view(request, fase_grupos_pk, fase_mata_mata_pk):
     fase_grupos = get_object_or_404(Fase, pk=fase_grupos_pk, tipo=Fase.GRUPOS)
     fase_mata_mata = get_object_or_404(Fase, pk=fase_mata_mata_pk, tipo=Fase.MATA_MATA)
@@ -681,7 +685,7 @@ class LocalListView(LoginRequiredMixin, ListView):
         return ctx
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def local_criar_view(request):
     if request.method == 'POST':
         form = LocalForm(request.POST)
@@ -695,7 +699,7 @@ def local_criar_view(request):
     return redirect(reverse('competicao:local_lista'))
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def local_editar_view(request, pk):
     local = get_object_or_404(Local, pk=pk)
     if request.method == 'POST':
@@ -709,7 +713,7 @@ def local_editar_view(request, pk):
     return render(request, 'competicao/local_form.html', {'form': form, 'local': local})
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def local_excluir_view(request, pk):
     local = get_object_or_404(Local, pk=pk)
     if request.method == 'POST':
@@ -767,7 +771,7 @@ def _arbitro_form_ctx(form):
     return {'custo_fields': custo_fields}
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def arbitro_criar_view(request):
     if request.method == 'POST':
         form = ArbitroForm(request.POST, request.FILES)
@@ -784,7 +788,7 @@ def arbitro_criar_view(request):
     return render(request, 'competicao/arbitro_form.html', ctx)
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def arbitro_editar_view(request, pk):
     arbitro = get_object_or_404(Arbitro, pk=pk)
     if request.method == 'POST':
@@ -799,7 +803,7 @@ def arbitro_editar_view(request, pk):
     return render(request, 'competicao/arbitro_form.html', ctx)
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def arbitro_excluir_view(request, pk):
     arbitro = get_object_or_404(Arbitro, pk=pk)
     if request.method == 'POST':
@@ -838,7 +842,7 @@ def arbitro_detalhe_view(request, pk):
     return render(request, 'competicao/arbitro_detalhe.html', ctx)
 
 
-@login_required
+@requer_perfil(*PODE_GERIR_EQUIPE)
 def escala_inteligente_view(request, jogo_pk):
     """Sugere árbitros disponíveis e sem conflito de horário para o jogo."""
     from datetime import timedelta
@@ -923,7 +927,7 @@ class EscalacaoJogoView(LoginRequiredMixin, DetailView):
         return ctx
 
 
-@login_required
+@requer_perfil(*PODE_GERIR_EQUIPE)
 def escalacao_criar_view(request, jogo_pk, equipe_pk):
     jogo = get_object_or_404(Jogo, pk=jogo_pk)
     equipe = get_object_or_404(Equipe, pk=equipe_pk)
@@ -957,7 +961,7 @@ def escalacao_criar_view(request, jogo_pk, equipe_pk):
     return redirect(reverse('competicao:escalacao', kwargs={'pk': jogo_pk}))
 
 
-@login_required
+@requer_perfil(*PODE_GERIR_EQUIPE)
 def escalacao_excluir_view(request, pk):
     esc = get_object_or_404(EscalacaoJogo, pk=pk)
     jogo_pk = esc.jogo_id
@@ -967,7 +971,7 @@ def escalacao_excluir_view(request, pk):
     return redirect(reverse('competicao:escalacao', kwargs={'pk': jogo_pk}))
 
 
-@login_required
+@requer_perfil(*PODE_LANCAMENTO)
 def substituicao_criar_view(request, jogo_pk):
     jogo = get_object_or_404(Jogo, pk=jogo_pk)
     if request.method == 'POST':
@@ -984,7 +988,7 @@ def substituicao_criar_view(request, jogo_pk):
     return redirect(reverse('competicao:escalacao', kwargs={'pk': jogo_pk}))
 
 
-@login_required
+@requer_perfil(*PODE_LANCAMENTO)
 def substituicao_excluir_view(request, pk):
     sub = get_object_or_404(Substituicao, pk=pk)
     jogo_pk = sub.jogo_id
@@ -998,7 +1002,7 @@ def substituicao_excluir_view(request, pk):
 # Árbitros por Jogo
 # ---------------------------------------------------------------------------
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def arbitros_jogo_criar_view(request, jogo_pk):
     jogo = get_object_or_404(Jogo, pk=jogo_pk)
     if request.method == 'POST':
@@ -1018,7 +1022,7 @@ def arbitros_jogo_criar_view(request, jogo_pk):
     return redirect(reverse('competicao:escalacao', kwargs={'pk': jogo_pk}))
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def arbitros_jogo_excluir_view(request, pk):
     arb = get_object_or_404(ArbitrosJogo, pk=pk)
     jogo_pk = arb.jogo_id
@@ -1273,12 +1277,17 @@ def pdf_classificacao_view(request, pk):
             grupos_data.append({'grupo': grupo, 'classificacao': cl})
         fases_grupos_data.append({'fase': fase, 'grupos': grupos_data})
 
-    return render(request, 'competicao/pdf_classificacao.html', {
+    ctx = {
         'competicao': comp,
         'classificacao': classificacao,
         'artilharia': artilharia,
         'fases_grupos_data': fases_grupos_data,
-    })
+    }
+    try:
+        nome = comp.nome.replace(' ', '_')[:40]
+        return render_pdf('competicao/pdf_classificacao.html', ctx, filename=f'classificacao_{nome}.pdf')
+    except RuntimeError:
+        return render(request, 'competicao/pdf_classificacao.html', ctx)
 
 
 @login_required
@@ -1296,7 +1305,7 @@ def pdf_sumula_view(request, pk):
     ocorrencias = sumula.ocorrencias.all() if sumula else []
     assinaturas = sumula.assinaturas.all() if sumula else []
 
-    return render(request, 'competicao/pdf_sumula.html', {
+    ctx = {
         'jogo': jogo,
         'gols_casa': gols_casa,
         'gols_fora': gols_fora,
@@ -1308,7 +1317,11 @@ def pdf_sumula_view(request, pk):
         'sumula': sumula,
         'ocorrencias': ocorrencias,
         'assinaturas': assinaturas,
-    })
+    }
+    try:
+        return render_pdf('competicao/pdf_sumula.html', ctx, filename=f'sumula_jogo_{pk}.pdf')
+    except RuntimeError:
+        return render(request, 'competicao/pdf_sumula.html', ctx)
 
 
 # ---------------------------------------------------------------------------
@@ -1322,7 +1335,7 @@ def _get_client_ip(request):
     return request.META.get('REMOTE_ADDR')
 
 
-@login_required
+@requer_perfil(*PODE_LANCAMENTO)
 def sumula_digital_view(request, jogo_pk):
     jogo = get_object_or_404(Jogo, pk=jogo_pk)
     sumula, _ = SumulaDigital.objects.get_or_create(jogo=jogo)
@@ -1355,7 +1368,7 @@ def sumula_digital_view(request, jogo_pk):
     return render(request, 'competicao/sumula_digital.html', ctx)
 
 
-@login_required
+@requer_perfil(*PODE_LANCAMENTO)
 def sumula_ocorrencia_criar_view(request, jogo_pk):
     jogo = get_object_or_404(Jogo, pk=jogo_pk)
     sumula, _ = SumulaDigital.objects.get_or_create(jogo=jogo)
@@ -1378,7 +1391,7 @@ def sumula_ocorrencia_criar_view(request, jogo_pk):
     return redirect(reverse('competicao:sumula_digital', kwargs={'jogo_pk': jogo_pk}))
 
 
-@login_required
+@requer_perfil(*PODE_LANCAMENTO)
 def sumula_ocorrencia_excluir_view(request, pk):
     ocorrencia = get_object_or_404(OcorrenciaSumula, pk=pk)
     jogo_pk = ocorrencia.sumula.jogo_id
@@ -1388,7 +1401,7 @@ def sumula_ocorrencia_excluir_view(request, pk):
     return redirect(reverse('competicao:sumula_digital', kwargs={'jogo_pk': jogo_pk}))
 
 
-@login_required
+@requer_perfil(*PODE_LANCAMENTO)
 def sumula_anexo_criar_view(request, jogo_pk):
     jogo = get_object_or_404(Jogo, pk=jogo_pk)
     sumula, _ = SumulaDigital.objects.get_or_create(jogo=jogo)
@@ -1411,7 +1424,7 @@ def sumula_anexo_criar_view(request, jogo_pk):
     return redirect(reverse('competicao:sumula_digital', kwargs={'jogo_pk': jogo_pk}))
 
 
-@login_required
+@requer_perfil(*PODE_LANCAMENTO)
 def sumula_anexo_excluir_view(request, pk):
     anexo = get_object_or_404(AnexoSumula, pk=pk)
     jogo_pk = anexo.sumula.jogo_id
@@ -1422,7 +1435,7 @@ def sumula_anexo_excluir_view(request, pk):
     return redirect(reverse('competicao:sumula_digital', kwargs={'jogo_pk': jogo_pk}))
 
 
-@login_required
+@requer_perfil(*PODE_LANCAMENTO_DELE)
 def sumula_assinar_view(request, jogo_pk, papel):
     from django.utils import timezone
     jogo = get_object_or_404(Jogo, pk=jogo_pk)
@@ -1459,7 +1472,7 @@ def sumula_assinar_view(request, jogo_pk, papel):
     return redirect(reverse('competicao:sumula_digital', kwargs={'jogo_pk': jogo_pk}))
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def sumula_finalizar_view(request, jogo_pk):
     from django.utils import timezone
     jogo = get_object_or_404(Jogo, pk=jogo_pk)
@@ -1498,9 +1511,12 @@ def pdf_elenco_view(request, competicao_pk, equipe_pk):
     inscricoes = InscricaoAtleta.objects.filter(
         competicao=competicao, atleta__equipe=equipe,
     ).select_related('atleta').order_by('numero_camisa', 'atleta__nome')
-    return render(request, 'competicao/pdf_elenco.html', {
-        'competicao': competicao, 'equipe': equipe, 'inscricoes': inscricoes,
-    })
+    ctx = {'competicao': competicao, 'equipe': equipe, 'inscricoes': inscricoes}
+    try:
+        nome_eq = equipe.nome_equipe.replace(' ', '_')[:30]
+        return render_pdf('competicao/pdf_elenco.html', ctx, filename=f'elenco_{nome_eq}.pdf')
+    except RuntimeError:
+        return render(request, 'competicao/pdf_elenco.html', ctx)
 
 
 @login_required
@@ -1513,16 +1529,19 @@ def pdf_artilheiros_view(request, pk):
         .annotate(total=Count('id'))
         .order_by('-total')
     )
-    return render(request, 'competicao/pdf_artilheiros.html', {
-        'competicao': comp, 'artilharia': artilharia,
-    })
+    ctx = {'competicao': comp, 'artilharia': artilharia}
+    try:
+        nome = comp.nome.replace(' ', '_')[:40]
+        return render_pdf('competicao/pdf_artilheiros.html', ctx, filename=f'artilheiros_{nome}.pdf')
+    except RuntimeError:
+        return render(request, 'competicao/pdf_artilheiros.html', ctx)
 
 
 # ---------------------------------------------------------------------------
 # Avaliação do Árbitro  (K)
 # ---------------------------------------------------------------------------
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def avaliacao_arbitro_view(request, jogo_pk):
     jogo = get_object_or_404(Jogo, pk=jogo_pk)
     if request.method == 'POST':
@@ -1559,7 +1578,7 @@ def notificacoes_view(request):
 # Taxa de inscrição — toggle  (P)
 # ---------------------------------------------------------------------------
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def inscricao_toggle_taxa_view(request, pk):
     inscricao = get_object_or_404(InscricaoAtleta, pk=pk)
     if request.method == 'POST':
@@ -1574,7 +1593,7 @@ def inscricao_toggle_taxa_view(request, pk):
 # 3º Lugar  (R)
 # ---------------------------------------------------------------------------
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def terceiro_lugar_criar_view(request, fase_pk):
     fase = get_object_or_404(Fase, pk=fase_pk)
     if request.method == 'POST':
@@ -1729,30 +1748,70 @@ class PublicClassificacaoView(DetailView):
 
 @login_required
 def dashboard_view(request):
+    import json
     from django.utils import timezone
     agora = timezone.now()
     ctx = {}
-    ctx['total_competicoes'] = Competicao.objects.count()
-    ctx['total_equipes'] = Equipe.objects.count()
-    ctx['total_atletas'] = Atleta.objects.count()
-    ctx['total_gols'] = Gol.objects.count()
+
+    # ── KPIs ──────────────────────────────────────────────────────────────
+    ctx['total_competicoes']   = Competicao.objects.count()
+    ctx['total_equipes']       = Equipe.objects.count()
+    ctx['total_atletas']       = Atleta.objects.count()
+    ctx['total_gols']          = Gol.objects.count()
     ctx['competicoes_andamento'] = Competicao.objects.filter(status='andamento')
+
     ctx['proximos_jogos'] = Jogo.objects.filter(
         finalizado=False, anulado=False, data_hora__gte=agora,
     ).select_related('equipe_casa', 'equipe_fora', 'rodada__competicao', 'local').order_by('data_hora')[:8]
+
     ctx['jogos_recentes'] = Jogo.objects.filter(
         finalizado=True, anulado=False,
     ).select_related('equipe_casa', 'equipe_fora', 'rodada__competicao').order_by('-data_hora')[:8]
-    ctx['artilheiros_globais'] = (
+
+    artilheiros_list = list(
         Gol.objects
         .filter(tipo__in=['normal', 'penalti'])
         .values('atleta__nome', 'atleta__equipe__nome_equipe')
         .annotate(total=Count('id'))
         .order_by('-total')[:8]
     )
+    ctx['artilheiros_globais'] = artilheiros_list
+
     ctx['suspensoes_pendentes'] = Suspensao.objects.filter(
         cumprida=False,
     ).select_related('atleta__equipe', 'competicao').order_by('-pk')[:8]
+
+    # ── Dados para gráficos ───────────────────────────────────────────────
+
+    # Chart 1: Gols por competição (top 6)
+    gols_comp_qs = list(
+        Gol.objects
+        .values('jogo__rodada__competicao__nome')
+        .annotate(total=Count('id'))
+        .order_by('-total')[:6]
+    )
+    ctx['chart_gols_comp_labels'] = json.dumps(
+        [r['jogo__rodada__competicao__nome'] or '—' for r in gols_comp_qs]
+    )
+    ctx['chart_gols_comp_data'] = json.dumps([r['total'] for r in gols_comp_qs])
+
+    # Chart 2: Status das partidas
+    ctx['jogos_finalizados'] = Jogo.objects.filter(finalizado=True, anulado=False).count()
+    ctx['jogos_andamento']   = Jogo.objects.filter(em_andamento=True).count()
+    ctx['jogos_agendados']   = Jogo.objects.filter(
+        finalizado=False, em_andamento=False, anulado=False,
+    ).count()
+    ctx['jogos_anulados']    = Jogo.objects.filter(anulado=True).count()
+
+    # Chart 3: Cartões por tipo
+    cartoes_qs = {r['tipo']: r['total'] for r in Cartao.objects.values('tipo').annotate(total=Count('id'))}
+    ctx['chart_cartoes_amarelo']  = cartoes_qs.get('Amarelo', 0)
+    ctx['chart_cartoes_vermelho'] = cartoes_qs.get('Vermelho', 0)
+
+    # Chart 4: Top artilheiros (horizontal bar)
+    ctx['chart_art_labels'] = json.dumps([r['atleta__nome'] for r in artilheiros_list])
+    ctx['chart_art_data']   = json.dumps([r['total'] for r in artilheiros_list])
+
     return render(request, 'competicao/dashboard.html', ctx)
 
 
@@ -1799,7 +1858,7 @@ def calendario_view(request):
 # Tribunal Desportivo — Fase 4
 # ---------------------------------------------------------------------------
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def tribunal_dashboard_view(request):
     total   = ProcessoDesportivo.objects.count()
     abertos = ProcessoDesportivo.objects.filter(status='aberto').count()
@@ -1825,7 +1884,8 @@ def tribunal_dashboard_view(request):
     })
 
 
-class ProcessoListView(LoginRequiredMixin, ListView):
+class ProcessoListView(PerfilRequiredMixin, LoginRequiredMixin, ListView):
+    perfis_permitidos = PODE_ORGANIZAR
     template_name = 'competicao/processo_lista.html'
     context_object_name = 'processos'
     paginate_by = 20
@@ -1865,7 +1925,7 @@ class ProcessoListView(LoginRequiredMixin, ListView):
         return ctx
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def processo_criar_view(request):
     if request.method == 'POST':
         form = ProcessoDesportivoForm(request.POST)
@@ -1881,7 +1941,7 @@ def processo_criar_view(request):
     return render(request, 'competicao/processo_form.html', {'form': form})
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def processo_editar_view(request, pk):
     processo = get_object_or_404(ProcessoDesportivo, pk=pk)
     if request.method == 'POST':
@@ -1898,7 +1958,7 @@ def processo_editar_view(request, pk):
     return render(request, 'competicao/processo_form.html', {'form': form, 'processo': processo})
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def processo_detalhe_view(request, pk):
     processo = get_object_or_404(
         ProcessoDesportivo.objects.select_related(
@@ -1917,7 +1977,7 @@ def processo_detalhe_view(request, pk):
     })
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def processo_arquivar_view(request, pk):
     processo = get_object_or_404(ProcessoDesportivo, pk=pk)
     if request.method == 'POST':
@@ -1927,7 +1987,7 @@ def processo_arquivar_view(request, pk):
     return redirect(reverse('competicao:processo_detalhe', kwargs={'pk': pk}))
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def processo_reabrir_view(request, pk):
     processo = get_object_or_404(ProcessoDesportivo, pk=pk)
     if request.method == 'POST' and processo.status == 'arquivado':
@@ -1937,7 +1997,7 @@ def processo_reabrir_view(request, pk):
     return redirect(reverse('competicao:processo_detalhe', kwargs={'pk': pk}))
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def julgamento_criar_view(request, processo_pk):
     from django.utils import timezone
     processo = get_object_or_404(ProcessoDesportivo, pk=processo_pk)
@@ -1996,7 +2056,7 @@ def julgamento_criar_view(request, processo_pk):
     })
 
 
-@login_required
+@requer_perfil(*PODE_GERIR_EQUIPE)
 def recurso_criar_view(request, processo_pk):
     processo = get_object_or_404(ProcessoDesportivo, pk=processo_pk)
 
@@ -2018,7 +2078,7 @@ def recurso_criar_view(request, processo_pk):
     return redirect(reverse('competicao:processo_detalhe', kwargs={'pk': processo_pk}))
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def recurso_decidir_view(request, pk):
     from django.utils import timezone
     recurso = get_object_or_404(RecursoDesportivo, pk=pk)
@@ -2046,7 +2106,7 @@ def recurso_decidir_view(request, pk):
 # Financeiro Federativo — Fase 5
 # ---------------------------------------------------------------------------
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def financeiro_dashboard_view(request):
     from datetime import date
     from django.db.models import Sum
@@ -2104,7 +2164,8 @@ def financeiro_dashboard_view(request):
     })
 
 
-class LancamentoListView(LoginRequiredMixin, ListView):
+class LancamentoListView(PerfilRequiredMixin, LoginRequiredMixin, ListView):
+    perfis_permitidos   = PODE_ORGANIZAR
     template_name       = 'competicao/lancamento_lista.html'
     context_object_name = 'lancamentos'
     paginate_by         = 30
@@ -2151,7 +2212,7 @@ class LancamentoListView(LoginRequiredMixin, ListView):
         return ctx
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def lancamento_criar_view(request, tipo=None):
     initial = {'tipo': tipo} if tipo else {}
     if request.method == 'POST':
@@ -2172,7 +2233,7 @@ def lancamento_criar_view(request, tipo=None):
     })
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def lancamento_editar_view(request, pk):
     lan = get_object_or_404(LancamentoFinanceiro, pk=pk)
     if request.method == 'POST':
@@ -2194,7 +2255,7 @@ def lancamento_editar_view(request, pk):
     })
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def lancamento_detalhe_view(request, pk):
     lan = get_object_or_404(
         LancamentoFinanceiro.objects.select_related('competicao', 'equipe', 'atleta'), pk=pk
@@ -2206,7 +2267,7 @@ def lancamento_detalhe_view(request, pk):
     })
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def lancamento_excluir_view(request, pk):
     lan = get_object_or_404(LancamentoFinanceiro, pk=pk)
     if request.method == 'POST':
@@ -2218,7 +2279,7 @@ def lancamento_excluir_view(request, pk):
     return redirect(reverse('competicao:lancamento_lista'))
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def lancamento_baixar_view(request, pk):
     """Registra o pagamento/recebimento de um lançamento pendente."""
     lan = get_object_or_404(LancamentoFinanceiro, pk=pk)
@@ -2240,7 +2301,7 @@ def lancamento_baixar_view(request, pk):
     return redirect(reverse('competicao:lancamento_detalhe', kwargs={'pk': pk}))
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def conciliacao_view(request):
     """Baixa em lote de múltiplos lançamentos pendentes."""
     from datetime import date
@@ -2271,7 +2332,11 @@ def pdf_comprovante_view(request, pk):
     lan = get_object_or_404(
         LancamentoFinanceiro.objects.select_related('competicao', 'equipe', 'atleta'), pk=pk
     )
-    return render(request, 'competicao/pdf_comprovante.html', {'lan': lan})
+    ctx = {'lan': lan}
+    try:
+        return render_pdf('competicao/pdf_comprovante.html', ctx, filename=f'comprovante_{pk}.pdf')
+    except RuntimeError:
+        return render(request, 'competicao/pdf_comprovante.html', ctx)
 
 
 # ===========================================================================
@@ -2412,7 +2477,7 @@ def portal_arbitro_view(request, pk):
 # Portal: gestão (com login)
 # ---------------------------------------------------------------------------
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def publicacao_admin_lista_view(request):
     tipo = request.GET.get('tipo', '')
     q    = request.GET.get('q', '')
@@ -2430,7 +2495,7 @@ def publicacao_admin_lista_view(request):
     })
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def publicacao_criar_view(request):
     form = PublicacaoForm(request.POST or None, request.FILES or None)
     if form.is_valid():
@@ -2443,7 +2508,7 @@ def publicacao_criar_view(request):
     })
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def publicacao_editar_view(request, pk):
     pub  = get_object_or_404(Publicacao, pk=pk)
     form = PublicacaoForm(request.POST or None, request.FILES or None, instance=pub)
@@ -2458,7 +2523,7 @@ def publicacao_editar_view(request, pk):
     })
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def publicacao_excluir_view(request, pk):
     pub = get_object_or_404(Publicacao, pk=pk)
     if request.method == 'POST':

@@ -2,18 +2,51 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
-from django.views.generic import TemplateView
+from django.utils import timezone
 
 from .forms import LoginForm, AlterarSenhaForm, UsuarioEditForm
 from .models import Usuario
+from .permissions import requer_perfil, APENAS_ADMIN
 
 
-def _is_admin(user):
-    return user.is_admin or user.perfil == Usuario.ADMIN
+@login_required
+def index_view(request):
+    from apps.competicao.models import Competicao, Jogo, Gol
+    from apps.equipe.models import Equipe, Atleta
 
+    hoje = timezone.localdate()
 
-class Index(TemplateView):
-    template_name = 'core/index.html'
+    competicoes_ativas = Competicao.objects.filter(status='andamento').count()
+    total_competicoes  = Competicao.objects.count()
+    total_equipes      = Equipe.objects.count()
+    total_atletas      = Atleta.objects.filter(situacao='APTO').count()
+    partidas_hoje      = Jogo.objects.filter(data_hora__date=hoje).count()
+    total_gols         = Gol.objects.count()
+
+    proximas_partidas = (
+        Jogo.objects
+        .select_related('equipe_casa', 'equipe_fora', 'rodada__competicao')
+        .filter(data_hora__gte=timezone.now(), finalizado=False, anulado=False)
+        .order_by('data_hora')[:5]
+    )
+
+    ultimos_resultados = (
+        Jogo.objects
+        .select_related('equipe_casa', 'equipe_fora', 'rodada__competicao')
+        .filter(finalizado=True)
+        .order_by('-data_hora')[:6]
+    )
+
+    return render(request, 'core/index.html', {
+        'competicoes_ativas': competicoes_ativas,
+        'total_competicoes':  total_competicoes,
+        'total_equipes':      total_equipes,
+        'total_atletas':      total_atletas,
+        'partidas_hoje':      partidas_hoje,
+        'total_gols':         total_gols,
+        'proximas_partidas':  proximas_partidas,
+        'ultimos_resultados': ultimos_resultados,
+    })
 
 
 def login_view(request):
@@ -47,11 +80,8 @@ def logout_view(request):
 # Gestão de usuários (admin only)
 # ---------------------------------------------------------------------------
 
-@login_required
+@requer_perfil(*APENAS_ADMIN)
 def usuarios_lista_view(request):
-    if not _is_admin(request.user):
-        messages.error(request, 'Acesso restrito a administradores.')
-        return redirect('core:index')
     q = request.GET.get('q', '')
     qs = Usuario.objects.all().order_by('nome')
     if q:
@@ -59,11 +89,8 @@ def usuarios_lista_view(request):
     return render(request, 'core/usuarios.html', {'usuarios': qs, 'q': q})
 
 
-@login_required
+@requer_perfil(*APENAS_ADMIN)
 def usuario_editar_view(request, pk):
-    if not _is_admin(request.user):
-        messages.error(request, 'Acesso restrito a administradores.')
-        return redirect('core:index')
     usuario = get_object_or_404(Usuario, pk=pk)
     if request.method == 'POST':
         form = UsuarioEditForm(request.POST, instance=usuario)
@@ -76,11 +103,8 @@ def usuario_editar_view(request, pk):
     return render(request, 'core/usuario_editar.html', {'form': form, 'usuario': usuario})
 
 
-@login_required
+@requer_perfil(*APENAS_ADMIN)
 def usuario_toggle_ativo_view(request, pk):
-    if not _is_admin(request.user):
-        messages.error(request, 'Acesso restrito a administradores.')
-        return redirect('core:index')
     usuario = get_object_or_404(Usuario, pk=pk)
     if request.method == 'POST':
         usuario.is_active = not usuario.is_active

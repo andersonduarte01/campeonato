@@ -1,25 +1,235 @@
 {% extends 'base/indice.html' %}
 {% load static %}
-{% block titulo %}Início — CHAMPS{% endblock %}
+{% block titulo %}Dashboard — CHAMPS{% endblock %}
 
 {% block conteudo %}
-<div class="p-4 md:p-6">
-  <div class="hero min-h-64 bg-gradient-to-br from-base-300 to-base-200 rounded-2xl mb-6 border border-base-300">
-    <div class="hero-content text-center py-12">
-      <div>
-        <i class="bi bi-trophy-fill text-warning text-5xl mb-4 block"></i>
-        <h1 class="text-3xl font-black mb-2">CHAMPS</h1>
-        <p class="text-base-content/50 mb-6">Sistema de Gestão de Competições Esportivas</p>
-        <div class="flex gap-3 justify-center flex-wrap">
-          <a href="{% url 'competicao:competicao_lista' %}" class="btn btn-warning gap-2">
-            <i class="bi bi-trophy"></i> Ver Competições
-          </a>
-          <a href="{% url 'equipe:lista' %}" class="btn btn-ghost gap-2">
-            <i class="bi bi-people"></i> Equipes
-          </a>
+<div class="p-4 md:p-6 space-y-6">
+
+  <!-- Boas-vindas -->
+  <div class="flex items-center justify-between gap-4 flex-wrap">
+    <div>
+      <h1 class="section-heading text-3xl text-base-content">BEM-VINDO, {{ request.user.nome|upper }}</h1>
+      <p class="text-sm text-base-content/40 mt-0.5">Painel de controle — CHAMPS Plataforma Federativa</p>
+    </div>
+    <a href="{% url 'competicao:competicao_add' %}" class="btn btn-warning btn-sm gap-2">
+      <i class="bi bi-plus-lg"></i> Nova Competição
+    </a>
+  </div>
+
+  <!-- KPIs principais -->
+  <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+
+    <div class="card bg-base-200 border border-base-300 card-sport reveal">
+      <div class="card-body p-4">
+        <div class="flex items-start justify-between mb-2">
+          <span class="text-xs text-base-content/40 font-bold uppercase tracking-wider leading-tight">Competições<br>Ativas</span>
+          <div class="w-8 h-8 rounded-lg bg-warning/15 flex items-center justify-center shrink-0">
+            <i class="bi bi-trophy-fill text-warning text-sm"></i>
+          </div>
         </div>
+        <p class="stat-number text-3xl text-warning counter" data-target="{{ competicoes_ativas }}">{{ competicoes_ativas }}</p>
+        <p class="text-xs text-base-content/30 mt-0.5">de {{ total_competicoes }} total</p>
       </div>
     </div>
+
+    <div class="card bg-base-200 border border-base-300 card-sport reveal stagger-1">
+      <div class="card-body p-4">
+        <div class="flex items-start justify-between mb-2">
+          <span class="text-xs text-base-content/40 font-bold uppercase tracking-wider leading-tight">Equipes<br>Cadastradas</span>
+          <div class="w-8 h-8 rounded-lg bg-info/15 flex items-center justify-center shrink-0">
+            <i class="bi bi-shield-fill text-info text-sm"></i>
+          </div>
+        </div>
+        <p class="stat-number text-3xl text-info counter" data-target="{{ total_equipes }}">{{ total_equipes }}</p>
+        <p class="text-xs text-base-content/30 mt-0.5">times registrados</p>
+      </div>
+    </div>
+
+    <div class="card bg-base-200 border border-base-300 card-sport reveal stagger-2">
+      <div class="card-body p-4">
+        <div class="flex items-start justify-between mb-2">
+          <span class="text-xs text-base-content/40 font-bold uppercase tracking-wider leading-tight">Atletas<br>Aptos</span>
+          <div class="w-8 h-8 rounded-lg bg-success/15 flex items-center justify-center shrink-0">
+            <i class="bi bi-person-fill text-success text-sm"></i>
+          </div>
+        </div>
+        <p class="stat-number text-3xl text-success counter" data-target="{{ total_atletas }}">{{ total_atletas }}</p>
+        <p class="text-xs text-base-content/30 mt-0.5">em atividade</p>
+      </div>
+    </div>
+
+    <div class="card bg-base-200 border border-base-300 card-sport reveal stagger-3">
+      <div class="card-body p-4">
+        <div class="flex items-start justify-between mb-2">
+          <span class="text-xs text-base-content/40 font-bold uppercase tracking-wider leading-tight">Partidas<br>Hoje</span>
+          <div class="w-8 h-8 rounded-lg bg-error/15 flex items-center justify-center shrink-0">
+            <i class="bi bi-calendar-event text-error text-sm"></i>
+          </div>
+        </div>
+        <p class="stat-number text-3xl {% if partidas_hoje > 0 %}text-error{% else %}text-base-content/40{% endif %} counter" data-target="{{ partidas_hoje }}">{{ partidas_hoje }}</p>
+        {% if partidas_hoje > 0 %}
+        <p class="text-xs text-error/60 mt-0.5 flex items-center gap-1"><span class="live-dot"></span> ao vivo / hoje</p>
+        {% else %}
+        <p class="text-xs text-base-content/30 mt-0.5">sem jogos hoje</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card bg-base-200 border border-base-300 card-sport reveal stagger-4">
+      <div class="card-body p-4">
+        <div class="flex items-start justify-between mb-2">
+          <span class="text-xs text-base-content/40 font-bold uppercase tracking-wider leading-tight">Total<br>de Gols</span>
+          <div class="w-8 h-8 rounded-lg bg-warning/15 flex items-center justify-center shrink-0">
+            <i class="bi bi-bullseye text-warning text-sm"></i>
+          </div>
+        </div>
+        <p class="stat-number text-3xl text-warning counter" data-target="{{ total_gols }}">{{ total_gols }}</p>
+        <p class="text-xs text-base-content/30 mt-0.5">marcados na plataforma</p>
+      </div>
+    </div>
+
+    <div class="card bg-base-200 border border-base-300 card-sport reveal stagger-4">
+      <div class="card-body p-4">
+        <div class="flex items-start justify-between mb-2">
+          <span class="text-xs text-base-content/40 font-bold uppercase tracking-wider leading-tight">Perfil<br>de Acesso</span>
+          <div class="w-8 h-8 rounded-lg bg-neutral-content/10 flex items-center justify-center shrink-0">
+            <i class="bi bi-person-badge text-base-content/50 text-sm"></i>
+          </div>
+        </div>
+        <p class="section-heading text-xl text-base-content mt-1">{{ request.user.get_perfil_display }}</p>
+        <p class="text-xs text-base-content/30 mt-0.5 truncate">{{ request.user.email }}</p>
+      </div>
+    </div>
+
   </div>
+
+  <!-- Próximas partidas + Últimos resultados -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+    <!-- Próximas partidas -->
+    <div class="card bg-base-200 border border-base-300 overflow-hidden reveal">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
+        <i class="bi bi-calendar2-week text-warning text-sm"></i>
+        <span class="section-heading text-sm text-base-content/70 tracking-widest">PRÓXIMAS PARTIDAS</span>
+      </div>
+      <div class="divide-y divide-base-300/50">
+        {% for jogo in proximas_partidas %}
+        <a href="{% url 'competicao:jogo_detalhe' jogo.pk %}"
+           class="flex items-center gap-3 px-4 py-3 hover:bg-base-300/30 transition-colors group">
+          <div class="text-center w-10 shrink-0">
+            <p class="text-[10px] font-bold text-base-content/30 uppercase">{{ jogo.data_hora|date:"d/m" }}</p>
+            <p class="text-xs font-bold text-base-content/60">{{ jogo.data_hora|date:"H:i" }}</p>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-base-content truncate">
+              {{ jogo.equipe_casa.nome }} × {{ jogo.equipe_fora.nome }}
+            </p>
+            <p class="text-xs text-base-content/40 truncate">{{ jogo.rodada.competicao.nome }}</p>
+          </div>
+          <i class="bi bi-chevron-right text-base-content/20 text-xs group-hover:text-base-content/50 transition-colors"></i>
+        </a>
+        {% empty %}
+        <div class="px-4 py-8 text-center">
+          <i class="bi bi-calendar-x text-base-content/20 text-3xl mb-2 block"></i>
+          <p class="text-sm text-base-content/30">Nenhuma partida agendada</p>
+        </div>
+        {% endfor %}
+      </div>
+      {% if proximas_partidas %}
+      <div class="px-4 py-2 border-t border-base-300/50">
+        <a href="{% url 'competicao:competicao_lista' %}" class="text-xs text-warning/70 hover:text-warning">Ver todas as competições →</a>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Últimos resultados -->
+    <div class="card bg-base-200 border border-base-300 overflow-hidden reveal stagger-2">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
+        <i class="bi bi-flag-fill text-warning text-sm"></i>
+        <span class="section-heading text-sm text-base-content/70 tracking-widest">ÚLTIMOS RESULTADOS</span>
+      </div>
+      <div class="divide-y divide-base-300/50">
+        {% for jogo in ultimos_resultados %}
+        <a href="{% url 'competicao:jogo_detalhe' jogo.pk %}"
+           class="flex items-center gap-3 px-4 py-3 hover:bg-base-300/30 transition-colors group">
+          <div class="text-center w-10 shrink-0">
+            <p class="text-[10px] font-bold text-base-content/30 uppercase">{{ jogo.data_hora|date:"d/m" }}</p>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <p class="text-sm font-semibold text-base-content truncate flex-1">{{ jogo.equipe_casa.nome }}</p>
+              <span class="font-sports text-lg font-bold text-warning shrink-0 leading-none whitespace-nowrap">
+                {{ jogo.gols_casa }} — {{ jogo.gols_fora }}
+              </span>
+              <p class="text-sm font-semibold text-base-content truncate flex-1 text-right">{{ jogo.equipe_fora.nome }}</p>
+            </div>
+            <p class="text-xs text-base-content/40 truncate">{{ jogo.rodada.competicao.nome }}</p>
+          </div>
+          <i class="bi bi-chevron-right text-base-content/20 text-xs group-hover:text-base-content/50 transition-colors"></i>
+        </a>
+        {% empty %}
+        <div class="px-4 py-8 text-center">
+          <i class="bi bi-trophy text-base-content/20 text-3xl mb-2 block"></i>
+          <p class="text-sm text-base-content/30">Nenhuma partida realizada ainda</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Atalhos rápidos -->
+  <div class="card bg-base-200 border border-base-300 overflow-hidden reveal">
+    <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
+      <i class="bi bi-grid-3x3-gap-fill text-warning text-sm"></i>
+      <span class="section-heading text-sm text-base-content/70 tracking-widest">ACESSO RÁPIDO</span>
+    </div>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-px bg-base-300/30">
+
+      <a href="{% url 'competicao:competicao_lista' %}" class="flex flex-col items-center gap-2 p-4 bg-base-200 hover:bg-base-300/50 transition-colors">
+        <div class="w-10 h-10 rounded-xl bg-warning/15 flex items-center justify-center">
+          <i class="bi bi-trophy text-warning"></i>
+        </div>
+        <span class="text-xs text-base-content/60 font-medium text-center">Competições</span>
+      </a>
+
+      <a href="{% url 'equipe:lista' %}" class="flex flex-col items-center gap-2 p-4 bg-base-200 hover:bg-base-300/50 transition-colors">
+        <div class="w-10 h-10 rounded-xl bg-info/15 flex items-center justify-center">
+          <i class="bi bi-shield-fill text-info"></i>
+        </div>
+        <span class="text-xs text-base-content/60 font-medium text-center">Equipes</span>
+      </a>
+
+      <a href="{% url 'equipe:lista' %}" class="flex flex-col items-center gap-2 p-4 bg-base-200 hover:bg-base-300/50 transition-colors">
+        <div class="w-10 h-10 rounded-xl bg-success/15 flex items-center justify-center">
+          <i class="bi bi-person-fill text-success"></i>
+        </div>
+        <span class="text-xs text-base-content/60 font-medium text-center">Atletas</span>
+      </a>
+
+      <a href="{% url 'federacao:registro_lista' %}" class="flex flex-col items-center gap-2 p-4 bg-base-200 hover:bg-base-300/50 transition-colors">
+        <div class="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
+          <i class="bi bi-bank text-primary"></i>
+        </div>
+        <span class="text-xs text-base-content/60 font-medium text-center">Federação</span>
+      </a>
+
+      <a href="{% url 'competicao:arbitro_lista' %}" class="flex flex-col items-center gap-2 p-4 bg-base-200 hover:bg-base-300/50 transition-colors">
+        <div class="w-10 h-10 rounded-xl bg-warning/15 flex items-center justify-center">
+          <i class="bi bi-person-badge text-warning"></i>
+        </div>
+        <span class="text-xs text-base-content/60 font-medium text-center">Árbitros</span>
+      </a>
+
+      <a href="{% url 'auditoria:lgpd_dashboard' %}" class="flex flex-col items-center gap-2 p-4 bg-base-200 hover:bg-base-300/50 transition-colors">
+        <div class="w-10 h-10 rounded-xl bg-neutral-content/10 flex items-center justify-center">
+          <i class="bi bi-shield-lock text-base-content/50"></i>
+        </div>
+        <span class="text-xs text-base-content/60 font-medium text-center">LGPD</span>
+      </a>
+
+    </div>
+  </div>
+
 </div>
 {% endblock %}

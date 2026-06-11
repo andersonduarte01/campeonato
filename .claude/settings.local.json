@@ -33,7 +33,11 @@
       "Bash(Select-Object -First 20)",
       "Bash(python *)",
       "Bash(Get-ChildItem *)",
-      "PowerShell(New-Item *)"
+      "PowerShell(New-Item *)",
+      "Bash(Remove-Item \"C:\\\\Users\\\\usuario\\\\PycharmProjects\\\\champs\\\\campeonato\\\\templates\\\\base\\\\base.html\" -Force)",
+      "Bash(Remove-Item \"C:\\\\Users\\\\usuario\\\\PycharmProjects\\\\champs\\\\campeonato\\\\apps\\\\core\\\\templates\\\\core\\\\indice.html\" -Force)",
+      "Bash(Write-Output \"Deletados.\")",
+      "Bash(Select-Object Name)"
     ]
   }
 }

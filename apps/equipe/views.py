@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 
+from apps.core.permissions import PerfilRequiredMixin, PODE_GERIR_EQUIPE
 from .forms import EquipeForm, AtletaForm
 from .models import Equipe, Atleta
 
@@ -15,7 +16,8 @@ class EquipeListView(LoginRequiredMixin, ListView):
     ordering = ['nome_equipe']
 
 
-class EquipeCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class EquipeCreateView(PerfilRequiredMixin, LoginRequiredMixin, SuccessMessageMixin, CreateView):
+    perfis_permitidos = PODE_GERIR_EQUIPE
     model = Equipe
     form_class = EquipeForm
     template_name = 'equipe/form.html'
@@ -28,7 +30,8 @@ class EquipeCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
         return ctx
 
 
-class EquipeUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+class EquipeUpdateView(PerfilRequiredMixin, LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+    perfis_permitidos = PODE_GERIR_EQUIPE
     model = Equipe
     form_class = EquipeForm
     template_name = 'equipe/form.html'
@@ -41,7 +44,8 @@ class EquipeUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
         return ctx
 
 
-class EquipeDeleteView(LoginRequiredMixin, DeleteView):
+class EquipeDeleteView(PerfilRequiredMixin, LoginRequiredMixin, DeleteView):
+    perfis_permitidos = PODE_GERIR_EQUIPE
     model = Equipe
     template_name = 'equipe/confirmar_exclusao.html'
     success_url = reverse_lazy('equipe:lista')
@@ -59,7 +63,8 @@ class EquipeDetailView(LoginRequiredMixin, DetailView):
         return ctx
 
 
-class AtletaCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class AtletaCreateView(PerfilRequiredMixin, LoginRequiredMixin, SuccessMessageMixin, CreateView):
+    perfis_permitidos = PODE_GERIR_EQUIPE
     model = Atleta
     form_class = AtletaForm
     template_name = 'equipe/atleta_form.html'
@@ -78,7 +83,8 @@ class AtletaCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
         return ctx
 
 
-class AtletaUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+class AtletaUpdateView(PerfilRequiredMixin, LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+    perfis_permitidos = PODE_GERIR_EQUIPE
     model = Atleta
     form_class = AtletaForm
     template_name = 'equipe/atleta_form.html'
@@ -94,7 +100,8 @@ class AtletaUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
         return ctx
 
 
-class AtletaDeleteView(LoginRequiredMixin, DeleteView):
+class AtletaDeleteView(PerfilRequiredMixin, LoginRequiredMixin, DeleteView):
+    perfis_permitidos = PODE_GERIR_EQUIPE
     model = Atleta
     template_name = 'equipe/confirmar_exclusao_atleta.html'
     context_object_name = 'atleta'

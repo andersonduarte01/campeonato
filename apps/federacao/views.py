@@ -9,6 +9,8 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 
+from apps.core.permissions import requer_perfil, APENAS_ADMIN, PODE_ORGANIZAR, PODE_GERIR_EQUIPE
+
 from apps.equipe.models import Atleta, Equipe
 from apps.competicao.models import Arbitro
 
@@ -28,7 +30,7 @@ from .models import (
 # Dashboard Federativo
 # ─────────────────────────────────────────────────────────────────────────────
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def dashboard_federativo(request):
     hoje = datetime.date.today()
     ctx = {
@@ -58,7 +60,7 @@ def dashboard_federativo(request):
 # 1. REGISTRO FEDERATIVO
 # ─────────────────────────────────────────────────────────────────────────────
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def registro_lista(request):
     q    = request.GET.get('q', '').strip()
     st   = request.GET.get('status', '')
@@ -85,7 +87,7 @@ def registro_lista(request):
     })
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def registro_criar(request):
     form = RegistroFederativoForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
@@ -102,7 +104,7 @@ def registro_criar(request):
     return render(request, 'federacao/registro_form.html', {'form': form, 'titulo': 'Novo Registro Federativo'})
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def registro_editar(request, pk):
     reg  = get_object_or_404(RegistroFederativo, pk=pk)
     form = RegistroFederativoForm(request.POST or None, instance=reg)
@@ -113,7 +115,7 @@ def registro_editar(request, pk):
     return render(request, 'federacao/registro_form.html', {'form': form, 'reg': reg, 'titulo': 'Editar Registro Federativo'})
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def registro_detalhe(request, pk):
     reg       = get_object_or_404(RegistroFederativo.objects.select_related('atleta__equipe'), pk=pk)
     historico = HistoricoClube.objects.filter(atleta=reg.atleta).select_related('equipe').order_by('-data_entrada')
@@ -130,7 +132,7 @@ def registro_detalhe(request, pk):
 # 2. TRANSFERÊNCIAS
 # ─────────────────────────────────────────────────────────────────────────────
 
-@login_required
+@requer_perfil(*PODE_GERIR_EQUIPE)
 def transferencia_lista(request):
     st     = request.GET.get('status', '')
     q      = request.GET.get('q', '').strip()
@@ -156,7 +158,7 @@ def transferencia_lista(request):
     })
 
 
-@login_required
+@requer_perfil(*PODE_GERIR_EQUIPE)
 def transferencia_criar(request):
     form = TransferenciaForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
@@ -168,7 +170,7 @@ def transferencia_criar(request):
     return render(request, 'federacao/transferencia_form.html', {'form': form, 'titulo': 'Solicitar Transferência'})
 
 
-@login_required
+@requer_perfil(*PODE_GERIR_EQUIPE)
 def transferencia_detalhe(request, pk):
     t = get_object_or_404(
         Transferencia.objects.select_related(
@@ -178,7 +180,7 @@ def transferencia_detalhe(request, pk):
     return render(request, 'federacao/transferencia_detalhe.html', {'transf': t})
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def transferencia_acao(request, pk, acao):
     t = get_object_or_404(Transferencia, pk=pk)
     if request.method == 'POST':
@@ -222,7 +224,7 @@ def transferencia_acao(request, pk, acao):
 # Janelas de Transferência
 # ─────────────────────────────────────────────────────────────────────────────
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def janela_lista(request):
     janelas = JanelaTransferencia.objects.order_by('-data_inicio')
     form    = JanelaTransferenciaForm(request.POST or None)
@@ -233,7 +235,7 @@ def janela_lista(request):
     return render(request, 'federacao/janela_lista.html', {'janelas': janelas, 'form': form})
 
 
-@login_required
+@requer_perfil(*APENAS_ADMIN)
 def janela_editar(request, pk):
     janela = get_object_or_404(JanelaTransferencia, pk=pk)
     form   = JanelaTransferenciaForm(request.POST or None, instance=janela)
@@ -248,7 +250,7 @@ def janela_editar(request, pk):
 # 3. PERFIL FEDERATIVO DO CLUBE
 # ─────────────────────────────────────────────────────────────────────────────
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def clube_lista(request):
     q      = request.GET.get('q', '').strip()
     sit    = request.GET.get('situacao', '')
@@ -273,7 +275,7 @@ def clube_lista(request):
     })
 
 
-@login_required
+@requer_perfil(*PODE_GERIR_EQUIPE)
 def clube_criar(request):
     equipe_pk = request.GET.get('equipe')
     initial   = {}
@@ -288,7 +290,7 @@ def clube_criar(request):
     return render(request, 'federacao/clube_form.html', {'form': form, 'titulo': 'Novo Perfil Federativo'})
 
 
-@login_required
+@requer_perfil(*PODE_GERIR_EQUIPE)
 def clube_editar(request, pk):
     info = get_object_or_404(InfoClube, pk=pk)
     form = InfoClubeForm(request.POST or None, instance=info)
@@ -299,7 +301,7 @@ def clube_editar(request, pk):
     return render(request, 'federacao/clube_form.html', {'form': form, 'info': info, 'titulo': 'Editar Perfil Federativo'})
 
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def clube_detalhe(request, pk):
     info  = get_object_or_404(InfoClube.objects.select_related('equipe'), pk=pk)
     docs  = Documento.objects.filter(clube=info.equipe).select_related('tipo').order_by('-enviado_em')
@@ -313,7 +315,7 @@ def clube_detalhe(request, pk):
 # 4. DOCUMENTOS
 # ─────────────────────────────────────────────────────────────────────────────
 
-@login_required
+@requer_perfil(*PODE_ORGANIZAR)
 def documento_lista(request):
     st     = request.GET.get('status', '')
     ent    = request.GET.get('entidade', '')
@@ -338,7 +340,7 @@ def documento_lista(request):
     })
 
 
-@login_required
+@requer_perfil(*PODE_GERIR_EQUIPE)
 def documento_upload(request):
     equipe_pk = request.GET.get('clube')
     atleta_pk = request.GET.get('atleta')
@@ -356,7 +358,7 @@ def documento_upload(request):
     return render(request, 'federacao/documento_form.html', {'form': form})
 
 
-@login_required
+@requer_perfil(*APENAS_ADMIN)
 def documento_aprovar(request, pk):
     doc  = get_object_or_404(Documento, pk=pk)
     form = DocumentoAprovarForm(request.POST or None)
@@ -384,7 +386,7 @@ def documento_aprovar(request, pk):
 # Tipos de Documento
 # ─────────────────────────────────────────────────────────────────────────────
 
-@login_required
+@requer_perfil(*APENAS_ADMIN)
 def tipo_documento_lista(request):
     tipos = TipoDocumento.objects.annotate(
         total_docs=Count('documentos'),
@@ -397,7 +399,7 @@ def tipo_documento_lista(request):
     return render(request, 'federacao/tipo_documento_lista.html', {'tipos': tipos, 'form': form})
 
 
-@login_required
+@requer_perfil(*APENAS_ADMIN)
 def tipo_documento_editar(request, pk):
     tipo = get_object_or_404(TipoDocumento, pk=pk)
     form = TipoDocumentoForm(request.POST or None, instance=tipo)

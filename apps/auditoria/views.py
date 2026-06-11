@@ -10,6 +10,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
 
+from apps.core.permissions import requer_perfil, APENAS_ADMIN
 from .models import AuditLog, ConsentimentoLGPD
 from .utils import registrar_auditoria, get_client_ip
 
@@ -18,7 +19,7 @@ from .utils import registrar_auditoria, get_client_ip
 # Audit Log — administração
 # ---------------------------------------------------------------------------
 
-@login_required
+@requer_perfil(*APENAS_ADMIN)
 def audit_log_lista_view(request):
     qs = AuditLog.objects.select_related('usuario').order_by('-criado_em')
 
@@ -65,7 +66,7 @@ def audit_log_lista_view(request):
     })
 
 
-@login_required
+@requer_perfil(*APENAS_ADMIN)
 def audit_log_detalhe_view(request, pk):
     log = get_object_or_404(AuditLog, pk=pk)
     return render(request, 'auditoria/log_detalhe.html', {'log': log})

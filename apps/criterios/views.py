@@ -3,14 +3,15 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import CreateView
+
+from apps.core.permissions import PerfilRequiredMixin, PODE_ORGANIZAR
 from .models import FormatoCompeticao, CriterioClassificacao
 from .forms import FormatoCompeticaoForm, CriterioClassificacaoForm
 from ..competicao.models import Competicao
 
 
-# Create your views here.
-
-class FormatoCompeticaoAdd(CreateView):
+class FormatoCompeticaoAdd(PerfilRequiredMixin, CreateView):
+    perfis_permitidos = PODE_ORGANIZAR
     form_class = FormatoCompeticaoForm
     model = FormatoCompeticao
     template_name = 'criterios/formatoadd.html'
@@ -40,7 +41,8 @@ class FormatoCompeticaoAdd(CreateView):
         return contexto
 
 
-class CriterioClassificacaoAdd(CreateView):
+class CriterioClassificacaoAdd(PerfilRequiredMixin, CreateView):
+    perfis_permitidos = PODE_ORGANIZAR
     form_class = CriterioClassificacaoForm
     model = CriterioClassificacao
     template_name = 'criterios/criteriosadd.html'
