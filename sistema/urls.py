@@ -6,9 +6,10 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('apps.core.urls', namespace='core')),
+    # ── Módulos desativados — reativar cirurgicamente ──
     path('equipe/', include('apps.equipe.urls', namespace='equipe')),
     path('competicao/', include('apps.competicao.urls', namespace='competicao')),
     path('criterios/', include('apps.criterios.urls', namespace='criterios')),
-    path('federacao/', include('apps.federacao.urls', namespace='federacao')),
     path('auditoria/', include('apps.auditoria.urls', namespace='auditoria')),
+    path('registro/', include('apps.registro.urls', namespace='registro')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

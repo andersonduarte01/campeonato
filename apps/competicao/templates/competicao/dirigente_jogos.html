@@ -1,0 +1,85 @@
+{% extends 'base/indice.html' %}
+{% block titulo %}{{ equipe.nome_equipe }} — Jogos{% endblock %}
+
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
+    <ul>
+      <li><a href="{% url 'competicao:dirigente_dashboard' %}" class="hover:text-gray-700 dark:text-gray-300">Meu Painel</a></li>
+      <li><span class="text-gray-600 dark:text-gray-400">Jogos</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block conteudo %}
+<div class="p-4 md:p-6 space-y-4">
+
+  <!-- Cabeçalho -->
+  <div class="flex items-center gap-4">
+    <a href="{% url 'competicao:dirigente_dashboard' %}"
+       class="btn btn-ghost btn-sm btn-square border border-gray-200 dark:border-gray-700 text-gray-500 shrink-0">
+      <i class="ti ti-arrow-left text-sm"></i>
+    </a>
+    <div>
+      <div class="flex items-center gap-2 mb-0.5">
+        <i class="ti ti-calendar-event text-blue-500 text-sm"></i>
+        <span class="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">Jogos</span>
+      </div>
+      <h1 class="section-heading text-3xl text-gray-900 dark:text-white leading-none">{{ equipe.nome_equipe|upper }}</h1>
+    </div>
+  </div>
+
+  <!-- Card com abas -->
+  <div class="card overflow-hidden">
+
+    <div class="tabs px-4 pt-2">
+      <a href="{% url 'competicao:dirigente_jogos' %}?tab=agendados"
+         class="tab {% if tab == 'agendados' %}tab-active{% endif %} flex items-center gap-1.5">
+        <i class="ti ti-calendar-time text-sm"></i> Agendados
+      </a>
+      <a href="{% url 'competicao:dirigente_jogos' %}?tab=realizados"
+         class="tab {% if tab == 'realizados' %}tab-active{% endif %} flex items-center gap-1.5">
+        <i class="ti ti-circle-check text-sm"></i> Realizados
+      </a>
+      <span class="badge badge-gray ml-auto self-center">{{ page_obj.paginator.count }}</span>
+    </div>
+
+    {% if page_obj.object_list %}
+    <div class="divide-y divide-gray-100 dark:divide-gray-700">
+      {% for jogo in page_obj %}
+      {% if tab == 'agendados' %}
+      {% include 'competicao/_dirigente_jogo_card.html' with jogo=jogo equipe=equipe show_escalacao=True jogos_confirmados=jogos_confirmados %}
+      {% else %}
+      {% include 'competicao/_dirigente_jogo_card.html' with jogo=jogo equipe=equipe %}
+      {% endif %}
+      {% endfor %}
+    </div>
+    {% else %}
+    {% if tab == 'agendados' %}
+    {% include 'components/empty_state.html' with icon="calendar-x" title="Nenhum jogo agendado ou aguardando data." %}
+    {% else %}
+    {% include 'components/empty_state.html' with icon="calendar-x" title="Nenhum jogo realizado ainda." %}
+    {% endif %}
+    {% endif %}
+
+    {% if page_obj.paginator.num_pages > 1 %}
+    <div class="flex justify-center py-4 border-t border-gray-100 dark:border-gray-700">
+      <div class="join">
+        {% if page_obj.has_previous %}
+        <a href="?tab={{ tab }}&page={{ page_obj.previous_page_number }}"
+           class="join-item btn btn-sm">«</a>
+        {% endif %}
+        <button class="join-item btn btn-sm">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</button>
+        {% if page_obj.has_next %}
+        <a href="?tab={{ tab }}&page={{ page_obj.next_page_number }}"
+           class="join-item btn btn-sm">»</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+
+</div>
+{% endblock %}

@@ -1,12 +1,12 @@
-{% extends 'base/indice.html' %}
+﻿{% extends 'base/indice.html' %}
 {% block titulo %}Portal — Publicações{% endblock %}
 
 {% block breadcrumbs %}
 <div class="px-4 md:px-6 pt-3 pb-0">
-  <div class="breadcrumbs text-xs text-base-content/40">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
     <ul>
-      <li><span class="text-base-content/60">Portal</span></li>
-      <li><span class="text-base-content/60">Publicações</span></li>
+      <li><span class="text-gray-600 dark:text-gray-400">Portal</span></li>
+      <li><span class="text-gray-600 dark:text-gray-400">Publicações</span></li>
     </ul>
   </div>
 </div>
@@ -19,20 +19,20 @@
   <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
     <div>
       <div class="flex items-center gap-2 mb-1">
-        <i class="bi bi-globe text-warning text-sm"></i>
-        <span class="text-xs font-bold uppercase tracking-widest text-base-content/40">Portal Público</span>
+        <i class="ti ti-world text-yellow-500 text-sm"></i>
+        <span class="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">Portal Público</span>
       </div>
-      <h1 class="section-heading text-4xl text-base-content leading-none">PUBLICAÇÕES</h1>
-      <p class="text-sm text-base-content/40 mt-1">Gerencie notícias, comunicados, regulamentos e documentos</p>
+      <h1 class="section-heading text-4xl text-gray-900 dark:text-white leading-none">PUBLICAÇÕES</h1>
+      <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Gerencie notícias, comunicados, regulamentos e documentos</p>
     </div>
     <div class="flex items-center gap-2 flex-wrap">
       <a href="{% url 'competicao:portal_home' %}" target="_blank"
-         class="btn btn-ghost btn-sm border border-base-content/10 gap-1">
-        <i class="bi bi-box-arrow-up-right text-sm"></i> Ver portal
+         class="btn btn-ghost btn-sm border border-gray-200/60 dark:border-gray-700/60 gap-1">
+        <i class="ti ti-external-link text-sm"></i> Ver portal
       </a>
       <a href="{% url 'competicao:publicacao_criar' %}"
-         class="btn btn-warning btn-sm gap-1.5 font-semibold shadow shadow-warning/20">
-        <i class="bi bi-plus-lg"></i> Nova Publicação
+         class="btn btn-primary btn-sm gap-1.5">
+        <i class="ti ti-plus"></i> Nova Publicação
       </a>
     </div>
   </div>
@@ -41,9 +41,9 @@
   <form method="get" class="flex flex-wrap items-end gap-3">
     <div>
       <label class="label py-0 mb-1">
-        <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Tipo</span>
+        <span class="label-text text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Tipo</span>
       </label>
-      <select name="tipo" class="select select-sm select-bordered" onchange="this.form.submit()">
+      <select name="tipo" class="select select-sm " onchange="this.form.submit()">
         <option value="">Todos os tipos</option>
         {% for v, l in tipo_choices %}
         <option value="{{ v }}" {% if tipo_filtro == v %}selected{% endif %}>{{ l }}</option>
@@ -52,28 +52,28 @@
     </div>
     <div class="flex-1 min-w-48">
       <label class="label py-0 mb-1">
-        <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Busca</span>
+        <span class="label-text text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Busca</span>
       </label>
       <div class="join">
         <input type="text" name="q" value="{{ q }}" placeholder="Título ou resumo…"
-               class="input input-sm input-bordered join-item w-full">
-        <button type="submit" class="btn btn-sm btn-ghost border border-base-content/15 join-item">
-          <i class="bi bi-search"></i>
+               class="input input-sm  join-item w-full">
+        <button type="submit" class="btn btn-sm btn-ghost border border-gray-200 dark:border-gray-700 join-item">
+          <i class="ti ti-search"></i>
         </button>
       </div>
     </div>
     {% if q or tipo_filtro %}
     <a href="{% url 'competicao:publicacao_admin_lista' %}"
-       class="btn btn-ghost btn-sm border border-base-content/10 self-end">Limpar</a>
+       class="btn btn-ghost btn-sm border border-gray-200/60 dark:border-gray-700/60 self-end">Limpar</a>
     {% endif %}
   </form>
 
   <!-- Tabela -->
-  <div class="card bg-base-200 border border-base-300 overflow-hidden">
+  <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
     <div class="overflow-x-auto">
       <table class="table table-sm w-full">
         <thead>
-          <tr class="text-xs font-bold uppercase tracking-wider text-base-content/40 border-b border-base-300">
+          <tr class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 border-b border-gray-200 dark:border-gray-700">
             <th class="py-3">Título</th>
             <th>Tipo</th>
             <th>Status</th>
@@ -84,37 +84,37 @@
         </thead>
         <tbody>
           {% for pub in publicacoes %}
-          <tr class="border-b border-base-300/40 hover:bg-base-300/20 transition-colors">
+          <tr class="border-b border-gray-200 dark:border-gray-700/40 hover:bg-gray-200/20 dark:bg-gray-700/20 transition-colors">
             <td class="max-w-64">
-              <p class="font-semibold text-sm text-base-content truncate">{{ pub.titulo }}</p>
+              <p class="font-semibold text-sm text-gray-900 dark:text-white truncate">{{ pub.titulo }}</p>
               {% if pub.resumo %}
-              <p class="text-xs text-base-content/30 truncate">{{ pub.resumo }}</p>
+              <p class="text-xs text-gray-400 dark:text-gray-600 truncate">{{ pub.resumo }}</p>
               {% endif %}
             </td>
             <td>
               <span class="badge badge-xs
-                {% if pub.tipo == 'noticia' %}badge-info
-                {% elif pub.tipo == 'comunicado' %}badge-warning
-                {% elif pub.tipo == 'regulamento' %}badge-success
-                {% else %}badge-neutral{% endif %}">
+                {% if pub.tipo == 'noticia' %}badge-blue
+                {% elif pub.tipo == 'comunicado' %}badge-yellow
+                {% elif pub.tipo == 'regulamento' %}badge-green
+                {% else %}badge-gray{% endif %}">
                 {{ pub.get_tipo_display }}
               </span>
             </td>
             <td>
               {% if pub.publicado %}
-              <span class="badge badge-success badge-xs">Publicado</span>
+              <span class="badge badge-green badge-xs">Publicado</span>
               {% else %}
-              <span class="badge badge-ghost badge-xs">Rascunho</span>
+              <span class="badge badge-gray badge-xs">Rascunho</span>
               {% endif %}
             </td>
             <td>
               {% if pub.destaque %}
-              <i class="bi bi-star-fill text-warning text-sm"></i>
+              <i class="ti ti-star text-yellow-500 text-sm"></i>
               {% else %}
-              <i class="bi bi-star text-base-content/20 text-sm"></i>
+              <i class="ti ti-star text-gray-300 dark:text-gray-600 text-sm"></i>
               {% endif %}
             </td>
-            <td class="text-xs text-base-content/40 whitespace-nowrap">
+            <td class="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
               {% if pub.publicado_em %}{{ pub.publicado_em|date:"d/m/Y" }}
               {% else %}{{ pub.criado_em|date:"d/m/Y" }}{% endif %}
             </td>
@@ -122,33 +122,30 @@
               <div class="flex items-center gap-1 justify-end">
                 {% if pub.publicado %}
                 <a href="{% url 'competicao:portal_publicacao_detalhe' pub.slug %}" target="_blank"
-                   class="btn btn-ghost btn-xs border border-base-content/10"
+                   class="btn btn-ghost btn-xs border border-gray-200/60 dark:border-gray-700/60"
                    title="Ver no portal">
-                  <i class="bi bi-eye text-xs"></i>
+                  <i class="ti ti-eye text-xs"></i>
                 </a>
                 {% endif %}
                 <a href="{% url 'competicao:publicacao_editar' pub.pk %}"
-                   class="btn btn-ghost btn-xs border border-base-content/10">
-                  <i class="bi bi-pencil text-xs"></i>
+                   class="btn btn-ghost btn-xs border border-gray-200/60 dark:border-gray-700/60">
+                  <i class="ti ti-pencil text-xs"></i>
                 </a>
-                <form method="post" action="{% url 'competicao:publicacao_excluir' pub.pk %}" class="inline">
-                  {% csrf_token %}
-                  <button type="submit"
-                          class="btn btn-ghost btn-xs border border-base-content/10 text-error/40 hover:text-error hover:border-error/30"
-                          onclick="return confirm('Excluir esta publicação?')">
-                    <i class="bi bi-trash text-xs"></i>
-                  </button>
-                </form>
+                <button type="button"
+                        onclick="abrirModalExcluirPub('{% url 'competicao:publicacao_excluir' pub.pk %}', '{{ pub.titulo|escapejs }}')"
+                        class="btn btn-ghost btn-xs border border-gray-200/60 dark:border-gray-700/60 text-red-500/40 hover:text-red-500 hover:border-red-500/30">
+                  <i class="ti ti-trash text-xs"></i>
+                </button>
               </div>
             </td>
           </tr>
           {% empty %}
           <tr>
-            <td colspan="6" class="text-center py-14 text-base-content/25">
-              <i class="bi bi-newspaper text-4xl block mb-3"></i>
+            <td colspan="6" class="text-center py-14 text-gray-400 dark:text-gray-600">
+              <i class="ti ti-news text-4xl block mb-3"></i>
               <p class="text-sm">Nenhuma publicação encontrada.</p>
-              <a href="{% url 'competicao:publicacao_criar' %}" class="btn btn-warning btn-sm mt-4 gap-1">
-                <i class="bi bi-plus-lg"></i> Criar primeira publicação
+              <a href="{% url 'competicao:publicacao_criar' %}" class="btn btn-outline btn-sm mt-4 gap-1">
+                <i class="ti ti-plus"></i> Criar primeira publicação
               </a>
             </td>
           </tr>
@@ -159,4 +156,51 @@
   </div>
 
 </div>
+
+<!-- Modal: excluir publicação -->
+<div id="modal-excluir-pub" tabindex="-1" aria-hidden="true"
+     class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 flex justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+  <div class="relative p-4 w-full max-w-md max-h-full">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 space-y-4">
+      <div class="flex items-center gap-3">
+        <i class="ti ti-alert-triangle text-red-500 text-xl"></i>
+        <h2 class="font-semibold text-gray-900 dark:text-white">Excluir Publicação</h2>
+      </div>
+      <p class="text-sm text-gray-600 dark:text-gray-400">
+        Excluir <strong id="modal-pub-titulo" class="text-gray-900 dark:text-white"></strong>?
+        Esta ação é irreversível.
+      </p>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="fecharModalExcluirPub()" class="btn btn-ghost btn-sm">Cancelar</button>
+        <form id="form-excluir-pub" method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger-outline btn-sm gap-1">
+            <i class="ti ti-trash text-xs"></i> Excluir
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% block script %}
+<script>
+function abrirModalExcluirPub(url, titulo) {
+  document.getElementById('modal-pub-titulo').textContent = titulo;
+  document.getElementById('form-excluir-pub').action = url;
+  var m = document.getElementById('modal-excluir-pub');
+  m.classList.remove('hidden');
+  m.classList.add('flex');
+}
+function fecharModalExcluirPub() {
+  var m = document.getElementById('modal-excluir-pub');
+  m.classList.add('hidden');
+  m.classList.remove('flex');
+}
+document.getElementById('modal-excluir-pub').addEventListener('click', function(e) {
+  if (e.target === this) fecharModalExcluirPub();
+});
+</script>
+{% endblock %}
+
 {% endblock %}

@@ -1,0 +1,14 @@
+Olá{% if user.nome %}, {{ user.nome }}{% endif %}!
+
+Uma conta foi criada para você no CHAMPS — a plataforma de gestão de
+competições esportivas.
+
+Para começar a usar, defina sua senha através do link abaixo (válido
+por tempo limitado):
+
+{{ protocol }}://{{ domain }}{% url 'core:password_reset_confirm' uidb64=uid token=token %}
+
+Se você não esperava este convite, ignore este e-mail.
+
+—
+Equipe CHAMPS

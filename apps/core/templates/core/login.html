@@ -1,241 +1,187 @@
-{% load tailwind_tags %}
+{% load static %}
 <!doctype html>
-<html lang="pt-br" data-theme="luxury">
+<html lang="pt-br" id="html-root" class="">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Entrar — Champs</title>
+  <title>Entrar — CHAMPS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
-  {% tailwind_css %}
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+  <link rel="stylesheet" href="{% static 'css/dist/styles.css' %}">
 </head>
 
-<body class="min-h-screen bg-base-100 flex flex-col lg:flex-row">
+<body class="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col lg:flex-row antialiased">
 
-  <!-- ═══════════════════════════════════════════════════════════════
-       LADO ESQUERDO — Hero / Brand
-  ════════════════════════════════════════════════════════════════ -->
-  <div class="relative lg:w-1/2 bg-neutral flex flex-col overflow-hidden
-              min-h-[280px] lg:min-h-screen">
+  <!-- Lado esquerdo — Hero -->
+  <div class="relative lg:w-1/2 bg-blue-700 dark:bg-blue-900 flex flex-col overflow-hidden min-h-[260px] lg:min-h-screen">
 
-    <!-- Gradiente radial dourado (fundo) -->
-    <div class="pointer-events-none absolute inset-0" aria-hidden="true">
-      <div class="absolute top-0 right-0 w-[600px] h-[600px] rounded-full
-                  bg-warning/8 blur-[120px] -translate-y-1/2 translate-x-1/4"></div>
-      <div class="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full
-                  bg-warning/5 blur-[100px] translate-y-1/3 -translate-x-1/4"></div>
-    </div>
-
-    <!-- Ícone decorativo de fundo (gigante, translúcido) -->
+    <!-- Ícone decorativo de fundo -->
     <div class="pointer-events-none absolute inset-0 flex items-center justify-center" aria-hidden="true">
-      <i class="bi bi-trophy-fill text-neutral-content/[0.03] select-none"
-         style="font-size: 32rem; line-height: 1;"></i>
+      <i class="ti ti-trophy text-white/5 select-none" style="font-size: 28rem; line-height: 1;"></i>
     </div>
 
-    <!-- Linha dourada no topo -->
-    <div class="h-0.5 w-full bg-gradient-to-r from-transparent via-warning/50 to-transparent shrink-0 relative z-10"></div>
+    <!-- Gradiente suave -->
+    <div class="pointer-events-none absolute inset-0 bg-gradient-to-br from-blue-600/30 to-transparent" aria-hidden="true"></div>
 
-    <!-- Conteúdo do hero -->
+    <!-- Conteúdo -->
     <div class="relative z-10 flex flex-col justify-between flex-1 p-8 md:p-12 lg:p-14">
 
       <!-- Brand -->
       <div class="flex items-center gap-3">
-        <div class="w-11 h-11 rounded-xl bg-warning/10 border border-warning/25
-                    flex items-center justify-center shadow-lg">
-          <i class="bi bi-trophy-fill text-warning text-xl"></i>
+        <div class="w-11 h-11 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center shadow-lg">
+          <i class="ti ti-trophy text-white text-xl"></i>
         </div>
         <div>
-          <div class="section-heading text-2xl text-neutral-content tracking-widest leading-none">CHAMPS</div>
-          <div class="text-[11px] text-neutral-content/30 font-medium mt-0.5 tracking-wide">
-            Sistema de Campeonatos
-          </div>
+          <div class="section-heading text-2xl text-white tracking-widest leading-none">CHAMPS</div>
+          <div class="text-[11px] text-white/50 font-medium mt-0.5 tracking-wide">Sistema de Campeonatos</div>
         </div>
       </div>
 
-      <!-- Headline central (oculta em mobile) -->
+      <!-- Headline (desktop) -->
       <div class="hidden lg:block">
-        <h2 class="section-heading text-6xl xl:text-7xl text-neutral-content leading-none mb-6">
+        <h2 class="section-heading text-6xl xl:text-7xl text-white leading-none mb-6">
           GERENCIE<br>
-          <span class="text-warning">CAMPEONATOS</span><br>
+          <span class="text-blue-200">CAMPEONATOS</span><br>
           COM PRECISÃO
         </h2>
-        <p class="text-neutral-content/50 text-base max-w-sm leading-relaxed">
-          Tabelas automáticas, controle de gols, cartões, suspensões e muito mais
-          — tudo em um só lugar.
+        <p class="text-white/60 text-base max-w-sm leading-relaxed">
+          Tabelas automáticas, controle de gols, cartões, suspensões e muito mais — tudo em um só lugar.
         </p>
 
-        <!-- Feature list -->
         <ul class="mt-8 space-y-3">
-          {% for feat in features|default:"" %}{% endfor %}
-          <li class="flex items-center gap-3 text-neutral-content/60">
-            <div class="w-8 h-8 rounded-lg bg-warning/10 border border-warning/20
-                        flex items-center justify-center shrink-0">
-              <i class="bi bi-trophy text-warning text-sm"></i>
+          <li class="flex items-center gap-3 text-white/60">
+            <div class="w-8 h-8 rounded-lg bg-white/10 border border-white/15 flex items-center justify-center shrink-0">
+              <i class="ti ti-trophy text-white text-sm"></i>
             </div>
             <span class="text-sm font-medium">Competições com múltiplas fases</span>
           </li>
-          <li class="flex items-center gap-3 text-neutral-content/60">
-            <div class="w-8 h-8 rounded-lg bg-success/10 border border-success/20
-                        flex items-center justify-center shrink-0">
-              <i class="bi bi-table text-success text-sm"></i>
+          <li class="flex items-center gap-3 text-white/60">
+            <div class="w-8 h-8 rounded-lg bg-white/10 border border-white/15 flex items-center justify-center shrink-0">
+              <i class="ti ti-table text-white text-sm"></i>
             </div>
             <span class="text-sm font-medium">Classificação e artilharia automáticas</span>
           </li>
-          <li class="flex items-center gap-3 text-neutral-content/60">
-            <div class="w-8 h-8 rounded-lg bg-info/10 border border-info/20
-                        flex items-center justify-center shrink-0">
-              <i class="bi bi-people-fill text-info text-sm"></i>
+          <li class="flex items-center gap-3 text-white/60">
+            <div class="w-8 h-8 rounded-lg bg-white/10 border border-white/15 flex items-center justify-center shrink-0">
+              <i class="ti ti-users text-white text-sm"></i>
             </div>
             <span class="text-sm font-medium">Gestão de elencos e escalações</span>
           </li>
-          <li class="flex items-center gap-3 text-neutral-content/60">
-            <div class="w-8 h-8 rounded-lg bg-error/10 border border-error/20
-                        flex items-center justify-center shrink-0">
-              <i class="bi bi-square-fill text-error text-sm"></i>
+          <li class="flex items-center gap-3 text-white/60">
+            <div class="w-8 h-8 rounded-lg bg-white/10 border border-white/15 flex items-center justify-center shrink-0">
+              <i class="ti ti-square text-white text-sm"></i>
             </div>
             <span class="text-sm font-medium">Cartões e suspensões automáticas</span>
           </li>
         </ul>
       </div>
 
-      <!-- Rodapé do hero -->
       <div class="hidden lg:block">
-        <p class="text-xs text-neutral-content/20">
-          &copy; <script>document.write(new Date().getFullYear())</script> Champs
-          &mdash; Desenvolvido por Anderson Duarte
-        </p>
+        <p class="text-xs text-white/25">&copy; 2025 CHAMPS — Desenvolvido por Anderson Duarte</p>
       </div>
 
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════════════════════════
-       LADO DIREITO — Formulário de login
-  ════════════════════════════════════════════════════════════════ -->
-  <div class="flex-1 lg:w-1/2 flex items-center justify-center
-              px-6 py-12 lg:py-0 bg-base-100 relative">
+  <!-- Lado direito — Formulário -->
+  <div class="flex-1 lg:w-1/2 flex items-center justify-center px-6 py-12 lg:py-0 bg-white dark:bg-gray-900 relative">
 
-    <!-- Glow sutil centralizado -->
-    <div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-      <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
-                  w-[400px] h-[400px] rounded-full bg-warning/4 blur-[80px]"></div>
-    </div>
+    <div class="w-full max-w-sm">
 
-    <div class="w-full max-w-sm relative z-10">
-
-      <!-- Brand pequeno (mobile only) -->
+      <!-- Brand mobile -->
       <div class="flex items-center gap-2.5 justify-center mb-8 lg:hidden">
-        <div class="w-9 h-9 rounded-xl bg-neutral border border-neutral-content/20
-                    flex items-center justify-center shadow-lg">
-          <i class="bi bi-trophy-fill text-warning"></i>
+        <div class="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg">
+          <i class="ti ti-trophy text-white text-lg"></i>
         </div>
-        <div class="section-heading text-2xl text-base-content tracking-widest">CHAMPS</div>
+        <div class="section-heading text-2xl text-gray-900 dark:text-white tracking-widest">CHAMPS</div>
       </div>
 
-      <!-- Heading do form -->
+      <!-- Título -->
       <div class="mb-8">
-        <h1 class="section-heading text-4xl text-base-content leading-none mb-1">BEM-VINDO</h1>
-        <p class="text-sm text-base-content/40 font-medium">Faça login para continuar</p>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white leading-none mb-1">Bem-vindo</h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Faça login para continuar</p>
       </div>
 
-      <!-- Alertas -->
+      <!-- Alertas de erro -->
       {% if messages %}
       <div class="space-y-2 mb-6">
         {% for message in messages %}
-        <div role="alert"
-             class="alert alert-error text-sm rounded-xl py-2.5 border-error/20">
-          <i class="bi bi-exclamation-triangle-fill shrink-0 text-sm"></i>
+        <div class="alert alert-danger text-sm" role="alert">
+          <i class="ti ti-alert-triangle shrink-0 text-base"></i>
           <span>{{ message }}</span>
         </div>
         {% endfor %}
       </div>
       {% endif %}
 
-      <!-- Formulário -->
+      <!-- Form -->
       <form method="post"
             action="{% url 'core:login' %}{% if request.GET.next %}?next={{ request.GET.next }}{% endif %}"
             novalidate class="space-y-5">
         {% csrf_token %}
 
         <!-- E-mail -->
-        <div class="space-y-1.5">
-          <label class="text-xs font-bold uppercase tracking-widest text-base-content/40"
-                 for="{{ form.email.id_for_label }}">
-            E-mail
-          </label>
-          <label class="input input-bordered flex items-center gap-2.5
-                        bg-base-200 border-base-content/10
-                        focus-within:border-warning/50 focus-within:bg-base-200
-                        transition-all duration-150 rounded-xl
-                        {% if form.email.errors %}border-error/60{% endif %}">
-            <i class="bi bi-envelope text-base-content/25 text-sm shrink-0"></i>
+        <div>
+          <label class="form-label" for="{{ form.email.id_for_label }}">E-mail</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-3 flex items-center text-gray-400 pointer-events-none">
+              <i class="ti ti-mail text-base"></i>
+            </span>
             <input type="email"
                    id="{{ form.email.id_for_label }}"
                    name="email"
                    value="{{ form.email.value|default:'' }}"
                    placeholder="seu@email.com"
-                   class="grow text-sm bg-transparent outline-none
-                          placeholder:text-base-content/20 text-base-content"
+                   class="form-input pl-9 {% if form.email.errors %}border-red-400 dark:border-red-500{% endif %}"
                    autocomplete="email"
                    autofocus>
-          </label>
+          </div>
           {% if form.email.errors %}
-          <p class="text-error text-xs flex items-center gap-1">
-            <i class="bi bi-exclamation-circle shrink-0"></i>
-            {{ form.email.errors|join:", " }}
+          <p class="mt-1 text-xs text-red-600 dark:text-red-400 flex items-center gap-1">
+            <i class="ti ti-alert-circle shrink-0 text-base"></i>{{ form.email.errors|join:", " }}
           </p>
           {% endif %}
         </div>
 
         <!-- Senha -->
-        <div class="space-y-1.5">
-          <div class="flex items-center justify-between">
-            <label class="text-xs font-bold uppercase tracking-widest text-base-content/40"
-                   for="{{ form.password.id_for_label }}">
-              Senha
-            </label>
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="form-label mb-0" for="{{ form.password.id_for_label }}">Senha</label>
             <a href="{% url 'core:password_reset' %}"
-               class="text-xs text-base-content/30 hover:text-warning transition-colors duration-150">
+               class="text-xs text-blue-600 dark:text-blue-400 hover:underline">
               Esqueci a senha
             </a>
           </div>
-          <label class="input input-bordered flex items-center gap-2.5
-                        bg-base-200 border-base-content/10
-                        focus-within:border-warning/50 focus-within:bg-base-200
-                        transition-all duration-150 rounded-xl
-                        {% if form.password.errors %}border-error/60{% endif %}">
-            <i class="bi bi-lock text-base-content/25 text-sm shrink-0"></i>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-3 flex items-center text-gray-400 pointer-events-none">
+              <i class="ti ti-lock text-base"></i>
+            </span>
             <input type="password"
                    id="{{ form.password.id_for_label }}"
                    name="password"
                    placeholder="••••••••"
-                   class="grow text-sm bg-transparent outline-none
-                          placeholder:text-base-content/20 text-base-content"
+                   class="form-input pl-9 {% if form.password.errors %}border-red-400 dark:border-red-500{% endif %}"
                    autocomplete="current-password">
-          </label>
+          </div>
           {% if form.password.errors %}
-          <p class="text-error text-xs flex items-center gap-1">
-            <i class="bi bi-exclamation-circle shrink-0"></i>
-            {{ form.password.errors|join:", " }}
+          <p class="mt-1 text-xs text-red-600 dark:text-red-400 flex items-center gap-1">
+            <i class="ti ti-alert-circle shrink-0 text-base"></i>{{ form.password.errors|join:", " }}
           </p>
           {% endif %}
         </div>
 
-        <!-- Botão submit -->
-        <button type="submit"
-                class="btn btn-warning w-full font-bold shadow-lg shadow-warning/20
-                       rounded-xl gap-2 mt-2">
-          <i class="bi bi-box-arrow-in-right text-base"></i>
+        <!-- Submit -->
+        <button type="submit" class="btn btn-primary btn-full mt-2">
+          <i class="ti ti-login-2 text-base"></i>
           Entrar no sistema
         </button>
 
       </form>
 
-      <!-- Rodapé mobile -->
-      <p class="text-center text-xs text-base-content/20 mt-10 lg:hidden">
-        &copy; <script>document.write(new Date().getFullYear())</script> Champs
+      <p class="text-center text-xs text-gray-400 dark:text-gray-600 mt-10 lg:hidden">
+        &copy; 2025 CHAMPS
       </p>
 
     </div>

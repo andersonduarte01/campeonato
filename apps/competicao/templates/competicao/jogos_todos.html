@@ -1,0 +1,359 @@
+{% extends 'base/indice.html' %}
+{% block titulo %}Jogos{% endblock %}
+
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
+    <ul>
+      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-gray-700 dark:text-gray-300">Dashboard</a></li>
+      <li><span class="text-gray-600 dark:text-gray-400">Jogos</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block conteudo %}
+<div class="p-4 md:p-6 max-w-[1400px] mx-auto space-y-6">
+
+  <!-- Cabeçalho -->
+  <div class="flex items-end justify-between gap-4">
+    <div>
+      <h1 class="section-heading text-4xl text-gray-900 dark:text-white leading-none">JOGOS</h1>
+      <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Ao vivo, próximos e resultados</p>
+    </div>
+    <a href="{% url 'competicao:calendario' %}"
+       class="btn btn-ghost btn-sm gap-1 border border-gray-200/60 dark:border-gray-700/60 shrink-0">
+      <i class="ti ti-calendar"></i> Calendário
+    </a>
+  </div>
+
+  <!-- Tabs -->
+  <div class="border-b border-gray-200 dark:border-gray-700 flex gap-1 -mb-2">
+    <button class="jt-tab px-4 py-2.5 text-xs font-bold border-b-2 border-transparent
+                   text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300
+                   rounded-t-lg transition-all duration-150 shrink-0"
+            data-panel="panel-aovivo" id="tab-ao-vivo">
+      <span class="live-dot mr-1.5"></span>Ao Vivo
+      {% if ao_vivo %}
+      <span class="badge badge-red badge-xs ml-1">{{ ao_vivo|length }}</span>
+      {% endif %}
+    </button>
+    <button class="jt-tab px-4 py-2.5 text-xs font-bold border-b-2 border-transparent
+                   text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300
+                   rounded-t-lg transition-all duration-150 shrink-0"
+            data-panel="panel-proximos" id="tab-proximos">
+      <i class="ti ti-calendar-event mr-1.5"></i>Próximos
+      {% if proximos %}
+      <span class="badge badge-blue badge-xs ml-1">{{ proximos|length }}</span>
+      {% endif %}
+    </button>
+    <button class="jt-tab px-4 py-2.5 text-xs font-bold border-b-2 border-transparent
+                   text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300
+                   rounded-t-lg transition-all duration-150 shrink-0"
+            data-panel="panel-resultados" id="tab-resultados">
+      <i class="ti ti-circle-check mr-1.5"></i>Resultados
+      {% if resultados %}
+      <span class="badge badge-gray badge-xs ml-1">{{ resultados|length }}</span>
+      {% endif %}
+    </button>
+  </div>
+
+  <!-- ── Painel: Ao Vivo ──────────────────────────────────────────── -->
+  <div id="panel-aovivo" class="jt-panel hidden">
+    <div class="card overflow-hidden">
+      <div class="card-header">
+        <span class="live-dot shrink-0"></span>
+        <span class="section-title text-red-500 dark:text-red-400">Ao Vivo</span>
+        {% if ao_vivo %}
+        <span class="badge badge-red ml-auto">{{ ao_vivo|length }}</span>
+        {% endif %}
+      </div>
+      {% if ao_vivo %}
+      <div class="divide-y divide-gray-100 dark:divide-gray-700" id="list-aovivo">
+        {% for j in ao_vivo %}
+        <a href="{% url 'competicao:jogo_detalhe' j.pk %}"
+           class="jt-item block px-4 py-4 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors group">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[10px] font-bold text-red-500 uppercase tracking-wide flex items-center gap-1">
+              <span class="live-dot w-1.5 h-1.5"></span> Ao Vivo
+            </span>
+            <span class="text-[10px] text-gray-400 dark:text-gray-500 truncate ml-2">{{ j.rodada.competicao.nome }}</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="flex-1 flex items-center gap-2 justify-end min-w-0">
+              {% if j.equipe_casa.escudo %}
+              <img src="{{ j.equipe_casa.escudo.thumbnail.url }}" class="w-7 h-7 rounded-full object-cover border border-gray-200 dark:border-gray-700 shrink-0">
+              {% else %}
+              <div class="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-[10px] font-black text-gray-500 shrink-0">{{ j.equipe_casa.nome_equipe|first|upper }}</div>
+              {% endif %}
+              <span class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ j.equipe_casa.nome_equipe }}</span>
+            </div>
+            <div class="shrink-0 px-3 py-1 bg-red-50 dark:bg-red-900/20 rounded-lg text-center min-w-[60px]">
+              <span class="stat-number text-xl text-red-500 leading-none">{{ j.gols_casa }}–{{ j.gols_fora }}</span>
+            </div>
+            <div class="flex-1 flex items-center gap-2 min-w-0">
+              {% if j.equipe_fora.escudo %}
+              <img src="{{ j.equipe_fora.escudo.thumbnail.url }}" class="w-7 h-7 rounded-full object-cover border border-gray-200 dark:border-gray-700 shrink-0">
+              {% else %}
+              <div class="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-[10px] font-black text-gray-500 shrink-0">{{ j.equipe_fora.nome_equipe|first|upper }}</div>
+              {% endif %}
+              <span class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ j.equipe_fora.nome_equipe }}</span>
+            </div>
+          </div>
+          {% if j.local %}
+          <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-2 flex items-center gap-1 justify-center">
+            <i class="ti ti-map-pin shrink-0"></i>{{ j.local.nome }}
+          </p>
+          {% endif %}
+        </a>
+        {% endfor %}
+      </div>
+      <div id="pager-aovivo" class="hidden px-4 py-3 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between gap-3">
+        <button id="pager-aovivo-prev" class="btn btn-ghost btn-sm gap-1" disabled>
+          <i class="ti ti-chevron-left"></i> Anterior
+        </button>
+        <span id="pager-aovivo-label" class="text-xs text-gray-400 dark:text-gray-500"></span>
+        <button id="pager-aovivo-next" class="btn btn-ghost btn-sm gap-1">
+          Próxima <i class="ti ti-chevron-right"></i>
+        </button>
+      </div>
+      {% else %}
+      {% include 'components/empty_state.html' with icon="live-photo" title="Nenhuma partida ao vivo no momento." %}
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ── Painel: Próximos ─────────────────────────────────────────── -->
+  <div id="panel-proximos" class="jt-panel hidden">
+    <div class="card overflow-hidden">
+      <div class="card-header">
+        <i class="ti ti-calendar-event text-blue-600 dark:text-blue-400 text-base"></i>
+        <span class="section-title">Próximos Jogos</span>
+        {% if proximos %}
+        <span class="badge badge-blue ml-auto">{{ proximos|length }}</span>
+        {% endif %}
+      </div>
+      {% if proximos %}
+      <div class="divide-y divide-gray-100 dark:divide-gray-700" id="list-proximos">
+        {% for j in proximos %}
+        <a href="{% url 'competicao:jogo_detalhe' j.pk %}"
+           class="jt-item block px-4 py-4 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors group">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[10px] text-gray-400 dark:text-gray-500 flex items-center gap-1.5">
+              <i class="ti ti-calendar shrink-0"></i>
+              {% if j.data_hora %}
+              {{ j.data_hora|date:"d/m/Y" }}
+              <span class="font-bold text-blue-600 dark:text-blue-400">{{ j.data_hora|date:"H:i" }}</span>
+              {% else %}
+              <span class="italic">Data a definir</span>
+              {% endif %}
+            </span>
+            <span class="text-[10px] text-gray-400 dark:text-gray-500 truncate ml-2">{{ j.rodada.competicao.nome }}</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="flex-1 flex items-center gap-2 justify-end min-w-0">
+              {% if j.equipe_casa.escudo %}
+              <img src="{{ j.equipe_casa.escudo.thumbnail.url }}" class="w-7 h-7 rounded-full object-cover border border-gray-200 dark:border-gray-700 shrink-0">
+              {% else %}
+              <div class="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-[10px] font-black text-gray-500 shrink-0">{{ j.equipe_casa.nome_equipe|first|upper }}</div>
+              {% endif %}
+              <span class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ j.equipe_casa.nome_equipe }}</span>
+            </div>
+            <div class="shrink-0 px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-lg text-center min-w-[60px]">
+              <span class="text-sm font-black text-gray-300 dark:text-gray-600 tracking-widest">VS</span>
+            </div>
+            <div class="flex-1 flex items-center gap-2 min-w-0">
+              {% if j.equipe_fora.escudo %}
+              <img src="{{ j.equipe_fora.escudo.thumbnail.url }}" class="w-7 h-7 rounded-full object-cover border border-gray-200 dark:border-gray-700 shrink-0">
+              {% else %}
+              <div class="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-[10px] font-black text-gray-500 shrink-0">{{ j.equipe_fora.nome_equipe|first|upper }}</div>
+              {% endif %}
+              <span class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ j.equipe_fora.nome_equipe }}</span>
+            </div>
+          </div>
+          {% if j.local %}
+          <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-2 flex items-center gap-1 justify-center">
+            <i class="ti ti-map-pin shrink-0"></i>{{ j.local.nome }}
+          </p>
+          {% endif %}
+        </a>
+        {% endfor %}
+      </div>
+      <div id="pager-proximos" class="hidden px-4 py-3 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between gap-3">
+        <button id="pager-proximos-prev" class="btn btn-ghost btn-sm gap-1" disabled>
+          <i class="ti ti-chevron-left"></i> Anterior
+        </button>
+        <span id="pager-proximos-label" class="text-xs text-gray-400 dark:text-gray-500"></span>
+        <button id="pager-proximos-next" class="btn btn-ghost btn-sm gap-1">
+          Próxima <i class="ti ti-chevron-right"></i>
+        </button>
+      </div>
+      {% else %}
+      {% include 'components/empty_state.html' with icon="calendar-x" title="Nenhum jogo agendado." %}
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ── Painel: Resultados ───────────────────────────────────────── -->
+  <div id="panel-resultados" class="jt-panel hidden">
+    <div class="card overflow-hidden">
+      <div class="card-header">
+        <i class="ti ti-circle-check text-green-500 dark:text-green-400 text-base"></i>
+        <span class="section-title">Resultados</span>
+        {% if resultados %}
+        <span class="badge badge-gray ml-auto">{{ resultados|length }}</span>
+        {% endif %}
+      </div>
+      {% if resultados %}
+      <div class="divide-y divide-gray-100 dark:divide-gray-700" id="list-resultados">
+        {% for j in resultados %}
+        <a href="{% url 'competicao:jogo_detalhe' j.pk %}"
+           class="jt-item block px-4 py-4 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors group">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[10px] text-gray-400 dark:text-gray-500 flex items-center gap-1">
+              <i class="ti ti-calendar shrink-0"></i>
+              {% if j.data_hora %}{{ j.data_hora|date:"d/m/Y H:i" }}{% else %}—{% endif %}
+            </span>
+            <span class="text-[10px] text-gray-400 dark:text-gray-500 truncate ml-2">{{ j.rodada.competicao.nome }}</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="flex-1 flex items-center gap-2 justify-end min-w-0">
+              {% if j.equipe_casa.escudo %}
+              <img src="{{ j.equipe_casa.escudo.thumbnail.url }}"
+                   class="w-7 h-7 rounded-full object-cover border border-gray-200 dark:border-gray-700 shrink-0
+                          {% if j.gols_casa < j.gols_fora %}opacity-40{% endif %}">
+              {% else %}
+              <div class="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-[10px] font-black shrink-0
+                          {% if j.gols_casa < j.gols_fora %}text-gray-400 opacity-40{% else %}text-gray-500{% endif %}">
+                {{ j.equipe_casa.nome_equipe|first|upper }}
+              </div>
+              {% endif %}
+              <span class="text-sm font-semibold truncate {% if j.gols_casa < j.gols_fora %}text-gray-400 dark:text-gray-500{% else %}text-gray-900 dark:text-white{% endif %}">
+                {{ j.equipe_casa.nome_equipe }}
+              </span>
+            </div>
+            <div class="shrink-0 flex items-center gap-1.5 px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-lg min-w-[60px] justify-center">
+              <span class="stat-number text-lg leading-none
+                {% if j.gols_casa > j.gols_fora %}text-green-600 dark:text-green-400
+                {% elif j.gols_casa == j.gols_fora %}text-gray-500 dark:text-gray-400
+                {% else %}text-gray-300 dark:text-gray-600{% endif %}">{{ j.gols_casa }}</span>
+              <span class="text-gray-300 dark:text-gray-600 text-xs font-bold">–</span>
+              <span class="stat-number text-lg leading-none
+                {% if j.gols_fora > j.gols_casa %}text-green-600 dark:text-green-400
+                {% elif j.gols_casa == j.gols_fora %}text-gray-500 dark:text-gray-400
+                {% else %}text-gray-300 dark:text-gray-600{% endif %}">{{ j.gols_fora }}</span>
+            </div>
+            <div class="flex-1 flex items-center gap-2 min-w-0">
+              {% if j.equipe_fora.escudo %}
+              <img src="{{ j.equipe_fora.escudo.thumbnail.url }}"
+                   class="w-7 h-7 rounded-full object-cover border border-gray-200 dark:border-gray-700 shrink-0
+                          {% if j.gols_fora < j.gols_casa %}opacity-40{% endif %}">
+              {% else %}
+              <div class="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-[10px] font-black shrink-0
+                          {% if j.gols_fora < j.gols_casa %}text-gray-400 opacity-40{% else %}text-gray-500{% endif %}">
+                {{ j.equipe_fora.nome_equipe|first|upper }}
+              </div>
+              {% endif %}
+              <span class="text-sm font-semibold truncate {% if j.gols_fora < j.gols_casa %}text-gray-400 dark:text-gray-500{% else %}text-gray-900 dark:text-white{% endif %}">
+                {{ j.equipe_fora.nome_equipe }}
+              </span>
+            </div>
+          </div>
+          {% if j.local %}
+          <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-2 flex items-center gap-1 justify-center">
+            <i class="ti ti-map-pin shrink-0"></i>{{ j.local.nome }}
+          </p>
+          {% endif %}
+        </a>
+        {% endfor %}
+      </div>
+      <div id="pager-resultados" class="hidden px-4 py-3 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between gap-3">
+        <button id="pager-resultados-prev" class="btn btn-ghost btn-sm gap-1" disabled>
+          <i class="ti ti-chevron-left"></i> Anterior
+        </button>
+        <span id="pager-resultados-label" class="text-xs text-gray-400 dark:text-gray-500"></span>
+        <button id="pager-resultados-next" class="btn btn-ghost btn-sm gap-1">
+          Próxima <i class="ti ti-chevron-right"></i>
+        </button>
+      </div>
+      {% else %}
+      {% include 'components/empty_state.html' with icon="clipboard-x" title="Nenhum resultado registrado." %}
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+(function () {
+  'use strict';
+  var PAGE_SIZE = 10;
+
+  /* ── Paginação ───────────────────────────────────────────────────── */
+  function initPager(listId, pagerId) {
+    var list = document.getElementById(listId);
+    if (!list) return;
+    var items = Array.from(list.querySelectorAll('.jt-item'));
+    if (items.length <= PAGE_SIZE) return;
+
+    var pager  = document.getElementById(pagerId);
+    var btnPrev = document.getElementById(pagerId + '-prev');
+    var btnNext = document.getElementById(pagerId + '-next');
+    var label   = document.getElementById(pagerId + '-label');
+    var total   = Math.ceil(items.length / PAGE_SIZE);
+    var current = 1;
+
+    function render() {
+      var start = (current - 1) * PAGE_SIZE;
+      items.forEach(function (item, i) {
+        item.classList.toggle('hidden', i < start || i >= start + PAGE_SIZE);
+      });
+      label.textContent = 'Página ' + current + ' de ' + total;
+      btnPrev.disabled = current === 1;
+      btnNext.disabled = current === total;
+    }
+
+    btnPrev.addEventListener('click', function () { if (current > 1) { current--; render(); } });
+    btnNext.addEventListener('click', function () { if (current < total) { current++; render(); } });
+
+    pager.classList.remove('hidden');
+    render();
+  }
+
+  initPager('list-aovivo',    'pager-aovivo');
+  initPager('list-proximos',  'pager-proximos');
+  initPager('list-resultados','pager-resultados');
+
+  /* ── Tabs ─────────────────────────────────────────────────────────── */
+  var tabs   = document.querySelectorAll('.jt-tab');
+  var panels = document.querySelectorAll('.jt-panel');
+
+  function activate(tab) {
+    tabs.forEach(function (t) {
+      t.classList.remove('tab-active', 'bg-blue-500/5');
+      t.classList.add('border-transparent', 'text-gray-400');
+    });
+    panels.forEach(function (p) { p.classList.add('hidden'); });
+    tab.classList.remove('border-transparent', 'text-gray-400');
+    tab.classList.add('tab-active', 'bg-blue-500/5');
+    var panel = document.getElementById(tab.dataset.panel);
+    if (panel) panel.classList.remove('hidden');
+  }
+
+  tabs.forEach(function (tab) {
+    tab.addEventListener('click', function () { activate(this); });
+  });
+
+  /* Abre a tab correta pelo hash da URL (#ao-vivo / #proximos / #resultados) */
+  var hashMap = {
+    '#ao-vivo':    document.getElementById('tab-ao-vivo'),
+    '#proximos':   document.getElementById('tab-proximos'),
+    '#resultados': document.getElementById('tab-resultados'),
+  };
+  var inicial = hashMap[window.location.hash] || document.getElementById('tab-proximos');
+  if (inicial) activate(inicial);
+})();
+</script>
+{% endblock %}

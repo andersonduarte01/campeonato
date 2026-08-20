@@ -1,0 +1,208 @@
+{% extends 'base/indice.html' %}
+{% block titulo %}Meu Painel — Árbitro{% endblock %}
+
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
+    <ul>
+      <li><span class="text-gray-600 dark:text-gray-400">Meu Painel</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block conteudo %}
+<div class="p-4 md:p-6 space-y-6">
+
+  <!-- ── Cabeçalho ──────────────────────────────────────────────────── -->
+  <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2 mb-1">
+        <i class="ti ti-whistle text-orange-400 text-sm"></i>
+        <span class="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">Árbitro</span>
+      </div>
+      <h1 class="section-heading text-4xl text-gray-900 dark:text-white leading-none">MEU PAINEL</h1>
+      <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">{{ request.user.nome }}</p>
+    </div>
+    <a href="{% url 'competicao:jogos_todos' %}"
+       class="btn btn-ghost btn-sm gap-1.5 border border-gray-200/60 dark:border-gray-700/60 shrink-0">
+      <i class="ti ti-calendar"></i> Todos os jogos
+    </a>
+  </div>
+
+  <!-- ── Stats rápidos ─────────────────────────────────────────────── -->
+  <div class="grid grid-cols-3 gap-3">
+    <div class="card p-4 text-center">
+      <div class="stat-number text-3xl {% if pendentes %}text-yellow-500{% else %}text-gray-300 dark:text-gray-600{% endif %}">
+        {{ pendentes|length }}
+      </div>
+      <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mt-1">Pendentes</p>
+    </div>
+    <div class="card p-4 text-center">
+      <div class="stat-number text-3xl {% if proximos %}text-blue-500{% else %}text-gray-300 dark:text-gray-600{% endif %}">
+        {{ proximos|length }}
+      </div>
+      <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mt-1">Próximos</p>
+    </div>
+    <div class="card p-4 text-center">
+      <div class="stat-number text-3xl text-gray-500 dark:text-gray-400">{{ total_jogos }}</div>
+      <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mt-1">Apitados</p>
+    </div>
+  </div>
+
+  <!-- ── Layout principal ──────────────────────────────────────────── -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+    <!-- Coluna esquerda (2/3) -->
+    <div class="lg:col-span-2 space-y-5">
+
+      <!-- Ao Vivo -->
+      {% if ao_vivo %}
+      <div class="card overflow-hidden">
+        <div class="card-header">
+          <span class="live-dot shrink-0"></span>
+          <span class="section-title text-red-500 dark:text-red-400">Ao Vivo</span>
+          <span class="badge badge-red ml-auto">{{ ao_vivo|length }}</span>
+        </div>
+        <div class="divide-y divide-gray-100 dark:divide-gray-700">
+          {% for j in ao_vivo %}
+          {% include 'competicao/_arbitro_jogo_card.html' with jogo=j modo="aovivo" %}
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Aguardando Súmula -->
+      {% if pendentes %}
+      <div class="card overflow-hidden ring-1 ring-yellow-400/30">
+        <div class="card-header bg-yellow-50/50 dark:bg-yellow-900/10">
+          <i class="ti ti-clipboard-text text-yellow-500 text-base shrink-0"></i>
+          <span class="section-title text-yellow-600 dark:text-yellow-400">Aguardando Súmula</span>
+          <span class="badge badge-yellow ml-auto">{{ pendentes|length }}</span>
+        </div>
+        <div class="divide-y divide-gray-100 dark:divide-gray-700">
+          {% for j in pendentes %}
+          {% include 'competicao/_arbitro_jogo_card.html' with jogo=j modo="pendente" %}
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Próximos jogos -->
+      <div class="card overflow-hidden">
+        <div class="card-header">
+          <i class="ti ti-calendar-event text-blue-600 dark:text-blue-400 text-base shrink-0"></i>
+          <span class="section-title">Próximos Jogos</span>
+          {% if proximos %}
+          <span class="badge badge-blue ml-auto">{{ proximos|length }}</span>
+          {% endif %}
+        </div>
+        {% if proximos %}
+        <div class="divide-y divide-gray-100 dark:divide-gray-700">
+          {% for j in proximos %}
+          {% include 'competicao/_arbitro_jogo_card.html' with jogo=j modo="proximo" %}
+          {% endfor %}
+        </div>
+        {% else %}
+        {% include 'components/empty_state.html' with icon="calendar-x" title="Nenhum jogo agendado para você." %}
+        {% endif %}
+      </div>
+
+    </div>
+
+    <!-- Coluna direita (1/3) -->
+    <div class="space-y-5">
+
+      <!-- Histórico -->
+      <div class="card overflow-hidden">
+        <div class="card-header">
+          <i class="ti ti-history text-gray-400 dark:text-gray-500 text-base shrink-0"></i>
+          <span class="section-title">Histórico</span>
+          {% if total_jogos %}
+          <span class="badge badge-gray ml-auto">{{ total_jogos }}</span>
+          {% endif %}
+        </div>
+        {% if historico %}
+        <div class="divide-y divide-gray-100 dark:divide-gray-700">
+          {% for j in historico %}
+          <a href="{% url 'competicao:jogo_detalhe' j.pk %}"
+             class="block px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors group">
+
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-[10px] text-gray-400 dark:text-gray-500">
+                {% if j.data_hora %}{{ j.data_hora|date:"d/m/Y" }}{% else %}—{% endif %}
+              </span>
+              <span class="text-[10px] text-gray-400 dark:text-gray-500 truncate ml-2 max-w-[100px]">
+                {{ j.rodada.competicao.nome }}
+              </span>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <div class="flex-1 flex items-center gap-1.5 justify-end min-w-0">
+                {% if j.equipe_casa.escudo %}
+                <img src="{{ j.equipe_casa.escudo.thumbnail.url }}"
+                     class="w-5 h-5 rounded-full object-cover border border-gray-200 dark:border-gray-700 shrink-0
+                            {% if j.gols_casa < j.gols_fora %}opacity-40{% endif %}">
+                {% else %}
+                <div class="w-5 h-5 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-[9px] font-black shrink-0
+                            {% if j.gols_casa < j.gols_fora %}opacity-40{% endif %} text-gray-500">
+                  {{ j.equipe_casa.nome_equipe|first|upper }}
+                </div>
+                {% endif %}
+                <span class="text-xs font-medium truncate
+                  {% if j.gols_casa < j.gols_fora %}text-gray-400 dark:text-gray-500{% else %}text-gray-800 dark:text-gray-200{% endif %}">
+                  {{ j.equipe_casa.nome_equipe|truncatechars:10 }}
+                </span>
+              </div>
+
+              <div class="shrink-0 px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-center min-w-[42px]">
+                <span class="stat-number text-sm
+                  {% if j.gols_casa > j.gols_fora %}text-green-600 dark:text-green-400
+                  {% elif j.gols_casa == j.gols_fora %}text-gray-500 dark:text-gray-400
+                  {% else %}text-gray-300 dark:text-gray-600{% endif %}">{{ j.gols_casa }}</span>
+                <span class="text-gray-300 dark:text-gray-600 text-xs">–</span>
+                <span class="stat-number text-sm
+                  {% if j.gols_fora > j.gols_casa %}text-green-600 dark:text-green-400
+                  {% elif j.gols_casa == j.gols_fora %}text-gray-500 dark:text-gray-400
+                  {% else %}text-gray-300 dark:text-gray-600{% endif %}">{{ j.gols_fora }}</span>
+              </div>
+
+              <div class="flex-1 flex items-center gap-1.5 min-w-0">
+                {% if j.equipe_fora.escudo %}
+                <img src="{{ j.equipe_fora.escudo.thumbnail.url }}"
+                     class="w-5 h-5 rounded-full object-cover border border-gray-200 dark:border-gray-700 shrink-0
+                            {% if j.gols_fora < j.gols_casa %}opacity-40{% endif %}">
+                {% else %}
+                <div class="w-5 h-5 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-[9px] font-black shrink-0
+                            {% if j.gols_fora < j.gols_casa %}opacity-40{% endif %} text-gray-500">
+                  {{ j.equipe_fora.nome_equipe|first|upper }}
+                </div>
+                {% endif %}
+                <span class="text-xs font-medium truncate
+                  {% if j.gols_fora < j.gols_casa %}text-gray-400 dark:text-gray-500{% else %}text-gray-800 dark:text-gray-200{% endif %}">
+                  {{ j.equipe_fora.nome_equipe|truncatechars:10 }}
+                </span>
+              </div>
+            </div>
+
+          </a>
+          {% endfor %}
+        </div>
+        {% if total_jogos > 10 %}
+        <div class="px-4 py-2.5 border-t border-gray-100 dark:border-gray-700 text-center">
+          <a href="{% url 'competicao:arbitro_detalhe' request.vinculo.pk %}"
+             class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">
+            Ver histórico completo
+          </a>
+        </div>
+        {% endif %}
+        {% else %}
+        {% include 'components/empty_state.html' with icon="whistle" title="Nenhum jogo apitado ainda." %}
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}

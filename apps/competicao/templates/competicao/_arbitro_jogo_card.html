@@ -1,0 +1,83 @@
+<div class="px-4 py-4 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+
+  <!-- Meta: data/hora + competição -->
+  <div class="flex items-center justify-between mb-2.5">
+    <span class="text-[10px] text-gray-400 dark:text-gray-500 flex items-center gap-1.5">
+      {% if modo == "aovivo" %}
+      <span class="live-dot w-1.5 h-1.5 shrink-0"></span>
+      <span class="text-red-500 font-bold">Ao Vivo</span>
+      {% elif jogo.data_hora %}
+      <i class="ti ti-calendar shrink-0"></i>
+      {{ jogo.data_hora|date:"d/m/Y" }}
+      <span class="font-bold text-blue-600 dark:text-blue-400">{{ jogo.data_hora|date:"H:i" }}</span>
+      {% else %}
+      <i class="ti ti-calendar shrink-0"></i>
+      <span class="italic">Data a definir</span>
+      {% endif %}
+    </span>
+    <span class="text-[10px] text-gray-400 dark:text-gray-500 truncate ml-2 max-w-[140px]">
+      {{ jogo.rodada.competicao.nome }}
+    </span>
+  </div>
+
+  <!-- Confronto -->
+  <div class="flex items-center gap-3">
+    <div class="flex-1 flex items-center gap-2 justify-end min-w-0">
+      {% if jogo.equipe_casa.escudo %}
+      <img src="{{ jogo.equipe_casa.escudo.thumbnail.url }}"
+           class="w-7 h-7 rounded-full object-cover border border-gray-200 dark:border-gray-700 shrink-0">
+      {% else %}
+      <div class="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-[10px] font-black text-gray-500 shrink-0">
+        {{ jogo.equipe_casa.nome_equipe|first|upper }}
+      </div>
+      {% endif %}
+      <span class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ jogo.equipe_casa.nome_equipe }}</span>
+    </div>
+
+    <div class="shrink-0 px-3 py-1 rounded-lg text-center min-w-[58px]
+      {% if modo == 'aovivo' %}bg-red-50 dark:bg-red-900/20
+      {% elif modo == 'pendente' %}bg-yellow-50 dark:bg-yellow-900/20
+      {% else %}bg-gray-100 dark:bg-gray-700{% endif %}">
+      {% if modo == 'aovivo' %}
+      <span class="stat-number text-xl text-red-500 leading-none">{{ jogo.gols_casa }}–{{ jogo.gols_fora }}</span>
+      {% else %}
+      <span class="text-sm font-black text-gray-300 dark:text-gray-600 tracking-widest">VS</span>
+      {% endif %}
+    </div>
+
+    <div class="flex-1 flex items-center gap-2 min-w-0">
+      {% if jogo.equipe_fora.escudo %}
+      <img src="{{ jogo.equipe_fora.escudo.thumbnail.url }}"
+           class="w-7 h-7 rounded-full object-cover border border-gray-200 dark:border-gray-700 shrink-0">
+      {% else %}
+      <div class="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-[10px] font-black text-gray-500 shrink-0">
+        {{ jogo.equipe_fora.nome_equipe|first|upper }}
+      </div>
+      {% endif %}
+      <span class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ jogo.equipe_fora.nome_equipe }}</span>
+    </div>
+  </div>
+
+  <!-- Local -->
+  {% if jogo.local %}
+  <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-2 flex items-center gap-1 justify-center">
+    <i class="ti ti-map-pin shrink-0"></i>{{ jogo.local.nome }}
+  </p>
+  {% endif %}
+
+  <!-- Ações -->
+  <div class="mt-3 flex gap-2 justify-end">
+    {% if modo == "aovivo" or modo == "pendente" %}
+    <a href="{% url 'competicao:sumula' jogo_pk=jogo.pk %}"
+       class="btn btn-primary btn-sm gap-1.5">
+      <i class="ti ti-clipboard-text text-sm"></i>
+      {% if modo == "aovivo" %}Súmula ao vivo{% else %}Preencher Súmula{% endif %}
+    </a>
+    {% endif %}
+    <a href="{% url 'competicao:jogo_detalhe' jogo.pk %}"
+       class="btn btn-ghost btn-sm gap-1 border border-gray-200/60 dark:border-gray-700/60">
+      <i class="ti ti-eye text-sm"></i> Ver jogo
+    </a>
+  </div>
+
+</div>

@@ -1,135 +1,77 @@
 {% extends 'base/indice.html' %}
-{% block titulo %}LGPD — Privacidade e Dados{% endblock %}
-
-{% block breadcrumbs %}
-<div class="px-4 md:px-6 pt-3 pb-0">
-  <div class="breadcrumbs text-xs text-base-content/40">
-    <ul>
-      <li><span class="text-base-content/60">Auditoria</span></li>
-      <li><span class="text-base-content/60">LGPD — Privacidade</span></li>
-    </ul>
-  </div>
-</div>
-{% endblock %}
+{% block titulo %}Privacidade e LGPD{% endblock %}
 
 {% block conteudo %}
-<div class="p-4 md:p-6 max-w-[900px] mx-auto space-y-6">
+<div class="p-4 md:p-6 max-w-2xl mx-auto space-y-6">
 
   <!-- Cabeçalho -->
-  <div>
-    <div class="flex items-center gap-2 mb-1">
-      <i class="bi bi-shield-lock text-warning text-sm"></i>
-      <span class="text-xs font-bold uppercase tracking-widest text-base-content/40">Auditoria e Segurança</span>
+  <div class="flex items-center gap-3">
+    <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800 flex items-center justify-center">
+      <i class="ti ti-shield-lock text-blue-600 dark:text-blue-400 text-xl"></i>
     </div>
-    <h1 class="section-heading text-4xl text-base-content leading-none">LGPD — PRIVACIDADE</h1>
-    <p class="text-sm text-base-content/40 mt-1">
-      Conforme a Lei Geral de Proteção de Dados (Lei nº 13.709/2018), você tem
-      direito de acessar, corrigir e excluir seus dados pessoais.
-    </p>
-  </div>
-
-  <!-- Dados do titular -->
-  <div class="card bg-base-200 border border-base-300 overflow-hidden">
-    <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
-      <i class="bi bi-person-lines-fill text-warning text-sm"></i>
-      <span class="section-heading text-sm text-base-content/70 tracking-widest">SEUS DADOS</span>
-    </div>
-    <div class="p-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
-      <div>
-        <p class="text-xs text-base-content/40 font-bold uppercase tracking-wider mb-1">Nome</p>
-        <p class="text-sm font-semibold">{{ request.user.nome }}</p>
-      </div>
-      <div class="col-span-2">
-        <p class="text-xs text-base-content/40 font-bold uppercase tracking-wider mb-1">E-mail</p>
-        <p class="text-sm font-semibold truncate">{{ request.user.email }}</p>
-      </div>
-      <div>
-        <p class="text-xs text-base-content/40 font-bold uppercase tracking-wider mb-1">Eventos auditados</p>
-        <p class="text-sm font-semibold">{{ total_logs }}</p>
-      </div>
-    </div>
-    <div class="px-4 pb-4 flex flex-wrap gap-2">
-      <a href="{% url 'auditoria:lgpd_exportar' %}"
-         class="btn btn-sm btn-ghost border border-base-content/10 gap-1.5">
-        <i class="bi bi-download text-sm"></i>
-        Exportar meus dados (JSON)
-      </a>
+    <div>
+      <h1 class="text-xl font-bold text-gray-900 dark:text-white leading-none">Privacidade e LGPD</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Gerencie seus consentimentos e dados pessoais</p>
     </div>
   </div>
 
   <!-- Consentimentos -->
-  <div class="card bg-base-200 border border-base-300 overflow-hidden">
-    <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
-      <i class="bi bi-check2-circle text-warning text-sm"></i>
-      <span class="section-heading text-sm text-base-content/70 tracking-widest">CONSENTIMENTOS</span>
+  <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+    <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
+      <i class="ti ti-checklist text-blue-500 text-sm"></i>
+      <h2 class="font-bold text-sm">Consentimentos</h2>
     </div>
-    <form method="post" class="p-4 space-y-4">
-      {% csrf_token %}
-      <p class="text-xs text-base-content/40">
-        Gerencie o que o CHAMPS pode fazer com seus dados. As alterações são
-        registradas com data, hora e IP para conformidade legal.
-      </p>
-      <div class="space-y-3">
+    <div class="card-body p-5">
+      <form method="post" class="space-y-4">
+        {% csrf_token %}
         {% for item in tipo_choices_state %}
-        <div class="flex items-center justify-between p-3 bg-base-300/30 rounded-xl border border-base-300/50">
-          <div class="flex-1">
-            <p class="text-sm font-semibold text-base-content">{{ item.label }}</p>
+        <label class="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 cursor-pointer hover:border-blue-300 dark:hover:border-blue-600 transition-colors">
+          <input type="checkbox"
+                 name="{{ item.tipo }}"
+                 {% if item.aceito %}checked{% endif %}
+                 class="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+          <span class="flex-1">
+            <span class="block text-sm font-medium text-gray-900 dark:text-white">{{ item.label }}</span>
             {% if item.atualizado %}
-            <p class="text-xs text-base-content/30">
-              Atualizado em {{ item.atualizado|date:"d/m/Y H:i" }}
-            </p>
-            {% else %}
-            <p class="text-xs text-base-content/25">Não definido</p>
+            <span class="block text-xs text-gray-400 mt-0.5">Atualizado em {{ item.atualizado|date:'d/m/Y H:i' }}</span>
             {% endif %}
-          </div>
-          <label class="flex items-center gap-2 cursor-pointer ml-4">
-            <input type="checkbox"
-                   name="{{ item.tipo }}"
-                   class="toggle toggle-success toggle-sm"
-                   {% if item.aceito %}checked{% endif %}>
-            <span class="text-xs {% if item.aceito %}text-success{% else %}text-base-content/30{% endif %}">
-              {% if item.aceito %}Aceito{% else %}Recusado{% endif %}
-            </span>
-          </label>
-        </div>
+          </span>
+        </label>
         {% endfor %}
-      </div>
-      <button type="submit"
-              class="btn btn-warning btn-sm gap-1.5 font-semibold shadow shadow-warning/20">
-        <i class="bi bi-check-lg"></i> Salvar consentimentos
-      </button>
-    </form>
+        <button type="submit" class="btn btn-primary btn-full">
+          <i class="ti ti-device-floppy"></i> Salvar consentimentos
+        </button>
+      </form>
+    </div>
   </div>
 
-  <!-- Exclusão / Anonimização -->
-  <div class="card bg-base-200 border border-error/20 overflow-hidden">
-    <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-error/5">
-      <i class="bi bi-trash3 text-error text-sm"></i>
-      <span class="section-heading text-sm text-error/70 tracking-widest">EXCLUSÃO DE DADOS</span>
+  <!-- Direitos do titular -->
+  <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+    <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
+      <i class="ti ti-user-shield text-blue-500 text-sm"></i>
+      <h2 class="font-bold text-sm">Seus direitos</h2>
     </div>
-    <div class="p-4 space-y-3">
-      <p class="text-sm text-base-content/60">
-        Ao solicitar a exclusão, seus dados pessoais (nome e e-mail) serão
-        <strong>anonimizados</strong> e sua conta será desativada. Esta ação é
-        <strong>irreversível</strong>. Os logs de auditoria são retidos para
-        fins legais conforme a política de retenção.
-      </p>
+    <div class="card-body p-5 space-y-3">
+      <a href="{% url 'auditoria:lgpd_exportar' %}"
+         class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-blue-300 dark:hover:border-blue-600 transition-colors group">
+        <i class="ti ti-download text-blue-500 text-lg shrink-0"></i>
+        <span class="flex-1">
+          <span class="block text-sm font-medium text-gray-900 dark:text-white">Exportar meus dados</span>
+          <span class="block text-xs text-gray-500 dark:text-gray-400">Baixe uma cópia dos seus dados pessoais em JSON</span>
+        </span>
+        <i class="ti ti-chevron-right text-gray-300 group-hover:text-blue-500 transition-colors"></i>
+      </a>
       <a href="{% url 'auditoria:lgpd_anonimizar' %}"
-         class="btn btn-sm btn-ghost border border-error/30 text-error/70 hover:btn-error hover:text-white gap-1.5">
-        <i class="bi bi-person-x text-sm"></i> Solicitar exclusão dos meus dados
+         class="flex items-center gap-3 p-3 rounded-lg border border-red-200 dark:border-red-900 bg-white dark:bg-gray-900 hover:border-red-400 dark:hover:border-red-600 transition-colors group">
+        <i class="ti ti-user-off text-red-500 text-lg shrink-0"></i>
+        <span class="flex-1">
+          <span class="block text-sm font-medium text-red-600 dark:text-red-400">Anonimizar minha conta</span>
+          <span class="block text-xs text-gray-500 dark:text-gray-400">Remove seus dados pessoais e desativa a conta (irreversível)</span>
+        </span>
+        <i class="ti ti-chevron-right text-gray-300 group-hover:text-red-500 transition-colors"></i>
       </a>
     </div>
   </div>
-
-  <!-- Link para logs (apenas admins) -->
-  {% if request.user.perfil == 'admin' or request.user.is_admin %}
-  <div class="flex justify-end">
-    <a href="{% url 'auditoria:log_lista' %}"
-       class="btn btn-ghost btn-sm border border-base-content/10 gap-1">
-      <i class="bi bi-list-ul text-sm"></i> Ver todos os logs do sistema
-    </a>
-  </div>
-  {% endif %}
 
 </div>
 {% endblock %}

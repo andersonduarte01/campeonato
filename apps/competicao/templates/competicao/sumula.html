@@ -1,0 +1,441 @@
+﻿{% extends 'base/indice.html' %}
+{% block titulo %}Súmula — {{ jogo.equipe_casa }} × {{ jogo.equipe_fora }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
+    <ul>
+      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-gray-700 dark:hover:text-gray-300">Dashboard</a></li>
+      {% if jogo.rodada %}
+      <li><a href="{% url 'competicao:classificacao' jogo.rodada.competicao.pk %}" class="hover:text-gray-700 dark:hover:text-gray-300">{{ jogo.rodada.competicao.nome }}</a></li>
+      <li><a href="{% url 'competicao:rodadas' jogo.rodada.competicao.pk %}" class="hover:text-gray-700 dark:hover:text-gray-300">Rodadas</a></li>
+      {% endif %}
+      <li><a href="{% url 'competicao:jogo_detalhe' jogo.pk %}" class="hover:text-gray-700 dark:hover:text-gray-300">Jogo</a></li>
+      <li><span class="text-gray-600 dark:text-gray-400">Súmula</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block conteudo %}
+<div class="p-4 md:p-6 space-y-5">
+
+  <!-- ── Cabeçalho ─────────────────────────────────────────────────── -->
+  <div class="flex items-start justify-between gap-4 flex-wrap">
+    <div class="flex items-center gap-3">
+      <a href="{% url 'competicao:jogo_detalhe' jogo.pk %}"
+         class="btn btn-ghost btn-sm btn-square border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 shrink-0">
+        <i class="ti ti-arrow-left text-sm"></i>
+      </a>
+      <div>
+        <div class="flex items-center gap-2 mb-0.5">
+          <h1 class="section-heading text-4xl text-gray-900 dark:text-white leading-none">SÚMULA</h1>
+          <span class="badge badge-sm font-semibold
+            {% if sumula.status == 'homologada' %}badge-green
+            {% elif sumula.status == 'encerrada' %}badge-yellow
+            {% elif sumula.status == 'aberta' %}badge-blue
+            {% elif sumula.status == 'anulada' %}badge-red
+            {% else %}badge-gray{% endif %}">
+            {{ sumula.get_status_display }}
+          </span>
+        </div>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
+          {{ jogo.equipe_casa.nome_equipe }} × {{ jogo.equipe_fora.nome_equipe }}
+          {% if jogo.data_hora %} · {{ jogo.data_hora|date:"d/m/Y H:i" }}{% endif %}
+          {% if jogo.local %} · {{ jogo.local.nome }}{% endif %}
+        </p>
+      </div>
+    </div>
+    <div class="flex flex-wrap gap-2 shrink-0">
+      {% if sumula.pode_encerrar and pode_editar %}
+      <button type="button"
+              data-modal-target="modal-encerrar"
+              data-modal-toggle="modal-encerrar"
+              class="btn btn-outline btn-sm gap-1.5 font-semibold">
+        <i class="ti ti-lock text-sm"></i> Encerrar
+      </button>
+      {% endif %}
+      {% if sumula.pode_homologar and not is_arbitro_only %}
+      <button type="button"
+              data-modal-target="modal-homologar"
+              data-modal-toggle="modal-homologar"
+              class="btn btn-primary btn-sm gap-1.5 font-semibold">
+        <i class="ti ti-shield-check text-sm"></i> Homologar
+      </button>
+      {% endif %}
+      {% if sumula.pode_reabrir and not is_arbitro_only %}
+      <form method="post" action="{% url 'competicao:sumula_reabrir' sumula.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-ghost btn-sm gap-1 border border-gray-200 dark:border-gray-700">
+          <i class="ti ti-lock-open text-sm"></i> Reabrir
+        </button>
+      </form>
+      {% endif %}
+      <a href="{% url 'competicao:pdf_sumula' jogo.pk %}" target="_blank"
+         class="btn btn-ghost btn-sm gap-1 border border-gray-200 dark:border-gray-700">
+        <i class="ti ti-printer text-sm"></i> Imprimir
+      </a>
+    </div>
+  </div>
+
+  <!-- ── Aviso homologação ──────────────────────────────────────────── -->
+  {% if sumula.status == 'homologada' %}
+  <div class="alert alert-success">
+    <i class="ti ti-shield-check text-xl shrink-0"></i>
+    <div>
+      <p class="font-bold text-sm">Súmula Homologada</p>
+      <p class="text-xs mt-0.5 opacity-80">
+        Homologada por <strong>{{ sumula.homologada_por.nome }}</strong>
+        em {{ sumula.homologada_em|date:"d/m/Y \à\s H:i" }}
+      </p>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if is_secretario_only and sumula.status != 'homologada' %}
+  <div class="flex items-start gap-2.5 px-4 py-3 rounded-lg bg-blue-500/10 border border-blue-500/20
+              text-xs text-blue-600 dark:text-blue-400">
+    <i class="ti ti-eye text-base shrink-0 mt-0.5"></i>
+    <p>Modo visualização — o registro da súmula é atribuição do árbitro.
+    Após o encerramento, confira os dados e homologue a partida.</p>
+  </div>
+  {% endif %}
+
+  <!-- ── Card com tabs ─────────────────────────────────────────────── -->
+  <div class="card overflow-hidden">
+
+    <!-- Barra de tabs -->
+    <div class="flex items-stretch border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/10">
+      <div class="flex gap-1 px-3 pt-1">
+        <button class="sumula-tab px-4 py-2.5 text-[11px] font-bold tracking-wide rounded-t-lg
+                       border-b-2 border-transparent -mb-px transition-all duration-150 whitespace-nowrap
+                       text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                data-panel="panel-arbitragem">
+          <i class="ti ti-id-badge-2 text-xs mr-1"></i>Arbitragem
+        </button>
+        <button class="sumula-tab px-4 py-2.5 text-[11px] font-bold tracking-wide rounded-t-lg
+                       border-b-2 border-transparent -mb-px transition-all duration-150 whitespace-nowrap
+                       text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                data-panel="panel-escalacao">
+          <i class="ti ti-users text-xs mr-1"></i>Escalação
+        </button>
+        <button class="sumula-tab px-4 py-2.5 text-[11px] font-bold tracking-wide rounded-t-lg
+                       border-b-2 border-transparent -mb-px transition-all duration-150 whitespace-nowrap
+                       text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                data-panel="panel-subs">
+          <i class="ti ti-arrows-exchange text-xs mr-1"></i>Substituições
+        </button>
+        <button class="sumula-tab px-4 py-2.5 text-[11px] font-bold tracking-wide rounded-t-lg
+                       border-b-2 border-transparent -mb-px transition-all duration-150 whitespace-nowrap
+                       text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                data-panel="panel-ocorrencias">
+          <i class="ti ti-alert-triangle text-xs mr-1"></i>Ocorrências
+          {% if ocorrencias %}<span class="badge badge-yellow badge-xs ml-1">{{ ocorrencias|length }}</span>{% endif %}
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Panel: Arbitragem ─────────────────────────────────────── -->
+    <div id="panel-arbitragem" class="sumula-panel hidden p-4">
+      {% if pode_editar %}
+      <form method="post" action="{% url 'competicao:sumula_arbitragem' sumula.pk %}" class="space-y-4">
+        {% csrf_token %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {% for field in form_arb %}
+          {% if field.name != 'observacoes_arbitro' %}
+          <div>
+            <p class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">{{ field.label }}</p>
+            {{ field }}
+          </div>
+          {% endif %}
+          {% endfor %}
+        </div>
+        <div>
+          <p class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Observações do Árbitro</p>
+          {{ form_arb.observacoes_arbitro }}
+        </div>
+        <div class="flex justify-end pt-2 border-t border-gray-200 dark:border-gray-700">
+          <button type="submit" class="btn btn-primary btn-sm gap-1.5">
+            <i class="ti ti-device-floppy text-sm"></i> Salvar Arbitragem
+          </button>
+        </div>
+      </form>
+      {% else %}
+      <div class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+        {% if sumula.arbitro_principal %}<p><span class="font-semibold text-gray-500 dark:text-gray-400">Árbitro Principal:</span> {{ sumula.arbitro_principal.usuario.nome }}</p>{% endif %}
+        {% if sumula.arbitro_assistente_1 %}<p><span class="font-semibold text-gray-500 dark:text-gray-400">1º Assistente:</span> {{ sumula.arbitro_assistente_1.usuario.nome }}</p>{% endif %}
+        {% if sumula.arbitro_assistente_2 %}<p><span class="font-semibold text-gray-500 dark:text-gray-400">2º Assistente:</span> {{ sumula.arbitro_assistente_2.usuario.nome }}</p>{% endif %}
+        {% if sumula.quarto_arbitro %}<p><span class="font-semibold text-gray-500 dark:text-gray-400">4º Árbitro:</span> {{ sumula.quarto_arbitro.usuario.nome }}</p>{% endif %}
+        {% if sumula.observacoes_arbitro %}
+        <p class="mt-3 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg text-xs italic text-gray-500 dark:text-gray-400">{{ sumula.observacoes_arbitro }}</p>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- ── Panel: Escalação ──────────────────────────────────────── -->
+    <div id="panel-escalacao" class="sumula-panel hidden p-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {% for equipe, form_esc, escalacao_list in escalacao_data %}
+        <div>
+          <div class="flex items-center gap-2 mb-3 pb-2 border-b border-gray-200 dark:border-gray-700">
+            {% if equipe.escudo %}
+            <img src="{{ equipe.escudo.thumbnail.url }}" class="w-6 h-6 rounded-full object-cover shrink-0">
+            {% endif %}
+            <span class="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">{{ equipe.nome_equipe }}</span>
+          </div>
+
+          {% if pode_editar %}
+          <form method="post" action="{% url 'competicao:escalacao_adicionar' sumula.pk equipe.pk %}"
+                class="flex gap-2 mb-3">
+            {% csrf_token %}
+            <div class="flex-1">{{ form_esc.atleta }}</div>
+            <div class="w-20">{{ form_esc.numero_camisa }}</div>
+            <div class="w-28">{{ form_esc.tipo }}</div>
+            <button type="submit" class="btn btn-ghost btn-sm border border-gray-200 dark:border-gray-700 shrink-0">
+              <i class="ti ti-plus text-sm"></i>
+            </button>
+          </form>
+          {% endif %}
+
+          <div class="space-y-1">
+            {% for e in escalacao_list %}
+            <div class="flex items-center gap-2 px-3 py-2 rounded-lg
+                        {% if e.tipo == 'titular' %}bg-gray-50 dark:bg-gray-700/40{% endif %}">
+              <span class="w-6 text-xs font-mono text-gray-400 dark:text-gray-500 text-center shrink-0">{{ e.numero_camisa|default:"—" }}</span>
+              <span class="flex-1 text-sm font-medium text-gray-900 dark:text-white">
+                {{ e.atleta.nome }}{% if e.capitao %} <span class="text-yellow-500 font-bold text-xs">(C)</span>{% endif %}
+              </span>
+              <span class="badge badge-gray badge-xs">{% if e.tipo == 'reserva' %}Res{% else %}Tit{% endif %}</span>
+              {% if pode_editar %}
+              <form method="post" action="{% url 'competicao:escalacao_remover' e.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-ghost btn-xs text-red-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10">
+                  <i class="ti ti-x text-xs"></i>
+                </button>
+              </form>
+              {% endif %}
+            </div>
+            {% empty %}
+            <p class="text-xs text-gray-400 dark:text-gray-500 py-3 text-center">Nenhum atleta adicionado.</p>
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- ── Panel: Substituições ──────────────────────────────────── -->
+    <div id="panel-subs" class="sumula-panel hidden p-4 space-y-4">
+
+      {% if pode_editar %}
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {% for equipe, form_sub in subs_data %}
+        <div class="card bg-gray-50 dark:bg-gray-700/30 overflow-hidden">
+          <div class="card-header">
+            <span class="section-title">{{ equipe.nome_equipe }}</span>
+          </div>
+          <div class="p-3">
+            <form method="post" action="{% url 'competicao:substituicao_adicionar' sumula.pk equipe.pk %}" class="space-y-2">
+              {% csrf_token %}
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <p class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Saiu</p>
+                  {{ form_sub.atleta_saiu }}
+                </div>
+                <div>
+                  <p class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Entrou</p>
+                  {{ form_sub.atleta_entrou }}
+                </div>
+              </div>
+              <div class="flex gap-2 items-end">
+                <div class="flex-1">
+                  <p class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Minuto</p>
+                  {{ form_sub.minuto }}
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm gap-1 shrink-0">
+                  <i class="ti ti-plus text-sm"></i> Registrar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="space-y-2">
+        {% for sub in substituicoes %}
+        <div class="flex items-center gap-3 px-4 py-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg border border-gray-200 dark:border-gray-700">
+          <span class="font-mono text-xs font-bold text-yellow-600 dark:text-yellow-400 w-8 shrink-0">{{ sub.minuto }}'</span>
+          <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ sub.atleta_saiu.nome }}</span>
+          <i class="ti ti-arrows-exchange text-gray-400 dark:text-gray-500 text-sm shrink-0"></i>
+          <span class="text-sm font-medium text-green-600 dark:text-green-400">{{ sub.atleta_entrou.nome }}</span>
+          <span class="text-xs text-gray-400 dark:text-gray-500 ml-auto shrink-0">{{ sub.equipe.nome_equipe }}</span>
+          {% if pode_editar %}
+          <form method="post" action="{% url 'competicao:substituicao_remover' sub.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-ghost btn-xs text-red-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10">
+              <i class="ti ti-trash text-xs"></i>
+            </button>
+          </form>
+          {% endif %}
+        </div>
+        {% empty %}
+        {% include 'components/empty_state.html' with icon="arrows-exchange" title="Nenhuma substituição registrada." %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- ── Panel: Ocorrências ────────────────────────────────────── -->
+    <div id="panel-ocorrencias" class="sumula-panel hidden p-4 space-y-4">
+
+      {% if pode_editar %}
+      <div class="card bg-gray-50 dark:bg-gray-700/30 overflow-hidden">
+        <div class="card-header">
+          <i class="ti ti-alert-triangle text-yellow-500 text-base"></i>
+          <span class="section-title">Registrar Ocorrência</span>
+        </div>
+        <div class="p-3">
+          <form method="post" action="{% url 'competicao:ocorrencia_adicionar' sumula.pk %}" class="space-y-3">
+            {% csrf_token %}
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <p class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Tipo</p>
+                {{ form_ocorrencia.tipo }}
+              </div>
+              <div>
+                <p class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Minuto</p>
+                {{ form_ocorrencia.minuto }}
+              </div>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Descrição</p>
+              {{ form_ocorrencia.descricao }}
+            </div>
+            <div class="flex justify-end">
+              <button type="submit" class="btn btn-primary btn-sm gap-1.5">
+                <i class="ti ti-circle-plus text-sm"></i> Registrar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="space-y-2">
+        {% for oc in ocorrencias %}
+        <div class="flex items-start gap-3 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg border border-gray-200 dark:border-gray-700">
+          <div class="w-8 h-8 rounded-lg bg-yellow-50 dark:bg-yellow-400/10 border border-yellow-200 dark:border-yellow-400/20
+                      flex items-center justify-center shrink-0 mt-0.5">
+            <i class="ti ti-alert-triangle text-yellow-500 text-sm"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-0.5">
+              <span class="font-bold text-sm text-gray-900 dark:text-white">{{ oc.get_tipo_display }}</span>
+              {% if oc.minuto %}<span class="badge badge-gray badge-xs font-mono">{{ oc.minuto }}'</span>{% endif %}
+            </div>
+            <p class="text-sm text-gray-600 dark:text-gray-400">{{ oc.descricao }}</p>
+          </div>
+          {% if pode_editar %}
+          <form method="post" action="{% url 'competicao:ocorrencia_remover' oc.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-ghost btn-xs text-red-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10">
+              <i class="ti ti-trash text-xs"></i>
+            </button>
+          </form>
+          {% endif %}
+        </div>
+        {% empty %}
+        {% include 'components/empty_state.html' with icon="circle-check" title="Nenhuma ocorrência registrada." %}
+        {% endfor %}
+      </div>
+    </div>
+
+  </div><!-- /card -->
+
+</div>
+<!-- Modal: encerrar súmula -->
+{% if sumula.pode_encerrar and pode_editar %}
+<div id="modal-encerrar" tabindex="-1" aria-hidden="true"
+     class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 flex justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+  <div class="relative p-4 w-full max-w-md max-h-full">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 space-y-4">
+      <div class="flex items-center gap-3">
+        <i class="ti ti-lock text-amber-500 text-xl"></i>
+        <h2 class="font-semibold text-gray-900 dark:text-white">Encerrar Súmula</h2>
+      </div>
+      <p class="text-sm text-gray-600 dark:text-gray-400">
+        Encerrar a súmula e enviar para homologação? Após encerrada, não será possível editar sem reabertura.
+      </p>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" data-modal-hide="modal-encerrar" class="btn btn-ghost btn-sm">Cancelar</button>
+        <form method="post" action="{% url 'competicao:sumula_encerrar' sumula.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-outline btn-sm gap-1.5">
+            <i class="ti ti-lock text-sm"></i> Encerrar
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Modal: homologar súmula -->
+{% if sumula.pode_homologar and not is_arbitro_only %}
+<div id="modal-homologar" tabindex="-1" aria-hidden="true"
+     class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 flex justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+  <div class="relative p-4 w-full max-w-md max-h-full">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 space-y-4">
+      <div class="flex items-center gap-3">
+        <i class="ti ti-shield-check text-blue-500 text-xl"></i>
+        <h2 class="font-semibold text-gray-900 dark:text-white">Homologar Súmula</h2>
+      </div>
+      <p class="text-sm text-gray-600 dark:text-gray-400">
+        Homologar esta súmula? O resultado será <strong class="text-gray-900 dark:text-white">oficial e definitivo</strong>.
+      </p>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" data-modal-hide="modal-homologar" class="btn btn-ghost btn-sm">Cancelar</button>
+        <form method="post" action="{% url 'competicao:sumula_homologar' sumula.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary btn-sm gap-1.5">
+            <i class="ti ti-shield-check text-sm"></i> Homologar
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block script %}
+<script>
+(function () {
+  'use strict';
+  var tabs   = document.querySelectorAll('.sumula-tab');
+  var panels = document.querySelectorAll('.sumula-panel');
+
+  function activate(tab) {
+    tabs.forEach(function (t) {
+      t.classList.remove('tab-active', 'bg-blue-500/5');
+      t.classList.add('border-transparent', 'text-gray-500');
+    });
+    panels.forEach(function (p) { p.classList.add('hidden'); });
+
+    tab.classList.remove('border-transparent', 'text-gray-500');
+    tab.classList.add('tab-active', 'bg-blue-500/5');
+    var panel = document.getElementById(tab.dataset.panel);
+    if (panel) panel.classList.remove('hidden');
+  }
+
+  tabs.forEach(function (tab) {
+    tab.addEventListener('click', function () { activate(this); });
+  });
+
+  if (tabs.length) activate(tabs[0]);
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,122 @@
+Proposta Arquitetural – Gestão Lógica de Resultados de Partidas
+Objetivo
+Definir uma arquitetura baseada em estados de negócio, eliminando ambiguidades entre resultado provisório, súmula e homologação, preservando um único fluxo lógico para atualização da classificação.
+
+Princípio Central
+A partida possui apenas um resultado vigente em cada momento. O que muda não é o placar, mas quem possui autoridade sobre ele. Antes da súmula, o placar pertence ao jogo e pode ser informado pela secretaria. Após o encerramento da súmula, a autoridade passa a ser a súmula. A homologação apenas valida oficialmente esse resultado.
+Máquina de Estados
+Cada partida evolui por estados: Agendada → Em andamento → Resultado informado → Resultado oficial (quando houver súmula) → Homologada ou Anulada. Apenas um estado pode existir por vez, evitando combinações inválidas de múltiplos booleanos.
+Autoridade do Placar
+Sem súmula: o placar informado é provisório e representa o melhor conhecimento disponível. Com súmula encerrada: os eventos registrados passam a ser a referência oficial, sincronizando automaticamente o placar exibido. Após esse momento, o placar não deve mais ser editado manualmente.
+Classificação
+A classificação deve considerar apenas partidas cujo resultado seja considerado válido para classificação. Resultados provisórios podem aparecer com indicação visual específica. Resultados homologados tornam-se definitivos. Jogos anulados nunca participam.
+Homologação
+A homologação deixa de ser apenas um campo alterado manualmente e passa a representar uma transição formal de estado. Quando existir súmula, ela é utilizada como referência obrigatória antes da homologação. Quando não existir árbitro, a homologação utiliza o resultado informado.
+WO e Anulação
+Os fluxos existentes permanecem preservados. O WO produz imediatamente um resultado válido conforme as regras da competição. A anulação remove a partida da classificação independentemente do estado anterior.
+Benefícios
+Redução de inconsistências; eliminação de duas fontes concorrentes de verdade; regras de negócio mais claras; possibilidade de expansão para novos perfis como Operador ao Vivo; manutenção de um único ponto de recálculo da classificação; menor acoplamento entre formulários e regras de domínio.
+
+
+
+
+
+
+
+
+
+Aqui está uma proposta de solução lógica e arquitetural para o problema da gestão de resultados no CHAMPS, respeitando todas as restrições impostas.
+
+1. Simplificação de Estados (Ciclo de Vida do Jogo)
+Em vez de acumular flags booleanas concorrentes (provisorio, finalizado, em_andamento), o modelo deve migrar logicamente para uma máquina de estados determinística. Como o requisito pede o mínimo de alterações e migrações simples, a inclusão do campo provisorio = BooleanField(default=False) é suficiente para criar uma enumeração de estados derivada/calculada:
+
+[AGENDADO] ──(Iniciar)──> [EM_ANDAMENTO] ──(Digitar Placar)──> [PROVISORIO]
+   │                              │                                │
+   │                              └──(Encerrar Súmula)──┐          │
+   │                                                    ▼          │
+   ├──────────────────────────(Homologar)─────────── [SÚMULA] ─────┤
+   │                                                               │
+   └──────────────────────────(W.O. / Anular)──────────────────────┴──> [HOMOLOGADO / ANULADO]
+Regra de Prevalência e Prevenção de Ambiguidade
+Para resolver o conflito entre as duas fontes de verdade (inteiros gols_casa/fora vs. coleção Gol):
+
+Estado Provisório (Sem Súmula Encerrada): A fonte de verdade são os inteiros gols_casa e gols_fora. O operador digita manualmente e a flag provisorio=True é ativada.
+
+Estado com Súmula Encerrada/Homologada: A fonte de verdade torna-se estritamente a contagem da coleção Gol associada à súmula.
+
+Regra de Sobrescrita Cega no Encerramento da Súmula: Sempre que o Árbitro (ou Admin/SEC) encerra a súmula, a função _sincronizar_placar roda e sobrescreve os inteiros do jogo com a contagem exata dos eventos Gol. Isso extingue qualquer divergência anterior digitada na fase provisória.
+
+Bloqueio de Edição de Inteiros se Súmula Aberta/Encerrada: O formulário simples de placar (JogoResultadoForm) é desativado para o jogo se houver uma súmula vinculada que já esteja com status encerrada ou homologada. Toda e qualquer alteração de placar nesse cenário deve obrigatoriamente vir de edições na própria súmula (que dispara a sincronização).
+
+2. Lógica Unificada de Reclassificação no Signal
+Para manter o on_jogo_save como o único ponto de disparo da classificação sem duplicações, alteramos o critério de inclusão dos jogos na engine de pontuação:
+
+Filtros de Inclusão
+Um jogo entra no cálculo da tabela de classificação se atender a todas as condições:
+
+Possuir rodada_id preenchido (jogos de mata-mata/sem rodada continuam ignorados naturalmente).
+
+Não estar anulado (anulado=False).
+
+Estar em estado contabilizável (finalizado=True OU provisorio=True).
+
+Regra Visual e Separação de Dados
+O recálculo passa a gerar (ou marcar) a classificação indicando se há partidas pendentes de homologação. O indicador "Provisório" na tabela do front-end é acionado sempre que a consulta de classificação de uma equipe contabilizar ao menos um jogo com provisorio=True e finalizado=False.
+
+3. Matriz de Ações e Transições de Status
+A remoção dos checkboxes do formulário de edição direto do Django resolve a alteração indevida de estado pelo usuário. As ações passam a ter fluxos específicos:
+
+A. Lançamento Provisório (Sem Árbitro / Placar Rápido)
+Ação: Usuário (ADMIN/SEC) envia os inteiros de gols.
+
+Efeito:
+
+gols_casa e gols_fora atualizados.
+
+provisorio passa para True.
+
+em_andamento passa para False.
+
+Sinal on_jogo_save dispara recálculo com marcador Provisório.
+
+B. Encerramento da Súmula Digital (Com Árbitro)
+Ação: Árbitro (ARB) ou Admin/SEC encerra a súmula.
+
+Efeito:
+
+_sincronizar_placar conta os eventos Gol e sobrescreve gols_casa e gols_fora.
+
+provisorio passa a True (se o jogo ainda não tiver sido homologado).
+
+em_andamento passa para False.
+
+Edição direta do formulário de placar simples é bloqueada (pois a súmula é a autoridade).
+
+C. Homologação (Oficialização)
+Ação: Admin ou Secretário clica em "Homologar Resultado".
+
+Efeito:
+
+Validação de Segurança: Se existir súmula atrelada que não foi anulada, o sistema exige que ela esteja no status encerrada e roda _sincronizar_placar uma última vez antes de travar.
+
+provisorio passa para False.
+
+finalizado passa para True.
+
+Sinal on_jogo_save dispara recálculo, convertendo o status do jogo na tabela de Provisório para Definitivo.
+
+D. Casos Especiais (W.O. e Anulação)
+W.O.: A ação dedicada força gols_casa/fora conforme a regra de W.O. (ex: 3×0), marca wo=True, finalizado=True e provisorio=False. A súmula é dispensada/fechada.
+
+Anulação: Marca anulado=True. O signal de reclassificação ignora jogos anulados no filtro de contagem, expurgando seus pontos/gols da classificação automaticamente.
+
+4. Prontidão para Permissões e Timeline Futura (Operador ao Vivo)
+Para garantir a futura introdução do papel "Operador ao vivo" sem refatorar views ou templates:
+
+Encapsulamento de Regras de Permissão: As verificações diretas nos templates (is_admin / is_secretario) devem ser substituídas por métodos de permissão no próprio modelo ou helpers de contexto (ex: jogo.pode_editar_eventos(user) e jogo.pode_homologar(user)).
+
+Mapeamento de Tuplas de Controle:
+
+Lançamento de Eventos / Placar: Performa checagem contra a tupla PODE_LANCAR_EVENTOS, que hoje contém (ADMIN, SEC) e futuramente incluirá OPERADOR.
+
+Ações Críticas (Homologar/Anular): Mantêm-se restritas à tupla PODE_HOMOLOGAR contendo apenas (ADMIN, SEC).

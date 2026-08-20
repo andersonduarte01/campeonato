@@ -1,0 +1,161 @@
+{% extends 'base/indice.html' %}
+{% block titulo %}Transferências{% endblock %}
+
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
+    <ul>
+      <li><a href="{% url 'registro:dashboard' %}" class="hover:text-gray-700 dark:text-gray-300">Federação</a></li>
+      <li><span class="text-gray-600 dark:text-gray-400">Transferências</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block conteudo %}
+<div class="p-4 md:p-6 space-y-5">
+
+  <!-- Cabeçalho -->
+  <div class="flex items-end justify-between gap-4">
+    <div>
+      <h1 class="section-heading text-4xl text-gray-900 dark:text-white leading-none">TRANSFERÊNCIAS</h1>
+      <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Movimentação de atletas entre clubes</p>
+    </div>
+    <div class="flex gap-2 shrink-0">
+      <a href="{% url 'registro:janela_lista' %}"
+         class="btn btn-ghost btn-sm gap-1.5 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
+        <i class="ti ti-calendar-event text-xs"></i>
+        <span class="hidden sm:inline">Janelas</span>
+      </a>
+      <a href="{% url 'registro:transferencia_criar' %}" class="btn btn-outline shrink-0">
+        <i class="ti ti-circle-plus"></i>
+        <span class="hidden sm:inline">Solicitar</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Status da janela -->
+  {% if janela_ativa %}
+  <div class="flex items-center gap-2 px-4 py-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-sm text-green-700 dark:text-green-400">
+    <i class="ti ti-calendar-check shrink-0"></i>
+    <span>Janela <strong>{{ janela_ativa.nome }}</strong> aberta até <strong>{{ janela_ativa.data_fim|date:"d/m/Y" }}</strong></span>
+  </div>
+  {% else %}
+  <div class="flex items-center gap-3 px-4 py-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-sm text-amber-700 dark:text-amber-400">
+    <i class="ti ti-calendar-x shrink-0"></i>
+    <span class="flex-1">Nenhuma janela de transferência ativa no momento.</span>
+    <a href="{% url 'registro:janela_lista' %}"
+       class="text-xs font-semibold underline underline-offset-2 hover:no-underline shrink-0">
+      Gerenciar janelas
+    </a>
+  </div>
+  {% endif %}
+
+  <!-- Card principal -->
+  <div class="card overflow-hidden">
+
+    <!-- Filtros -->
+    <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+      <form method="get" class="flex gap-3 items-center">
+        <div class="relative flex-1 min-w-0">
+          <i class="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm pointer-events-none"></i>
+          <input type="search" name="q" value="{{ q }}"
+                 class="form-input pl-9 text-sm w-full"
+                 placeholder="Buscar atleta...">
+        </div>
+        <select name="status" class="form-select text-sm w-44 shrink-0" onchange="this.form.submit()">
+          <option value="">Todos os status</option>
+          {% for val, label in status_choices %}
+          <option value="{{ val }}" {% if val == status_atual %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-outline shrink-0">Buscar</button>
+        {% if q or status_atual %}
+        <a href="{% url 'registro:transferencia_lista' %}" class="btn btn-ghost shrink-0">Limpar</a>
+        {% endif %}
+      </form>
+    </div>
+
+    {% if transferencias %}
+    <div class="overflow-x-auto">
+      <table class="table table-sm">
+        <thead>
+          <tr class="bg-gray-50 dark:bg-gray-700/50 text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+            <th>Atleta</th>
+            <th>Origem → Destino</th>
+            <th>Tipo</th>
+            <th>Janela</th>
+            <th>Data</th>
+            <th>Status</th>
+            <th class="text-right">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in transferencias %}
+          <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+            <td class="py-2.5">
+              <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-full bg-blue-500/10 border border-blue-500/20
+                            flex items-center justify-center text-[10px] font-black text-blue-500 shrink-0">
+                  {{ t.atleta.nome|first|upper }}
+                </div>
+                <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ t.atleta.nome }}</span>
+              </div>
+            </td>
+            <td class="text-xs text-gray-500 dark:text-gray-400">
+              <span class="{% if t.status == 'aprovada' %}line-through text-gray-400 dark:text-gray-600{% endif %}">{{ t.clube_origem.nome_equipe }}</span>
+              <i class="ti ti-arrow-right text-gray-300 dark:text-gray-600 mx-1"></i>
+              <span class="font-semibold text-gray-700 dark:text-gray-300">{{ t.clube_destino.nome_equipe }}</span>
+            </td>
+            <td class="text-xs text-gray-500 dark:text-gray-400">{{ t.get_tipo_display }}</td>
+            <td class="text-xs text-gray-400 dark:text-gray-500">{{ t.janela.nome|default:"—" }}</td>
+            <td class="text-xs text-gray-400 dark:text-gray-500">{{ t.data_solicitacao|date:"d/m/Y" }}</td>
+            <td>
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border
+                {% if t.status == 'aprovada' %}bg-green-500/10 text-green-500 border-green-500/20
+                {% elif t.status == 'rejeitada' or t.status == 'cancelada' %}bg-red-500/10 text-red-500 border-red-500/20
+                {% elif t.status == 'em_analise' %}bg-blue-500/10 text-blue-500 border-blue-500/20
+                {% else %}bg-amber-400/10 text-amber-500 border-amber-400/20{% endif %}">
+                {{ t.get_status_display }}
+              </span>
+            </td>
+            <td class="text-right">
+              <a href="{% url 'registro:transferencia_detalhe' t.pk %}"
+                 class="btn btn-ghost btn-xs text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                 title="Ver detalhes">
+                <i class="ti ti-eye text-xs"></i>
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% else %}
+    <!-- Empty state -->
+    <div class="flex flex-col items-center justify-center py-16 gap-4 text-center">
+      <div class="relative">
+        <div class="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+          <i class="ti ti-arrows-exchange text-4xl text-gray-300 dark:text-gray-600"></i>
+        </div>
+        <div class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full
+                    bg-blue-600 dark:bg-transparent dark:border-2 dark:border-blue-500
+                    flex items-center justify-center shadow">
+          <i class="ti ti-plus text-white dark:text-blue-400 text-sm"></i>
+        </div>
+      </div>
+      <div>
+        <p class="section-heading text-xl text-gray-400 dark:text-gray-500">SEM TRANSFERÊNCIAS</p>
+        <p class="text-sm text-gray-400 dark:text-gray-600 mt-1">Nenhuma transferência encontrada.</p>
+      </div>
+      <a href="{% url 'registro:transferencia_criar' %}" class="btn btn-outline">
+        <i class="ti ti-circle-plus"></i> Solicitar Transferência
+      </a>
+    </div>
+    {% endif %}
+
+  </div>
+
+</div>
+{% endblock %}

@@ -3,10 +3,10 @@
 
 {% block breadcrumbs %}
 <div class="px-4 md:px-6 pt-3 pb-0">
-  <div class="breadcrumbs text-xs text-base-content/40">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
     <ul>
-      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-base-content/70">Dashboard</a></li>
-      <li><span class="text-base-content/60">Notificações</span></li>
+      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-gray-700 dark:text-gray-300">Dashboard</a></li>
+      <li><span class="text-gray-600 dark:text-gray-400">Notificações</span></li>
     </ul>
   </div>
 </div>
@@ -18,14 +18,14 @@
   <!-- Cabeçalho -->
   <div class="flex items-center justify-between gap-4">
     <div class="flex items-center gap-3">
-      <div class="w-9 h-9 rounded-xl bg-warning/10 border border-warning/20
+      <div class="w-9 h-9 rounded-xl bg-yellow-400/10 border border-yellow-400/20
                   flex items-center justify-center shrink-0">
-        <i class="bi bi-bell-fill text-warning text-base"></i>
+        <i class="ti ti-bell text-yellow-500 text-base"></i>
       </div>
       <div>
-        <h1 class="section-heading text-2xl text-base-content leading-none">NOTIFICAÇÕES</h1>
+        <h1 class="section-heading text-2xl text-gray-900 dark:text-white leading-none">NOTIFICAÇÕES</h1>
         {% with nao_lidas=notificacoes|length %}
-        <p class="text-xs text-base-content/40 mt-0.5">
+        <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
           {{ notificacoes|length }} notificaç{{ notificacoes|length|pluralize:"ão,ões" }}
         </p>
         {% endwith %}
@@ -35,8 +35,8 @@
     <form method="post" action="{% url 'competicao:marcar_todas_lidas' %}">
       {% csrf_token %}
       <button type="submit"
-              class="btn btn-ghost btn-sm gap-1.5 border border-base-content/10 text-base-content/50 hover:text-base-content">
-        <i class="bi bi-check2-all text-sm"></i>
+              class="btn btn-ghost btn-sm gap-1.5 border border-gray-200/60 dark:border-gray-700/60 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:text-white">
+        <i class="ti ti-checks text-sm"></i>
         <span class="hidden sm:inline">Marcar todas lidas</span>
       </button>
     </form>
@@ -46,63 +46,63 @@
   {% if notificacoes %}
 
   <!-- Tabs -->
-  <div class="flex gap-1 border-b border-base-300 -mb-2">
-    <button class="notif-tab px-4 py-2.5 text-xs font-bold border-b-2 border-warning text-warning
-                   bg-warning/5 rounded-t-lg transition-all duration-150 shrink-0"
+  <div class="flex gap-1 border-b border-gray-200 dark:border-gray-700 -mb-2">
+    <button class="notif-tab px-4 py-2.5 text-xs font-bold border-b-2 border-yellow-400 text-yellow-500
+                   bg-yellow-400/5 rounded-t-lg transition-all duration-150 shrink-0"
             data-filter="all">
       Todas
-      <span class="badge badge-ghost badge-xs ml-1" id="count-notif-all">{{ notificacoes|length }}</span>
+      <span class="badge badge-gray badge-xs ml-1" id="count-notif-all">{{ notificacoes|length }}</span>
     </button>
     <button class="notif-tab px-4 py-2.5 text-xs font-bold border-b-2 border-transparent
-                   text-base-content/40 hover:text-base-content/70 rounded-t-lg transition-all duration-150 shrink-0"
+                   text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:text-gray-300 rounded-t-lg transition-all duration-150 shrink-0"
             data-filter="nao-lida">
       Não lidas
-      <span class="badge badge-error badge-xs ml-1" id="count-notif-nao-lida">0</span>
+      <span class="badge badge-red badge-xs ml-1" id="count-notif-nao-lida">0</span>
     </button>
     <button class="notif-tab px-4 py-2.5 text-xs font-bold border-b-2 border-transparent
-                   text-base-content/40 hover:text-base-content/70 rounded-t-lg transition-all duration-150 shrink-0"
+                   text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:text-gray-300 rounded-t-lg transition-all duration-150 shrink-0"
             data-filter="suspensao">
       Suspensões
     </button>
     <button class="notif-tab px-4 py-2.5 text-xs font-bold border-b-2 border-transparent
-                   text-base-content/40 hover:text-base-content/70 rounded-t-lg transition-all duration-150 shrink-0"
+                   text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:text-gray-300 rounded-t-lg transition-all duration-150 shrink-0"
             data-filter="resultado">
       Resultados
     </button>
   </div>
 
-  <div class="card bg-base-200 border border-base-300 overflow-hidden mt-4">
-    <div class="divide-y divide-base-300" id="notif-list">
+  <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden mt-4">
+    <div class="divide-y divide-gray-100 dark:divide-gray-700" id="notif-list">
       {% for n in notificacoes %}
       <a href="{% if n.url %}{{ n.url }}{% else %}#{% endif %}"
          class="notif-item flex items-start gap-3 px-4 py-3.5 transition-colors group
-                {% if not n.lida %}bg-info/5 hover:bg-info/10{% else %}hover:bg-base-300/30{% endif %}"
+                {% if not n.lida %}bg-blue-500/5 hover:bg-blue-500/10{% else %}hover:bg-gray-200/30 dark:bg-gray-700/30{% endif %}"
          data-tipo="{{ n.tipo }}"
          data-lida="{{ n.lida|yesno:'sim,nao' }}">
 
         <!-- Ícone por tipo -->
         <div class="mt-0.5 shrink-0 w-8 h-8 rounded-lg flex items-center justify-center
-          {% if n.tipo == 'suspensao' %}bg-error/10 border border-error/20
-          {% elif n.tipo == 'resultado' %}bg-success/10 border border-success/20
-          {% else %}bg-info/10 border border-info/20{% endif %}">
+          {% if n.tipo == 'suspensao' %}bg-red-500/10 border border-red-500/20
+          {% elif n.tipo == 'resultado' %}bg-green-500/10 border border-green-500/20
+          {% else %}bg-blue-500/10 border border-blue-500/20{% endif %}">
           {% if n.tipo == 'suspensao' %}
-            <i class="bi bi-exclamation-triangle-fill text-error text-sm"></i>
+            <i class="ti ti-alert-triangle text-red-500 text-sm"></i>
           {% elif n.tipo == 'resultado' %}
-            <i class="bi bi-check2-circle text-success text-sm"></i>
+            <i class="ti ti-circle-check text-green-500 text-sm"></i>
           {% else %}
-            <i class="bi bi-info-circle-fill text-info text-sm"></i>
+            <i class="ti ti-info-circle text-blue-500 text-sm"></i>
           {% endif %}
         </div>
 
         <!-- Conteúdo -->
         <div class="flex-1 min-w-0">
-          <p class="text-sm font-semibold text-base-content leading-snug
-                    group-hover:text-warning transition-colors">
+          <p class="text-sm font-semibold text-gray-900 dark:text-white leading-snug
+                    group-hover:text-yellow-500 transition-colors">
             {{ n.mensagem }}
           </p>
-          <p class="text-xs text-base-content/40 mt-0.5">
+          <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
             {{ n.criada_em|date:"d/m/Y" }}
-            <span class="text-base-content/25 mx-1">·</span>
+            <span class="text-gray-400 dark:text-gray-600 mx-1">·</span>
             {{ n.criada_em|date:"H:i" }}
           </p>
         </div>
@@ -110,14 +110,14 @@
         <!-- Indicador não lida -->
         {% if not n.lida %}
         <div class="shrink-0 mt-1.5">
-          <div class="w-2.5 h-2.5 rounded-full bg-info shadow-sm shadow-info/50"></div>
+          <div class="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-sm shadow-blue-500/50"></div>
         </div>
         {% endif %}
 
         <!-- Seta -->
         {% if n.url %}
-        <i class="bi bi-chevron-right text-xs text-base-content/20 shrink-0 mt-1
-                  group-hover:text-base-content/50 transition-colors"></i>
+        <i class="ti ti-chevron-right text-xs text-gray-300 dark:text-gray-600 shrink-0 mt-1
+                  group-hover:text-gray-500 dark:text-gray-400 transition-colors"></i>
         {% endif %}
 
       </a>
@@ -127,24 +127,24 @@
 
   <!-- Empty state dentro do filtro -->
   <div id="notif-empty" class="hidden">
-    <div class="card bg-base-200 border border-base-300">
-      <div class="flex flex-col items-center justify-center py-14 gap-3 text-base-content/30">
-        <i class="bi bi-bell-slash text-4xl opacity-40"></i>
+    <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+      <div class="flex flex-col items-center justify-center py-14 gap-3 text-gray-400 dark:text-gray-600">
+        <i class="ti ti-bell-off text-4xl opacity-40"></i>
         <p class="text-sm font-medium">Nenhuma notificação neste filtro</p>
       </div>
     </div>
   </div>
 
   {% else %}
-  <div class="card bg-base-200 border border-base-300">
+  <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
     <div class="flex flex-col items-center justify-center py-16 gap-4 text-center">
-      <div class="w-16 h-16 rounded-full bg-base-300 border border-base-content/10
+      <div class="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 border border-gray-200/60 dark:border-gray-700/60
                   flex items-center justify-center">
-        <i class="bi bi-bell-slash text-2xl text-base-content/20"></i>
+        <i class="ti ti-bell-off text-2xl text-gray-300 dark:text-gray-600"></i>
       </div>
       <div>
-        <p class="section-heading text-xl text-base-content/40">SEM NOTIFICAÇÕES</p>
-        <p class="text-sm text-base-content/30 mt-1.5">
+        <p class="section-heading text-xl text-gray-400 dark:text-gray-500">SEM NOTIFICAÇÕES</p>
+        <p class="text-sm text-gray-400 dark:text-gray-600 mt-1.5">
           Você receberá alertas de suspensões, resultados e eventos aqui.
         </p>
       </div>
@@ -177,11 +177,11 @@
 
     tabs.forEach(function (t) {
       var active = t === tab;
-      t.classList.toggle('border-warning',       active);
-      t.classList.toggle('text-warning',         active);
-      t.classList.toggle('bg-warning/5',         active);
+      t.classList.toggle('border-yellow-400',       active);
+      t.classList.toggle('text-yellow-500',         active);
+      t.classList.toggle('bg-yellow-400/5',         active);
       t.classList.toggle('border-transparent',   !active);
-      t.classList.toggle('text-base-content/40', !active);
+      t.classList.toggle('text-gray-400 dark:text-gray-500', !active);
     });
 
     var visible = 0;

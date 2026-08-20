@@ -4,11 +4,11 @@
 
 {% block breadcrumbs %}
 <div class="px-4 md:px-6 pt-3 pb-0">
-  <div class="breadcrumbs text-xs text-base-content/40">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
     <ul>
-      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-base-content/70">Dashboard</a></li>
-      <li><a href="{% url 'equipe:lista' %}" class="hover:text-base-content/70">Equipes</a></li>
-      <li><span class="text-base-content/60">{{ equipe.nome_equipe }}</span></li>
+      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-gray-700 dark:text-gray-300">Dashboard</a></li>
+      <li><a href="{% url 'equipe:lista' %}" class="hover:text-gray-700 dark:text-gray-300">Equipes</a></li>
+      <li><span class="text-gray-600 dark:text-gray-400">{{ equipe.nome_equipe }}</span></li>
     </ul>
   </div>
 </div>
@@ -16,181 +16,266 @@
 
 {% block conteudo %}
 {% url 'equipe:atleta_criar' equipe.pk as url_add_atleta %}
-<div class="space-y-5">
+<div class="p-4 md:p-6 space-y-5">
 
-  <!-- ── Hero Banner do clube ─────────────────────────────────────────── -->
-  <div class="relative overflow-hidden">
+  <!-- Cabeçalho -->
+  <div class="flex items-center gap-3">
+    <a href="{% url 'equipe:lista' %}"
+       class="btn btn-ghost btn-sm btn-square border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
+      <i class="ti ti-arrow-left text-sm"></i>
+    </a>
+    <h1 class="section-heading text-4xl text-gray-900 dark:text-white leading-none">EQUIPE</h1>
+  </div>
 
-    <!-- Banner com gradiente pitch -->
-    <div class="h-36 md:h-44 bg-gradient-to-br from-pitch via-pitch-light to-base-200
-                flex items-end px-6 pb-5">
-      <!-- Padrão geométrico decorativo sutil -->
-      <div class="absolute inset-0 opacity-10"
-           style="background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,.05) 10px, rgba(255,255,255,.05) 11px)">
-      </div>
-    </div>
+  <!-- Card único -->
+  <div class="card overflow-hidden">
 
-    <!-- Logo sobreposta ao banner (overlapping) -->
-    <div class="absolute bottom-0 left-6 translate-y-1/2">
+    <!-- Barra de gradiente no topo -->
+    <div class="h-1.5 bg-gradient-to-r from-blue-600 via-blue-400/50 to-transparent"></div>
+
+    <!-- Perfil da equipe -->
+    <div class="relative p-5 md:p-6 flex flex-col sm:flex-row sm:items-start gap-5">
+
+      <!-- Botão editar: canto superior direito em todos os tamanhos -->
+      {% if pode_editar_tecnico %}
+        {% if e_secretario %}
+        <a href="{% url 'equipe:editar' equipe.pk %}"
+           class="absolute top-4 right-4 btn btn-outline btn-sm btn-square">
+          <i class="ti ti-pencil text-sm"></i>
+        </a>
+        {% else %}
+        <a href="{% url 'equipe:dirigente_editar' equipe.pk %}"
+           class="absolute top-4 right-4 btn btn-outline btn-sm btn-square">
+          <i class="ti ti-pencil text-sm"></i>
+        </a>
+        {% endif %}
+      {% endif %}
+
+      <!-- Escudo: centralizado no mobile via mx-auto, normal no desktop -->
       {% if equipe.escudo %}
         <img src="{{ equipe.escudo.url }}" alt="{{ equipe.nome_equipe }}"
-             class="w-24 h-24 rounded-full object-cover border-4 border-base-100 shadow-2xl">
+             class="w-24 h-24 rounded-full object-cover border-4 border-gray-100 dark:border-gray-700 shadow-lg shrink-0 mx-auto sm:mx-0">
       {% else %}
-        <div class="w-24 h-24 rounded-full bg-base-200 border-4 border-base-100 shadow-2xl
+        <div class="w-24 h-24 rounded-full bg-blue-50 dark:bg-blue-900/20
+                    border-4 border-gray-100 dark:border-gray-700 shadow-lg shrink-0 mx-auto sm:mx-0
                     flex items-center justify-center">
-          <span class="text-4xl font-black text-base-content/40">{{ equipe.nome_equipe|first|upper }}</span>
+          <span class="text-4xl font-black text-blue-400">{{ equipe.nome_equipe|first|upper }}</span>
         </div>
       {% endif %}
-    </div>
 
-    <!-- Ações no canto superior direito do banner -->
-    <div class="absolute top-3 right-4 flex gap-2">
-      <a href="{% url 'equipe:editar' equipe.pk %}"
-         class="btn btn-sm bg-base-100/20 hover:bg-base-100/40 border-base-100/30 text-white
-                backdrop-blur-sm gap-1.5 font-medium">
-        <i class="bi bi-pencil text-xs"></i>
-        <span class="hidden sm:inline">Editar</span>
-      </a>
-      <a href="{% url 'equipe:lista' %}"
-         class="btn btn-sm bg-base-100/20 hover:bg-base-100/40 border-base-100/30 text-white
-                backdrop-blur-sm gap-1.5">
-        <i class="bi bi-arrow-left text-xs"></i>
-        <span class="hidden sm:inline">Voltar</span>
-      </a>
-    </div>
-  </div>
+      <!-- Informações -->
+      <div class="flex-1 min-w-0">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white leading-tight max-sm:text-center">{{ equipe.nome_equipe }}</h2>
+        <div class="flex flex-wrap items-center max-sm:justify-center gap-x-4 gap-y-1 mt-2 text-xs text-gray-400 dark:text-gray-500">
+          {% if equipe.cidade %}
+          <span class="flex items-center gap-1">
+            <i class="ti ti-map-pin text-blue-400 text-[11px]"></i>
+            {{ equipe.cidade }}{% if equipe.estado %}/{{ equipe.estado }}{% endif %}
+          </span>
+          {% endif %}
+          {% if equipe.fundacao %}
+          <span class="flex items-center gap-1">
+            <i class="ti ti-calendar text-blue-400 text-[11px]"></i>
+            Fundado em {{ equipe.fundacao|date:"Y" }}
+          </span>
+          {% endif %}
+          {% if equipe.estadio %}
+          <span class="flex items-center gap-1">
+            <i class="ti ti-building text-blue-400 text-[11px]"></i>
+            {{ equipe.estadio }}
+          </span>
+          {% endif %}
+          {% if equipe.cor_uniforme_principal %}
+          <span class="flex items-center gap-1">
+            <i class="ti ti-shirt text-blue-400 text-[11px]"></i>
+            {{ equipe.cor_uniforme_principal }}
+          </span>
+          {% endif %}
+          {% if equipe.cor_uniforme_alternativo %}
+          <span class="flex items-center gap-1">
+            <i class="ti ti-shirt text-gray-300 dark:text-gray-600 text-[11px]"></i>
+            {{ equipe.cor_uniforme_alternativo }}
+          </span>
+          {% endif %}
+        </div>
 
-  <!-- ── Info do clube (offset pelo logo) ─────────────────────────────── -->
-  <div class="px-4 md:px-6 pt-12 pb-1 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
-    <div>
-      <h1 class="section-heading text-3xl md:text-4xl leading-none">{{ equipe.nome_equipe }}</h1>
-      <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs text-base-content/40">
-        {% if equipe.cidade %}
-        <span class="flex items-center gap-1">
-          <i class="bi bi-geo-alt-fill text-[10px]"></i>
-          {{ equipe.cidade }}{% if equipe.estado %}/{{ equipe.estado }}{% endif %}
-        </span>
-        {% endif %}
-        {% if equipe.tecnico %}
-        <span class="flex items-center gap-1">
-          <i class="bi bi-person-fill text-[10px]"></i>
-          Técnico: {{ equipe.tecnico }}
-        </span>
-        {% endif %}
-        {% if equipe.fundacao %}
-        <span class="flex items-center gap-1">
-          <i class="bi bi-calendar-fill text-[10px]"></i>
-          Fundado em {{ equipe.fundacao|date:"Y" }}
-        </span>
-        {% endif %}
+        <!-- Técnico + Total atletas -->
+        <div class="mt-3 flex items-center gap-4 flex-wrap max-sm:justify-center">
+          <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700/50">
+            <i class="ti ti-whistle text-blue-500 text-sm shrink-0"></i>
+            <div>
+              <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 leading-none mb-0.5">Técnico</p>
+              <p class="text-sm font-semibold text-gray-800 dark:text-gray-200 leading-none">
+                {% if equipe.tecnico %}{{ equipe.tecnico }}{% else %}<span class="text-gray-400 dark:text-gray-500 font-normal italic text-xs">Não informado</span>{% endif %}
+              </p>
+            </div>
+          </div>
+          <div>
+            <span class="stat-number text-2xl text-gray-900 dark:text-white">{{ atletas.count }}</span>
+            <span class="text-xs text-gray-400 dark:text-gray-500 ml-1">atleta{{ atletas.count|pluralize }}</span>
+          </div>
+        </div>
       </div>
-    </div>
 
-    <!-- Stats em linha -->
-    <div class="flex items-center gap-5 shrink-0">
-      <div class="text-center">
-        <p class="stat-number text-2xl text-base-content">{{ atletas.count }}</p>
-        <p class="text-[10px] text-base-content/40 uppercase tracking-wide">Atletas</p>
-      </div>
-      {% if equipe.estadio %}
-      <div class="text-center">
-        <i class="bi bi-building text-base-content/20 text-xl block mb-0.5"></i>
-        <p class="text-[10px] text-base-content/40 uppercase tracking-wide truncate max-w-[80px]">{{ equipe.estadio|truncatechars:12 }}</p>
-      </div>
-      {% endif %}
     </div>
-  </div>
-
-  <!-- ── Elenco ─────────────────────────────────────────────────────────── -->
-  <div class="px-4 md:px-6 pb-6">
 
     <!-- Header do elenco -->
-    <div class="flex items-center justify-between mb-4">
+    <div class="border-t border-gray-200 dark:border-gray-700 px-5 md:px-6 py-3 flex items-center justify-between bg-gray-50 dark:bg-gray-700/20">
       <div class="flex items-center gap-2">
-        <i class="bi bi-people-fill text-warning text-sm"></i>
-        <span class="font-semibold text-sm">Elenco</span>
-        <span class="badge badge-ghost badge-sm">{{ atletas.count }}</span>
+        <i class="ti ti-users text-blue-500 text-sm"></i>
+        <span class="section-heading text-sm text-gray-700 dark:text-gray-300 tracking-widest">ELENCO</span>
+        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+                     bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400">{{ atletas.count }}</span>
       </div>
-      <a href="{{ url_add_atleta }}"
-         class="btn btn-warning btn-sm gap-1.5 shadow-lg shadow-warning/20">
-        <i class="bi bi-person-plus"></i>
+      <a href="{{ url_add_atleta }}" class="btn btn-outline btn-sm gap-1.5">
+        <i class="ti ti-user-plus"></i>
         <span class="hidden sm:inline">Adicionar Atleta</span>
       </a>
     </div>
 
-    <!-- Grid de cards de atleta -->
-    {% if atletas %}
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-      {% for atleta in atletas %}
-      {% url 'equipe:atleta_editar' atleta.pk as url_edit_atleta %}
-      {% url 'equipe:atleta_excluir' atleta.pk as url_del_atleta %}
+    <!-- Grid de atletas / empty state -->
+    <div class="p-4 md:p-6">
+      {% if atletas %}
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+        {% for atleta in atletas %}
+        {% url 'equipe:atleta_editar' atleta.pk as url_edit_atleta %}
+        {% url 'equipe:atleta_excluir' atleta.pk as url_del_atleta %}
 
-      <div class="card bg-base-200 border border-base-300 card-sport overflow-hidden group relative">
+        <div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden group relative card-sport">
 
-        <!-- Foto / Avatar -->
-        <div class="pt-5 px-3 pb-2 flex flex-col items-center gap-2">
-
+          <!-- Badge de situação -->
           {% if atleta.situacao == 'SUSPENSO' %}
-          <div class="absolute top-2 left-2">
-            <span class="badge badge-error badge-xs text-[9px]">Sus</span>
+          <div class="absolute top-2 left-2 z-10">
+            <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold
+                         bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400">Sus</span>
           </div>
           {% elif atleta.situacao == 'LESIONADO' %}
-          <div class="absolute top-2 left-2">
-            <span class="badge badge-warning badge-xs text-[9px]">Les</span>
+          <div class="absolute top-2 left-2 z-10">
+            <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold
+                         bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400">Les</span>
           </div>
           {% endif %}
 
-          {% if atleta.foto %}
-            <img src="{{ atleta.foto.thumbnail.url }}" alt="{{ atleta.nome }}"
-                 class="w-16 h-16 rounded-full object-cover border-2 border-base-300
-                        group-hover:border-warning/40 transition-colors">
-          {% else %}
-            <div class="w-16 h-16 rounded-full bg-neutral-content/10 border-2 border-base-300
-                        group-hover:border-warning/40 transition-colors
-                        flex items-center justify-center">
-              <span class="text-xl font-black text-base-content/40">{{ atleta.nome|first|upper }}</span>
+          <!-- Foto / Avatar -->
+          <div class="pt-5 px-3 pb-2 flex flex-col items-center gap-2">
+            {% if atleta.foto %}
+              <img src="{{ atleta.foto.thumbnail.url }}" alt="{{ atleta.nome }}"
+                   class="w-16 h-16 rounded-full object-cover
+                          border-2 border-gray-200 dark:border-gray-700
+                          group-hover:border-blue-400/50 transition-colors">
+            {% else %}
+              <div class="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/20
+                          border-2 border-gray-200 dark:border-gray-700
+                          group-hover:border-blue-400/50 transition-colors
+                          flex items-center justify-center">
+                <span class="text-xl font-black text-blue-400">{{ atleta.nome|first|upper }}</span>
+              </div>
+            {% endif %}
+
+            <div class="min-w-0 w-full text-center">
+              <p class="font-semibold text-xs truncate leading-snug text-gray-900 dark:text-white"
+                 title="{{ atleta.nome }}">{{ atleta.nome|truncatechars:18 }}</p>
+              <span class="inline-flex items-center px-2 py-0.5 mt-0.5 rounded-full text-[10px] font-medium
+                           bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400">
+                {{ atleta.get_posicao_display }}
+              </span>
             </div>
-          {% endif %}
+          </div>
 
-          <div class="min-w-0 w-full text-center">
-            <p class="font-semibold text-xs truncate leading-snug" title="{{ atleta.nome }}">
-              {{ atleta.nome|truncatechars:18 }}
-            </p>
-            <span class="badge badge-ghost badge-sm text-[10px] mt-0.5">
-              {{ atleta.get_posicao_display }}
-            </span>
+          <!-- Ações -->
+          <div class="border-t border-gray-200 dark:border-gray-700 px-2 py-1.5 flex gap-1 justify-center
+                      bg-gray-100/50 dark:bg-gray-700/20">
+            <a href="{{ url_edit_atleta }}"
+               class="btn btn-ghost btn-xs text-gray-400 hover:text-gray-900 dark:hover:text-white"
+               title="Editar atleta">
+              <i class="ti ti-pencil text-xs"></i>
+            </a>
+            <button type="button"
+                    onclick="abrirModalExcluir(this)"
+                    data-nome="{{ atleta.nome }}"
+                    data-equipe="{{ atleta.equipe.nome_equipe }}"
+                    data-url="{{ url_del_atleta }}"
+                    class="btn btn-ghost btn-xs text-red-400/60 hover:text-red-500"
+                    title="Remover atleta">
+              <i class="ti ti-trash text-xs"></i>
+            </button>
+          </div>
+
+        </div>
+        {% endfor %}
+      </div>
+
+      {% else %}
+      <!-- Empty state -->
+      <div class="flex flex-col items-center justify-center py-16 gap-4 text-center">
+        <div class="relative">
+          <div class="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+            <i class="ti ti-users text-4xl text-gray-300 dark:text-gray-600"></i>
+          </div>
+          <div class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full
+                      bg-blue-600 dark:bg-transparent dark:border-2 dark:border-blue-500
+                      flex items-center justify-center shadow">
+            <i class="ti ti-plus text-white dark:text-blue-400 text-sm"></i>
           </div>
         </div>
-
-        <!-- Ações (hover) -->
-        <div class="border-t border-base-300 px-2 py-1.5 flex gap-1 justify-center bg-base-300/20
-                    opacity-0 group-hover:opacity-100 transition-opacity">
-          <a href="{{ url_edit_atleta }}"
-             class="btn btn-ghost btn-xs text-base-content/50 hover:text-base-content"
-             title="Editar">
-            <i class="bi bi-pencil text-xs"></i>
-          </a>
-          <a href="{{ url_del_atleta }}"
-             class="btn btn-ghost btn-xs text-error/50 hover:text-error"
-             title="Excluir">
-            <i class="bi bi-trash text-xs"></i>
-          </a>
+        <div>
+          <p class="section-heading text-xl text-gray-400 dark:text-gray-500">ELENCO VAZIO</p>
+          <p class="text-sm text-gray-400 dark:text-gray-600 mt-1">Adicione atletas ao elenco desta equipe.</p>
         </div>
-
+        <a href="{{ url_add_atleta }}" class="btn btn-outline">
+          <i class="ti ti-user-plus"></i> Adicionar Atleta
+        </a>
       </div>
-      {% endfor %}
+      {% endif %}
     </div>
-
-    {% else %}
-    {% include 'components/empty_state.html' with
-       icon="person-x"
-       title="Nenhum atleta cadastrado."
-       subtitle="Adicione atletas ao elenco desta equipe."
-       cta_url=url_add_atleta
-       cta_label="Adicionar Atleta" %}
-    {% endif %}
 
   </div>
 
 </div>
+
+<!-- Modal de confirmação de exclusão de atleta -->
+<div id="modal-excluir-atleta"
+     class="fixed inset-0 z-50 hidden items-center justify-center"
+     style="background:rgba(0,0,0,0.5);">
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm mx-4 p-6 space-y-4">
+
+    <div class="flex items-center gap-3">
+      <i class="ti ti-trash text-red-500 text-xl"></i>
+      <h2 class="font-semibold text-gray-900 dark:text-white">Excluir atleta</h2>
+    </div>
+
+    <p class="text-sm text-gray-600 dark:text-gray-400">
+      Tem certeza que deseja excluir <strong id="modal-atleta-nome" class="text-gray-900 dark:text-white"></strong>?
+      Esta ação não pode ser desfeita.
+    </p>
+
+    <form method="post" id="form-excluir-atleta" class="flex justify-end gap-2">
+      {% csrf_token %}
+      <button type="button" onclick="fecharModalExcluir()" class="btn btn-ghost">Cancelar</button>
+      <button type="submit" class="btn btn-danger-outline">Excluir</button>
+    </form>
+
+  </div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+<script>
+function abrirModalExcluir(btn) {
+  document.getElementById('modal-atleta-nome').textContent = btn.dataset.nome;
+  document.getElementById('form-excluir-atleta').action   = btn.dataset.url;
+  var modal = document.getElementById('modal-excluir-atleta');
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+function fecharModalExcluir() {
+  var modal = document.getElementById('modal-excluir-atleta');
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+}
+document.getElementById('modal-excluir-atleta').addEventListener('click', function (e) {
+  if (e.target === this) fecharModalExcluir();
+});
+</script>
 {% endblock %}

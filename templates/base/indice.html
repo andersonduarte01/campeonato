@@ -1,687 +1,426 @@
-{% load static tailwind_tags %}
-<!doctype html>
-<html lang="pt-br" data-theme="luxury">
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR" id="html-root" class="">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block titulo %}Campeonato{% endblock %} — Champs</title>
+  <title>{% block titulo %}CHAMPS{% endblock %} — CHAMPS</title>
+
+  <!-- Google Fonts: Oswald + Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  {% tailwind_css %}
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-  {% block estatico %}{% endblock %}
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Tabler Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+
+  <!-- Tailwind CSS compilado -->
+  <link rel="stylesheet" href="{% static 'css/dist/styles.css' %}">
+
+  <!-- Dark mode: aplica tema antes do render para evitar flash -->
+  <script>
+    (function () {
+      var stored = localStorage.getItem('theme');
+      var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (stored === 'dark' || (!stored && prefersDark)) {
+        document.getElementById('html-root').classList.add('dark');
+      }
+    })();
+  </script>
 </head>
 
-<body class="min-h-screen bg-base-100 text-base-content antialiased">
+<body class="bg-gray-200 dark:bg-gray-900 text-gray-900 dark:text-white antialiased">
 
-  <!-- ── Toasts ────────────────────────────────────────────────────── -->
+<!-- ════════════════════════════════════════════════════════════════════
+     SIDEBAR LATERAL
+════════════════════════════════════════════════════════════════════ -->
+<aside id="sidebar"
+       class="fixed top-0 left-0 z-40 w-64 h-screen transition-transform duration-300
+              -translate-x-full sm:translate-x-0"
+       aria-label="Sidebar">
+
+  <div class="flex flex-col h-full overflow-y-auto
+              bg-white border-r border-gray-200
+              dark:bg-slate-900 dark:border-slate-800">
+
+    <!-- ── Brand / Logo ──────────────────────────────────────────── -->
+    <div class="flex items-center gap-3 px-4 h-16 shrink-0
+                border-b border-gray-200 dark:border-slate-800">
+      <!-- Ícone com glow azul -->
+      <div class="relative w-9 h-9 shrink-0">
+        <div class="absolute inset-0 rounded-xl bg-blue-500/20 blur-sm"></div>
+        <div class="relative w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700
+                    flex items-center justify-center shadow-lg shadow-blue-600/30">
+          <i class="ti ti-trophy text-white text-base"></i>
+        </div>
+      </div>
+      <div class="min-w-0 flex-1">
+        <p class="text-sm font-bold leading-none tracking-wide
+                  text-gray-900 dark:text-white">CHAMPS</p>
+        <p class="text-[10px] mt-0.5 font-medium tracking-widest uppercase
+                  text-gray-400 dark:text-slate-500">Gestão Esportiva</p>
+      </div>
+    </div>
+
+    <!-- ── Federação ativa ───────────────────────────────────────── -->
+    {% if request.federacao %}
+    <div class="mx-3 mt-3 px-3 py-2 rounded-lg
+                bg-gray-50 border border-gray-200
+                dark:bg-slate-800/60 dark:border-slate-700/50">
+      <p class="text-[10px] uppercase tracking-widest font-bold mb-0.5
+                text-gray-400 dark:text-slate-500">Federação</p>
+      <p class="text-xs font-semibold truncate
+                text-gray-700 dark:text-slate-200">
+        {% if request.federacao.sigla %}<span class="text-blue-600 dark:text-blue-400 font-bold mr-1">{{ request.federacao.sigla }}</span>{% endif %}
+        {{ request.federacao.nome }}
+      </p>
+    </div>
+    {% endif %}
+
+    <!-- ── Navegação ─────────────────────────────────────────────── -->
+    <nav class="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
+
+      {% url 'competicao:dashboard'        as url_dash    %}
+      {% url 'equipe:lista'                as url_equipes %}
+      {% url 'competicao:competicao_lista' as url_comp    %}
+      {% url 'competicao:calendario'       as url_cal     %}
+      {% url 'competicao:local_lista'      as url_local   %}
+      {% url 'competicao:arbitro_lista'    as url_arb     %}
+      {% url 'competicao:busca_global'     as url_busca   %}
+      {% url 'criterios:formato_lista'     as url_formatos %}
+      {% url 'criterios:criterio_lista'    as url_criterios %}
+
+      <!-- Principal -->
+      <span class="sidebar-label">Principal</span>
+
+      <a href="{{ url_dash }}"
+         class="nav-link {% if request.path == url_dash %}nav-link-active{% endif %}">
+        <i class="ti ti-layout-dashboard w-5 text-center shrink-0 text-base"></i>
+        <span>Dashboard</span>
+      </a>
+
+      <a href="{{ url_cal }}"
+         class="nav-link {% if request.path == url_cal %}nav-link-active{% endif %}">
+        <i class="ti ti-calendar w-5 text-center shrink-0 text-base"></i>
+        <span>Calendário</span>
+      </a>
+
+      {% if not is_dirigente_only and not is_arbitro_only %}
+      <a href="{{ url_busca }}"
+         class="nav-link {% if request.path == url_busca %}nav-link-active{% endif %}">
+        <i class="ti ti-search w-5 text-center shrink-0 text-base"></i>
+        <span>Busca Global</span>
+      </a>
+      {% endif %}
+
+      {% if not is_arbitro_only and not is_dirigente_only %}
+      <!-- Competições -->
+      <span class="sidebar-label">Competições</span>
+
+      <a href="{{ url_comp }}"
+         class="nav-link {% if url_comp in request.path %}nav-link-active{% endif %}">
+        <i class="ti ti-trophy w-5 text-center shrink-0 text-base"></i>
+        <span>Competições</span>
+      </a>
+
+      <!-- Configuração -->
+      <span class="sidebar-label">Configuração</span>
+
+      <a href="{{ url_formatos }}"
+         class="nav-link {% if url_formatos in request.path %}nav-link-active{% endif %}">
+        <i class="ti ti-tournament w-5 text-center shrink-0 text-base"></i>
+        <span>Formatos</span>
+      </a>
+
+      <a href="{{ url_criterios }}"
+         class="nav-link {% if url_criterios in request.path %}nav-link-active{% endif %}">
+        <i class="ti ti-list-check w-5 text-center shrink-0 text-base"></i>
+        <span>Critérios</span>
+      </a>
+
+      <!-- Gestão -->
+      <span class="sidebar-label">Gestão</span>
+
+      <a href="{{ url_equipes }}"
+         class="nav-link {% if url_equipes in request.path %}nav-link-active{% endif %}">
+        <i class="ti ti-shield w-5 text-center shrink-0 text-base"></i>
+        <span>Equipes</span>
+      </a>
+
+      <a href="{{ url_arb }}"
+         class="nav-link {% if url_arb in request.path %}nav-link-active{% endif %}">
+        <i class="ti ti-id-badge w-5 text-center shrink-0 text-base"></i>
+        <span>Árbitros</span>
+      </a>
+
+      <a href="{{ url_local }}"
+         class="nav-link {% if url_local in request.path %}nav-link-active{% endif %}">
+        <i class="ti ti-map-pin w-5 text-center shrink-0 text-base"></i>
+        <span>Locais</span>
+      </a>
+
+      <!-- Federativo -->
+      <span class="sidebar-label">Federativo</span>
+
+      {% url 'registro:dashboard' as url_reg %}
+      <a href="{{ url_reg }}"
+         class="nav-link {% if url_reg in request.path %}nav-link-active{% endif %}">
+        <i class="ti ti-clipboard-list w-5 text-center shrink-0 text-base"></i>
+        <span>Registro Federativo</span>
+      </a>
+
+      <!-- Administração — admin da federação, superadmin ou secretário -->
+      {% if request.user.is_admin or request.vinculo.papel == 'ADMIN' or request.vinculo.papel == 'SEC' %}
+      <span class="sidebar-label">Administração</span>
+
+      <a href="{% url 'core:usuarios_lista' %}"
+         class="nav-link {% if 'usuarios' in request.path %}nav-link-active{% endif %}">
+        <i class="ti ti-users w-5 text-center shrink-0 text-base"></i>
+        <span>Usuários</span>
+      </a>
+      {% endif %}
+      {% endif %}{# /not is_arbitro_only and not is_dirigente_only #}
+
+    </nav>
+
+    <!-- ── Usuário (rodapé do sidebar) ───────────────────────────── -->
+    <div class="shrink-0 p-3 border-t border-gray-200 dark:border-slate-800">
+      <div class="flex items-center gap-3 px-2 py-2 rounded-lg transition-colors group
+                  hover:bg-gray-100 dark:hover:bg-slate-800">
+        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-700
+                    flex items-center justify-center text-white text-sm font-bold shrink-0
+                    ring-2 ring-blue-500/20">
+          {{ request.user.nome|first|upper|default:request.user.email|first|upper }}
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-semibold truncate leading-tight transition-colors
+                    text-gray-900 group-hover:text-gray-700 dark:text-slate-200 dark:group-hover:text-white">
+            {{ request.user.nome|default:request.user.email }}
+          </p>
+          <p class="text-xs truncate text-gray-400 dark:text-slate-500">
+            {% if request.user.is_admin %}Superadmin{% elif request.vinculo %}{{ request.vinculo.get_papel_display }}{% endif %}
+          </p>
+        </div>
+        <i class="ti ti-dots-vertical text-base shrink-0 transition-colors
+                  text-gray-400 group-hover:text-gray-600 dark:text-slate-600 dark:group-hover:text-slate-400"></i>
+      </div>
+    </div>
+
+  </div>
+</aside>
+<!-- /sidebar -->
+
+<!-- ════════════════════════════════════════════════════════════════════
+     WRAPPER PRINCIPAL
+════════════════════════════════════════════════════════════════════ -->
+<div class="sm:ml-64 flex flex-col min-h-screen">
+
+  <!-- ── NAVBAR SUPERIOR ──────────────────────────────────────────── -->
+  <nav class="sticky top-0 z-30 bg-white border-b border-gray-200
+              dark:bg-gray-800 dark:border-gray-700 h-16 shrink-0">
+    <div class="flex items-center justify-between h-full px-4">
+
+      <!-- Esquerda: hambúrguer (mobile) -->
+      <div class="flex items-center gap-3">
+        <button type="button"
+                data-drawer-target="sidebar"
+                data-drawer-toggle="sidebar"
+                aria-controls="sidebar"
+                class="sm:hidden btn-icon">
+          <i class="ti ti-menu-2 text-xl"></i>
+          <span class="sr-only">Abrir menu</span>
+        </button>
+        <span class="sm:hidden text-sm font-bold text-gray-900 dark:text-white">CHAMPS</span>
+      </div>
+
+      <!-- Direita: toggle dark + dropdown usuário -->
+      <div class="flex items-center gap-1">
+
+        <!-- Dark / Light toggle -->
+        <button id="dark-toggle" type="button"
+                class="btn-icon" title="Alternar tema claro/escuro">
+          <i id="theme-icon" class="ti text-lg"></i>
+        </button>
+
+        <!-- Botão do dropdown de usuário -->
+        <button id="user-menu-btn"
+                data-dropdown-toggle="user-dropdown"
+                data-dropdown-placement="bottom-end"
+                type="button"
+                class="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-lg
+                       hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+          <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center
+                      text-white text-sm font-bold shrink-0">
+            {{ request.user.nome|first|upper|default:request.user.email|first|upper }}
+          </div>
+          <span class="hidden sm:block text-sm font-medium text-gray-700 dark:text-gray-300
+                       max-w-[130px] truncate">
+            {{ request.user.nome|default:request.user.email }}
+          </span>
+          <i class="ti ti-chevron-down text-xs text-gray-400 hidden sm:block"></i>
+        </button>
+
+        <!-- Menu dropdown do usuário (Flowbite) -->
+        <div id="user-dropdown"
+             class="z-50 hidden bg-white divide-y divide-gray-100 rounded-xl
+                    shadow-lg border border-gray-200 w-56
+                    dark:bg-gray-700 dark:divide-gray-600 dark:border-gray-600">
+          <div class="px-4 py-3">
+            <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">
+              {{ request.user.nome|default:request.user.email }}
+            </p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
+              {{ request.user.email }}
+            </p>
+          </div>
+          <ul class="py-1 text-sm">
+            <li>
+              <a href="{% url 'core:usuario_editar' request.user.pk %}"
+                 class="flex items-center gap-2.5 px-4 py-2
+                        text-gray-700 hover:bg-gray-100
+                        dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white
+                        transition-colors">
+                <i class="ti ti-user-circle text-gray-400 text-base"></i>
+                Meu Perfil
+              </a>
+            </li>
+            <li>
+              <a href="{% url 'core:alterar_senha' %}"
+                 class="flex items-center gap-2.5 px-4 py-2
+                        text-gray-700 hover:bg-gray-100
+                        dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white
+                        transition-colors">
+                <i class="ti ti-key text-gray-400 text-base"></i>
+                Alterar Senha
+              </a>
+            </li>
+            <li>
+              <a href="{% url 'auditoria:lgpd_dashboard' %}"
+                 class="flex items-center gap-2.5 px-4 py-2
+                        text-gray-700 hover:bg-gray-100
+                        dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white
+                        transition-colors">
+                <i class="ti ti-shield-lock text-gray-400 text-base"></i>
+                Privacidade (LGPD)
+              </a>
+            </li>
+          </ul>
+          <div class="py-1">
+            <form method="post" action="{% url 'core:logout' %}">
+              {% csrf_token %}
+              <button type="submit"
+                      class="flex items-center gap-2.5 w-full text-left px-4 py-2 text-sm
+                             text-red-600 hover:bg-gray-100
+                             dark:text-red-400 dark:hover:bg-gray-600 transition-colors">
+                <i class="ti ti-logout text-base"></i>
+                Sair
+              </button>
+            </form>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </nav>
+  <!-- /navbar -->
+
+  <!-- ── Breadcrumbs ────────────────────────────────── -->
+  {% block breadcrumbs %}{% endblock %}
+
+  <!-- ── Toasts ──────────────────────────────────────────────────────── -->
   {% if messages %}
-  <div class="toast toast-top toast-end z-[100] mt-3 gap-2">
+  <div id="toast-container"
+       class="fixed top-4 right-4 z-[9999] flex flex-col gap-2 pointer-events-none"
+       style="min-width:280px; max-width:360px">
     {% for message in messages %}
-    <div role="alert" class="alert shadow-2xl rounded-xl border border-base-content/10 text-sm font-medium
-      {% if 'success' in message.tags %}alert-success
-      {% elif 'error' in message.tags %}alert-error
-      {% elif 'warning' in message.tags %}alert-warning
-      {% else %}alert-info{% endif %}">
-      <i class="bi bi-
-        {% if 'success' in message.tags %}check-circle-fill
-        {% elif 'error' in message.tags %}x-circle-fill
-        {% elif 'warning' in message.tags %}exclamation-triangle-fill
-        {% else %}info-circle-fill{% endif %} text-base shrink-0"></i>
-      <span>{{ message }}</span>
+    <div class="toast-item pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border
+                bg-white dark:bg-gray-800 w-full
+                translate-x-full opacity-0 transition-all duration-300 ease-out
+                {% if message.tags == 'success' %}border-green-200 dark:border-green-800
+                {% elif message.tags == 'error' %}border-red-200 dark:border-red-800
+                {% elif message.tags == 'warning' %}border-yellow-200 dark:border-yellow-800
+                {% else %}border-blue-200 dark:border-blue-800{% endif %}">
+      <i class="ti shrink-0 text-xl
+                {% if message.tags == 'success' %}ti-circle-check text-green-500
+                {% elif message.tags == 'error' %}ti-circle-x text-red-500
+                {% elif message.tags == 'warning' %}ti-alert-triangle text-yellow-500
+                {% else %}ti-info-circle text-blue-500{% endif %}"></i>
+      <span class="flex-1 text-sm font-medium text-gray-800 dark:text-gray-200">{{ message }}</span>
+      <button onclick="dismissToast(this.closest('.toast-item'))"
+              class="shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+        <i class="ti ti-x text-sm"></i>
+      </button>
     </div>
     {% endfor %}
   </div>
+  <script>
+    function dismissToast(el) {
+      el.classList.add('translate-x-full', 'opacity-0');
+      setTimeout(function () { el.remove(); }, 300);
+    }
+    (function () {
+      var toasts = document.querySelectorAll('.toast-item');
+      toasts.forEach(function (t, i) {
+        setTimeout(function () {
+          t.classList.remove('translate-x-full', 'opacity-0');
+        }, 80 + i * 120);
+        setTimeout(function () { dismissToast(t); }, 4500 + i * 120);
+      });
+    })();
+  </script>
   {% endif %}
 
-  <!-- ── Resolução de URLs — disponíveis em todo o template ─────── -->
-  {% url 'competicao:dashboard'        as url_dash %}
-  {% url 'equipe:lista'                as url_equipes %}
-  {% url 'competicao:competicao_lista' as url_comp %}
-  {% url 'competicao:calendario'       as url_cal %}
-  {% url 'competicao:notificacoes'     as url_notif %}
-  {% url 'competicao:local_lista'      as url_local %}
-  {% url 'competicao:arbitro_lista'    as url_arb %}
-  {% url 'federacao:dashboard'         as url_fed %}
-  {% url 'federacao:registro_lista'    as url_fed_reg %}
-  {% url 'federacao:transferencia_lista' as url_fed_transf %}
-  {% url 'federacao:clube_lista'       as url_fed_clubes %}
-  {% url 'federacao:documento_lista'   as url_fed_docs %}
-  {% url 'competicao:tribunal_dashboard'   as url_tribunal %}
-  {% url 'competicao:processo_lista'     as url_processos %}
-  {% url 'competicao:financeiro_dashboard' as url_financeiro %}
-  {% url 'competicao:lancamento_lista'   as url_lancamentos %}
-  {% url 'competicao:publicacao_admin_lista' as url_portal_admin %}
-  {% url 'competicao:portal_home'        as url_portal %}
-  {% url 'auditoria:log_lista'           as url_audit_logs %}
-  {% url 'auditoria:lgpd_dashboard'      as url_lgpd %}
-
-  <!-- ─────────────────────────────────────────────────────────────────
-       DRAWER — lg:drawer-open torna a sidebar permanente no desktop
-  ────────────────────────────────────────────────────────────────── -->
-  <div class="drawer lg:drawer-open">
-    <input id="nav-drawer" type="checkbox" class="drawer-toggle" />
-
-    <!-- ═══ Área principal (navbar + conteúdo + footer) ════════════ -->
-    <div class="drawer-content flex flex-col min-h-screen">
-
-      <!-- ── Navbar ─────────────────────────────────────────────── -->
-      <nav class="navbar bg-neutral text-neutral-content sticky top-0 z-30 px-3 shadow-lg border-b border-neutral-content/10">
-
-        <!-- Start: hamburguer (mobile) + logo (mobile) -->
-        <div class="navbar-start gap-1">
-
-          <!-- Hamburguer: só mobile -->
-          <label for="nav-drawer" aria-label="Abrir menu"
-                 class="btn btn-ghost btn-sm lg:hidden text-neutral-content hover:bg-neutral-content/10">
-            <i class="bi bi-list text-xl"></i>
-          </label>
-
-          <!-- Logo: só mobile (desktop tem na sidebar) -->
-          <a href="/" class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-neutral-content/10
-                             transition-colors lg:hidden">
-            <i class="bi bi-trophy-fill text-warning text-lg"></i>
-            <span class="font-black text-base tracking-tight">Champs</span>
-          </a>
-
-        </div>
-
-        <!-- End: busca + usuário -->
-        <div class="navbar-end gap-2">
-
-          <!-- Busca global (desktop) — abre modal -->
-          <button type="button"
-                  onclick="document.getElementById('search-modal').showModal();setTimeout(()=>document.getElementById('search-modal-input').focus(),50)"
-                  class="hidden md:flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-lg text-sm
-                         bg-neutral-content/5 border border-neutral-content/10
-                         text-neutral-content/35 hover:text-neutral-content/60
-                         hover:bg-neutral-content/10 transition-all duration-150 cursor-pointer">
-            <i class="bi bi-search text-xs shrink-0"></i>
-            <span class="w-32 text-left">Buscar...</span>
-            <kbd class="kbd kbd-xs text-neutral-content/25">Ctrl K</kbd>
-          </button>
-
-          {% if user.is_authenticated %}
-          <!-- Dropdown usuário — padrão <details> do DaisyUI v5 -->
-          <details class="dropdown dropdown-end" id="user-dropdown">
-            <summary class="btn btn-ghost btn-sm gap-2 text-neutral-content hover:bg-neutral-content/10
-                            transition-colors duration-150 max-w-48 list-none cursor-pointer">
-              <div class="w-7 h-7 rounded-full bg-warning/10 border border-warning/20
-                          flex items-center justify-center shrink-0">
-                <i class="bi bi-person-fill text-warning/70 text-sm"></i>
-              </div>
-              <span class="hidden sm:inline truncate text-sm font-medium">
-                {{ user.nome|default:user.email }}
-              </span>
-              <i class="bi bi-chevron-down text-[10px] opacity-40"></i>
-            </summary>
-            <ul class="dropdown-content bg-neutral border border-neutral-content/10 rounded-xl shadow-2xl
-                       z-50 w-56 p-1.5 mt-1 flex flex-col gap-0.5">
-              <li class="px-3 py-1.5">
-                <span class="text-xs font-semibold text-neutral-content/40 uppercase tracking-widest">
-                  {{ user.get_perfil_display }}
-                </span>
-              </li>
-              <li><div class="h-px bg-neutral-content/10 my-0.5"></div></li>
-              <li>
-                <a href="{% url 'competicao:notificacoes' %}"
-                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-neutral-content/70
-                          hover:text-neutral-content hover:bg-neutral-content/10 transition-all duration-150">
-                  <i class="bi bi-bell-fill text-warning/70 text-xs"></i>
-                  Notificações
-                  {% if notificacoes_count > 0 %}
-                  <span class="badge badge-error badge-xs ml-auto">{{ notificacoes_count }}</span>
-                  {% endif %}
-                </a>
-              </li>
-              <li>
-                <a href="{% url 'core:alterar_senha' %}"
-                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-neutral-content/70
-                          hover:text-neutral-content hover:bg-neutral-content/10 transition-all duration-150">
-                  <i class="bi bi-lock-fill text-warning/70 text-xs"></i> Alterar Senha
-                </a>
-              </li>
-              <li><div class="h-px bg-neutral-content/10 my-0.5"></div></li>
-              <li>
-                <a href="{% url 'core:logout' %}"
-                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-error/80
-                          hover:text-error hover:bg-error/10 transition-all duration-150">
-                  <i class="bi bi-box-arrow-right text-xs"></i> Sair
-                </a>
-              </li>
-            </ul>
-          </details>
-
-          {% else %}
-          <a href="{% url 'core:login' %}" class="btn btn-warning btn-sm gap-1.5 font-semibold shadow-lg shadow-warning/20">
-            <i class="bi bi-box-arrow-in-right text-sm"></i>
-            <span class="hidden sm:inline">Entrar</span>
-          </a>
-          {% endif %}
-
-        </div>
-      </nav>
-      <!-- Linha dourada -->
-      <div class="h-px bg-gradient-to-r from-transparent via-warning/25 to-transparent shrink-0"></div>
-
-      <!-- Conteúdo da página -->
-      <main class="flex-1 pb-16 lg:pb-0">
-        {% block breadcrumbs %}{% endblock %}
-        {% block conteudo %}{% endblock %}
-      </main>
-
-      <!-- Footer -->
-      <footer class="bg-neutral border-t border-neutral-content/10 py-4 mt-8">
-        <p class="text-center text-sm text-neutral-content/25">
-          &copy; <script>document.write(new Date().getFullYear())</script>
-          &mdash; Desenvolvido por Anderson Duarte
-        </p>
-      </footer>
-
-    </div>
-    <!-- ═══ /Área principal ════════════════════════════════════════ -->
-
-    <!-- ── Sidebar — overlay no mobile, fixa no desktop ─────────── -->
-    <div class="drawer-side z-40">
-
-      <!-- Overlay: só mobile (no desktop não precisa fechar a sidebar) -->
-      <label for="nav-drawer" aria-label="Fechar menu" class="drawer-overlay lg:hidden"></label>
-
-      <aside class="bg-neutral text-neutral-content min-h-full w-64 flex flex-col
-                    border-r border-neutral-content/10 overflow-y-auto">
-
-        <!-- ── Logo / Marca ───────────────────────────────────────── -->
-        <a href="/" class="flex items-center gap-3 px-5 py-5 border-b border-neutral-content/10
-                           hover:bg-neutral-content/5 transition-colors group">
-          <div class="w-10 h-10 rounded-xl bg-warning/10 border border-warning/20
-                      flex items-center justify-center shrink-0
-                      group-hover:border-warning/40 transition-colors">
-            <i class="bi bi-trophy-fill text-warning text-xl"></i>
-          </div>
-          <div>
-            <div class="section-heading text-xl font-black tracking-widest text-neutral-content leading-none">
-              CHAMPS
-            </div>
-            <div class="text-[11px] text-neutral-content/30 mt-0.5 font-medium tracking-wide">
-              Sistema de Campeonatos
-            </div>
-          </div>
-        </a>
-
-        <!-- ── Navegação principal ────────────────────────────────── -->
-        <nav class="flex-1 px-3 py-4 flex flex-col gap-0.5 overflow-y-auto">
-
-          <!-- PRINCIPAL -->
-          <div class="sidebar-section">
-            <span class="sidebar-section-label">Principal</span>
-          </div>
-
-          <a href="{{ url_dash }}"
-             class="sidebar-link {% if request.path == url_dash %}sidebar-link-active{% endif %}">
-            <i class="bi bi-speedometer2 text-base shrink-0"></i>
-            Dashboard
-          </a>
-
-          <a href="{{ url_cal }}"
-             class="sidebar-link {% if request.path == url_cal %}sidebar-link-active{% endif %}">
-            <i class="bi bi-calendar3 text-base shrink-0"></i>
-            Calendário
-          </a>
-
-          <a href="{{ url_notif }}"
-             class="sidebar-link {% if request.path == url_notif %}sidebar-link-active{% endif %}">
-            <i class="bi bi-bell-fill text-base shrink-0"></i>
-            Notificações
-            {% if notificacoes_count > 0 %}
-            <span class="badge badge-error badge-xs ml-auto">{{ notificacoes_count }}</span>
-            {% endif %}
-          </a>
-
-          <!-- TORNEIOS -->
-          <div class="sidebar-section">
-            <span class="sidebar-section-label">Torneios</span>
-          </div>
-
-          <a href="{{ url_comp }}"
-             class="sidebar-link {% if url_comp in request.path %}sidebar-link-active{% endif %}">
-            <i class="bi bi-trophy text-base shrink-0"></i>
-            Competições
-          </a>
-
-          <a href="{{ url_equipes }}"
-             class="sidebar-link {% if url_equipes in request.path %}sidebar-link-active{% endif %}">
-            <i class="bi bi-shield-fill text-base shrink-0"></i>
-            Equipes
-          </a>
-
-          <!-- CADASTROS -->
-          <div class="sidebar-section">
-            <span class="sidebar-section-label">Cadastros</span>
-          </div>
-
-          <a href="{{ url_local }}"
-             class="sidebar-link {% if request.path == url_local %}sidebar-link-active{% endif %}">
-            <i class="bi bi-geo-alt-fill text-base shrink-0 text-warning/50"></i>
-            Locais / Campos
-          </a>
-
-          <a href="{{ url_arb }}"
-             class="sidebar-link {% if request.path == url_arb %}sidebar-link-active{% endif %}">
-            <i class="bi bi-person-badge-fill text-base shrink-0 text-warning/50"></i>
-            Árbitros
-          </a>
-
-          <!-- FEDERAÇÃO -->
-          <div class="sidebar-section">
-            <span class="sidebar-section-label">Federação</span>
-          </div>
-
-          <a href="{{ url_fed }}"
-             class="sidebar-link {% if request.path == url_fed %}sidebar-link-active{% endif %}">
-            <i class="bi bi-award-fill text-base shrink-0 text-warning/50"></i>
-            Dashboard Federativo
-          </a>
-
-          <a href="{{ url_fed_reg }}"
-             class="sidebar-link {% if url_fed_reg in request.path %}sidebar-link-active{% endif %}">
-            <i class="bi bi-card-text text-base shrink-0 text-warning/50"></i>
-            Registros
-          </a>
-
-          <a href="{{ url_fed_transf }}"
-             class="sidebar-link {% if url_fed_transf in request.path %}sidebar-link-active{% endif %}">
-            <i class="bi bi-arrow-left-right text-base shrink-0 text-warning/50"></i>
-            Transferências
-          </a>
-
-          <a href="{{ url_fed_clubes }}"
-             class="sidebar-link {% if url_fed_clubes in request.path %}sidebar-link-active{% endif %}">
-            <i class="bi bi-building-fill text-base shrink-0 text-warning/50"></i>
-            Clubes Federados
-          </a>
-
-          <a href="{{ url_fed_docs }}"
-             class="sidebar-link {% if url_fed_docs in request.path %}sidebar-link-active{% endif %}">
-            <i class="bi bi-folder2-open text-base shrink-0 text-warning/50"></i>
-            Documentos
-          </a>
-
-          <!-- FINANCEIRO -->
-          <div class="sidebar-section">
-            <span class="sidebar-section-label">Financeiro</span>
-          </div>
-
-          <a href="{{ url_financeiro }}"
-             class="sidebar-link {% if request.path == url_financeiro %}sidebar-link-active{% endif %}">
-            <i class="bi bi-cash-coin text-base shrink-0 text-warning/50"></i>
-            Financeiro
-          </a>
-
-          <a href="{{ url_lancamentos }}"
-             class="sidebar-link {% if url_lancamentos in request.path %}sidebar-link-active{% endif %}">
-            <i class="bi bi-receipt text-base shrink-0 text-warning/50"></i>
-            Lançamentos
-          </a>
-
-          <!-- PORTAL -->
-          <div class="sidebar-section">
-            <span class="sidebar-section-label">Portal Público</span>
-          </div>
-
-          <a href="{{ url_portal_admin }}"
-             class="sidebar-link {% if url_portal_admin in request.path %}sidebar-link-active{% endif %}">
-            <i class="bi bi-globe text-base shrink-0 text-warning/50"></i>
-            Publicações
-          </a>
-
-          <a href="{{ url_portal }}" target="_blank"
-             class="sidebar-link">
-            <i class="bi bi-box-arrow-up-right text-base shrink-0 text-warning/50"></i>
-            Ver Portal
-          </a>
-
-          <!-- TRIBUNAL -->
-          <div class="sidebar-section">
-            <span class="sidebar-section-label">Tribunal</span>
-          </div>
-
-          <a href="{{ url_tribunal }}"
-             class="sidebar-link {% if request.path == url_tribunal %}sidebar-link-active{% endif %}">
-            <i class="bi bi-hammer text-base shrink-0 text-warning/50"></i>
-            Tribunal Desportivo
-          </a>
-
-          <a href="{{ url_processos }}"
-             class="sidebar-link {% if url_processos in request.path %}sidebar-link-active{% endif %}">
-            <i class="bi bi-folder2-open text-base shrink-0 text-warning/50"></i>
-            Processos
-          </a>
-
-          <!-- AUDITORIA -->
-          <div class="sidebar-section">
-            <span class="sidebar-section-label">Segurança</span>
-          </div>
-
-          <a href="{{ url_lgpd }}"
-             class="sidebar-link {% if url_lgpd in request.path %}sidebar-link-active{% endif %}">
-            <i class="bi bi-shield-lock text-base shrink-0 text-warning/50"></i>
-            LGPD / Privacidade
-          </a>
-
-          {% if user.is_authenticated and user.is_admin or user.is_authenticated and user.perfil == 'admin' %}
-          <a href="{{ url_audit_logs }}"
-             class="sidebar-link {% if url_audit_logs in request.path %}sidebar-link-active{% endif %}">
-            <i class="bi bi-journal-text text-base shrink-0 text-warning/50"></i>
-            Logs de Auditoria
-          </a>
-
-          <!-- ADMINISTRAÇÃO -->
-          <div class="sidebar-section">
-            <span class="sidebar-section-label">Administração</span>
-          </div>
-
-          {% url 'core:usuarios_lista' as url_usuarios %}
-          <a href="{{ url_usuarios }}"
-             class="sidebar-link {% if request.path == url_usuarios %}sidebar-link-active{% endif %}">
-            <i class="bi bi-people-fill text-base shrink-0 text-warning/50"></i>
-            Gerenciar Usuários
-          </a>
-          {% endif %}
-
-          <!-- Busca mobile -->
-          <div class="mt-6 lg:hidden">
-            <form method="get" action="{% url 'competicao:busca_global' %}">
-              <label class="input input-sm bg-neutral-content/5 border-neutral-content/15
-                            flex items-center gap-2 w-full rounded-xl">
-                <i class="bi bi-search text-neutral-content/30 text-xs shrink-0"></i>
-                <input type="search" name="q" placeholder="Buscar..."
-                       class="grow bg-transparent text-sm text-neutral-content
-                              placeholder:text-neutral-content/30 outline-none">
-              </label>
-            </form>
-          </div>
-
-        </nav>
-        <!-- /nav -->
-
-        <!-- ── Rodapé da sidebar: usuário ─────────────────────────── -->
-        {% if user.is_authenticated %}
-        <div class="border-t border-neutral-content/10 px-3 py-3">
-
-          <!-- Info do usuário -->
-          <div class="flex items-center gap-3 px-2 py-2 mb-1">
-            <div class="w-9 h-9 rounded-full bg-warning/10 border border-warning/20
-                        flex items-center justify-center shrink-0">
-              <i class="bi bi-person-fill text-warning/70 text-sm"></i>
-            </div>
-            <div class="min-w-0 flex-1">
-              <p class="text-sm font-semibold text-neutral-content truncate leading-snug">
-                {{ user.nome|default:user.email }}
-              </p>
-              <p class="text-xs text-neutral-content/40">{{ user.get_perfil_display }}</p>
-            </div>
-          </div>
-
-          <!-- Ações rápidas -->
-          <a href="{% url 'competicao:notificacoes' %}"
-             class="sidebar-link py-2">
-            <i class="bi bi-bell-fill text-sm shrink-0"></i>
-            Notificações
-            {% if notificacoes_count > 0 %}
-            <span class="badge badge-error badge-xs ml-auto">{{ notificacoes_count }}</span>
-            {% endif %}
-          </a>
-
-          <a href="{% url 'core:alterar_senha' %}"
-             class="sidebar-link py-2">
-            <i class="bi bi-lock-fill text-sm shrink-0"></i>
-            Alterar Senha
-          </a>
-
-          <a href="{% url 'core:logout' %}"
-             class="sidebar-link py-2 text-error/70 hover:text-error hover:bg-error/10 mt-0.5">
-            <i class="bi bi-box-arrow-right text-sm shrink-0"></i>
-            Sair
-          </a>
-
-        </div>
-        {% else %}
-        <div class="border-t border-neutral-content/10 px-4 py-4">
-          <a href="{% url 'core:login' %}"
-             class="btn btn-warning btn-sm w-full gap-2 shadow-lg shadow-warning/20 font-semibold">
-            <i class="bi bi-box-arrow-in-right"></i> Entrar
-          </a>
-        </div>
-        {% endif %}
-
-      </aside>
-    </div>
-    <!-- ── /Sidebar ───────────────────────────────────────────────── -->
-
-  </div>
-  <!-- /drawer -->
-
-  <!-- ── Mobile Bottom Tab Bar (somente mobile) ──────────────────────── -->
-  <nav class="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-base-200/95 backdrop-blur-md
-              border-t border-base-300 h-16 flex items-stretch safe-area-inset-bottom">
-    <a href="{{ url_dash }}"
-       class="flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors
-              {% if request.path == url_dash %}text-warning{% else %}text-base-content/40 hover:text-base-content/70{% endif %}">
-      <i class="bi bi-speedometer2 text-xl leading-none"></i>
-      <span class="text-[10px] font-medium tracking-tight">Dashboard</span>
-    </a>
-    <a href="{{ url_comp }}"
-       class="flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors
-              {% if url_comp in request.path %}text-warning{% else %}text-base-content/40 hover:text-base-content/70{% endif %}">
-      <i class="bi bi-trophy text-xl leading-none"></i>
-      <span class="text-[10px] font-medium tracking-tight">Competições</span>
-    </a>
-    <a href="{{ url_cal }}"
-       class="flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors
-              {% if request.path == url_cal %}text-warning{% else %}text-base-content/40 hover:text-base-content/70{% endif %}">
-      <i class="bi bi-calendar3 text-xl leading-none"></i>
-      <span class="text-[10px] font-medium tracking-tight">Calendário</span>
-    </a>
-    <a href="{{ url_equipes }}"
-       class="flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors
-              {% if url_equipes in request.path %}text-warning{% else %}text-base-content/40 hover:text-base-content/70{% endif %}">
-      <i class="bi bi-shield-fill text-xl leading-none"></i>
-      <span class="text-[10px] font-medium tracking-tight">Equipes</span>
-    </a>
-    <a href="{{ url_notif }}"
-       class="flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors relative
-              {% if request.path == url_notif %}text-warning{% else %}text-base-content/40 hover:text-base-content/70{% endif %}">
-      <span class="relative inline-flex">
-        <i class="bi bi-bell-fill text-xl leading-none"></i>
-        {% if notificacoes_count > 0 %}
-        <span class="absolute -top-1 -right-2 badge badge-error badge-xs text-[9px] px-1 min-w-[1rem]">
-          {{ notificacoes_count }}
-        </span>
-        {% endif %}
-      </span>
-      <span class="text-[10px] font-medium tracking-tight">Avisos</span>
-    </a>
-  </nav>
-  <!-- /Mobile Bottom Tab Bar -->
-
-  <!-- ── Modal de Busca Global (Ctrl+K) ─────────────────────────────── -->
-  <dialog id="search-modal" class="modal modal-top sm:modal-middle">
-    <div class="modal-box bg-base-200 border border-base-300 sm:max-w-xl rounded-2xl p-0 overflow-hidden
-                shadow-2xl shadow-black/60">
-
-      <!-- Input principal -->
-      <form method="get" action="{% url 'competicao:busca_global' %}" id="search-modal-form">
-        <div class="flex items-center gap-3 px-4 py-3.5 border-b border-base-300">
-          <i class="bi bi-search text-warning/50 text-base shrink-0"></i>
-          <input type="search" name="q" id="search-modal-input"
-                 placeholder="Buscar competições, equipes, atletas..."
-                 autocomplete="off"
-                 class="flex-1 bg-transparent text-base outline-none text-base-content
-                        placeholder:text-base-content/30 min-w-0">
-          <kbd class="kbd kbd-sm hidden sm:inline text-base-content/20">Esc</kbd>
-        </div>
-      </form>
-
-      <!-- Links rápidos -->
-      <div class="p-3">
-        <p class="text-[10px] font-bold text-base-content/25 uppercase tracking-widest px-2 mb-2">
-          Acesso rápido
-        </p>
-        <div class="space-y-0.5">
-          <a href="{{ url_comp }}"
-             class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-base-300/70 transition-colors group">
-            <i class="bi bi-trophy text-warning/50 text-sm shrink-0"></i>
-            <span class="text-sm text-base-content/60 group-hover:text-base-content">Competições</span>
-          </a>
-          <a href="{{ url_equipes }}"
-             class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-base-300/70 transition-colors group">
-            <i class="bi bi-shield-fill text-warning/50 text-sm shrink-0"></i>
-            <span class="text-sm text-base-content/60 group-hover:text-base-content">Equipes</span>
-          </a>
-          <a href="{{ url_cal }}"
-             class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-base-300/70 transition-colors group">
-            <i class="bi bi-calendar3 text-warning/50 text-sm shrink-0"></i>
-            <span class="text-sm text-base-content/60 group-hover:text-base-content">Calendário</span>
-          </a>
-          <a href="{{ url_dash }}"
-             class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-base-300/70 transition-colors group">
-            <i class="bi bi-speedometer2 text-warning/50 text-sm shrink-0"></i>
-            <span class="text-sm text-base-content/60 group-hover:text-base-content">Dashboard</span>
-          </a>
-        </div>
-      </div>
-
-      <!-- Footer de atalhos -->
-      <div class="px-4 py-2 border-t border-base-300 flex items-center gap-4 text-[10px] text-base-content/25">
-        <span><kbd class="kbd kbd-xs">Enter</kbd> buscar</span>
-        <span><kbd class="kbd kbd-xs">Esc</kbd> fechar</span>
-      </div>
-    </div>
-    <!-- Backdrop fecha modal -->
-    <form method="dialog" class="modal-backdrop">
-      <button>fechar</button>
-    </form>
-  </dialog>
-  <!-- /Modal de Busca -->
-
-  <!-- ── Micro-interações globais ──────────────────────────────────── -->
-  <script>
+  <!-- ── Conteúdo da página ────────────────────────────────────────── -->
+  <main class="flex-1">
+    {% block conteudo %}{% endblock %}
+  </main>
+
+</div>
+<!-- /wrapper principal -->
+
+<!-- ════════════════════════════════════════════════════════════════════
+     SCRIPTS GLOBAIS
+════════════════════════════════════════════════════════════════════ -->
+
+<!-- Flowbite JS -->
+<script src="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.js"></script>
+
+<!-- Dark mode toggle -->
+<script>
+  function syncThemeIcon() {
+    var icon = document.getElementById('theme-icon');
+    if (!icon) return;
+    var isDark = document.getElementById('html-root').classList.contains('dark');
+    icon.className = isDark
+      ? 'ti ti-sun text-lg text-yellow-400'
+      : 'ti ti-moon text-lg text-gray-500';
+  }
+  syncThemeIcon();
+
+  document.getElementById('dark-toggle').addEventListener('click', function () {
+    var html = document.getElementById('html-root');
+    html.classList.toggle('dark');
+    localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+    syncThemeIcon();
+  });
+</script>
+
+<!-- Reveal scroll animations -->
+<script>
   (function () {
-    'use strict';
-
-    var noMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    /* ── 0a. Ctrl+K / Cmd+K → abre modal de busca ─────────────────── */
-    document.addEventListener('keydown', function (e) {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-        e.preventDefault();
-        var modal = document.getElementById('search-modal');
-        if (modal) {
-          modal.showModal();
-          setTimeout(function () {
-            var inp = document.getElementById('search-modal-input');
-            if (inp) inp.focus();
-          }, 50);
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          io.unobserve(e.target);
         }
-      }
-    });
-
-    /* ── 0. Fechar <details> dropdowns ao clicar fora ──────────────── */
-    document.addEventListener('click', function (e) {
-      document.querySelectorAll('details.dropdown[open]').forEach(function (d) {
-        if (!d.contains(e.target)) d.removeAttribute('open');
       });
-    });
-
-    /* ── 1. Toast: anima entrada e auto-remove após 4,5 s ─────────── */
-    document.querySelectorAll('.toast > [role="alert"]').forEach(function (el, i) {
-      if (!noMotion) {
-        el.style.animation = 'slide-toast 0.35s cubic-bezier(0.16,1,0.3,1) ' + (i * 100) + 'ms both';
-      }
-      setTimeout(function () {
-        el.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
-        el.style.opacity = '0';
-        el.style.transform = 'translateX(14px)';
-        setTimeout(function () { el.remove(); }, 360);
-      }, 4500 + i * 150);
-    });
-
-    /* ── 2. Scroll-reveal: cards e tabelas dentro de <main> ────────── */
-    if (!noMotion && 'IntersectionObserver' in window) {
-      var io = new IntersectionObserver(function (entries) {
-        entries.forEach(function (e) {
-          if (e.isIntersecting) {
-            e.target.classList.add('visible');
-            io.unobserve(e.target);
-          }
-        });
-      }, { threshold: 0.06, rootMargin: '0px 0px -32px 0px' });
-
-      /* Observa cards e tabelas; escalonamento de até 200 ms por grupo de 4 */
-      var targets = document.querySelectorAll('main .card, main table');
-      targets.forEach(function (el, i) {
-        el.classList.add('reveal');
-        el.style.transitionDelay = (Math.min((i % 4) * 65, 195)) + 'ms';
-        io.observe(el);
-      });
-    }
-
-    /* ── 3. Form submit → botão de envio mostra spinner ───────────── */
-    document.querySelectorAll('form').forEach(function (form) {
-      form.addEventListener('submit', function () {
-        var btn = form.querySelector('[type="submit"]');
-        if (!btn || btn.disabled) return;
-        btn.disabled = true;
-        btn.style.opacity = '0.72';
-        var orig = btn.innerHTML;
-        btn.innerHTML =
-          '<span style="display:inline-block;width:.85em;height:.85em;border:2px solid currentColor;' +
-          'border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;' +
-          'vertical-align:middle;margin-right:.35em"></span>' +
-          btn.textContent.trim();
-        /* Failsafe: restaura após 10 s se a página não recarregar */
-        setTimeout(function () {
-          btn.disabled = false;
-          btn.innerHTML = orig;
-          btn.style.opacity = '';
-        }, 10000);
-      });
-    });
-
-    /* ── 4. Counter: anima de 0 → N em .stat-number com valor inteiro ─ */
-    if (!noMotion && 'IntersectionObserver' in window) {
-      var statEls = Array.prototype.filter.call(
-        document.querySelectorAll('main .stat-number'),
-        function (el) {
-          var t = el.textContent.trim();
-          return /^\d+$/.test(t) && parseInt(t, 10) > 1;
-        }
-      );
-      if (statEls.length) {
-        var cio = new IntersectionObserver(function (entries) {
-          entries.forEach(function (e) {
-            if (!e.isIntersecting) return;
-            var el = e.target;
-            var target = parseInt(el.textContent.trim(), 10);
-            var dur = 750;
-            var t0 = performance.now();
-            (function tick(now) {
-              var p = Math.min((now - t0) / dur, 1);
-              var ease = 1 - Math.pow(1 - p, 3); /* ease-out-cubic */
-              el.textContent = Math.round(ease * target);
-              if (p < 1) requestAnimationFrame(tick);
-            })(t0);
-            cio.unobserve(el);
-          });
-        }, { threshold: 0.6 });
-        statEls.forEach(function (el) { cio.observe(el); });
-      }
-    }
-
+    }, { threshold: 0.05 });
+    document.querySelectorAll('.reveal').forEach(function (el) { io.observe(el); });
   })();
-  </script>
+</script>
 
-  {% block script %}{% endblock %}
+{% block script %}{% endblock %}
+
 </body>
 </html>

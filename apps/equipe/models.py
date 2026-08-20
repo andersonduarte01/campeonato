@@ -1,20 +1,29 @@
 from django.db import models
 from stdimage import StdImageField
-from ..core.models import Usuario
-# Create your models here.
 
-
-ESTADOS_BR = [
-    ('AC','AC'),('AL','AL'),('AP','AP'),('AM','AM'),('BA','BA'),('CE','CE'),
-    ('DF','DF'),('ES','ES'),('GO','GO'),('MA','MA'),('MT','MT'),('MS','MS'),
-    ('MG','MG'),('PA','PA'),('PB','PB'),('PR','PR'),('PE','PE'),('PI','PI'),
-    ('RJ','RJ'),('RN','RN'),('RS','RS'),('RO','RO'),('RR','RR'),('SC','SC'),
-    ('SP','SP'),('SE','SE'),('TO','TO'),
-]
+from apps.core.constants import ESTADOS_BR
+from ..core.models import Federacao
 
 
 class Equipe(models.Model):
+    SITUACAO_FILIADO       = 'filiado'
+    SITUACAO_REGULARIZACAO = 'em_regularizacao'
+    SITUACAO_SUSPENSO      = 'suspenso'
+    SITUACAO_DESFILIADO    = 'desfiliado'
+
+    SITUACAO_CHOICES = [
+        (SITUACAO_FILIADO,       'Filiado'),
+        (SITUACAO_REGULARIZACAO, 'Em Regularização'),
+        (SITUACAO_SUSPENSO,      'Suspenso'),
+        (SITUACAO_DESFILIADO,    'Desfiliado'),
+    ]
+
+    federacao   = models.ForeignKey(
+        Federacao, on_delete=models.PROTECT,
+        related_name='equipes', verbose_name='Federação',
+    )
     nome_equipe = models.CharField(verbose_name='Nome', max_length=300)
+    sigla       = models.CharField(max_length=10, blank=True, verbose_name='Sigla')
     escudo = StdImageField(upload_to='equipe/escudo', variations={'thumbnail': {'width': 200, 'height': 200}},
                            null=True, blank=True, delete_orphans=True)
     cidade = models.CharField(max_length=100, blank=True, null=True, verbose_name='Cidade')
@@ -23,7 +32,15 @@ class Equipe(models.Model):
     tecnico = models.CharField(max_length=200, blank=True, null=True, verbose_name='Técnico')
     cor_uniforme_principal = models.CharField(max_length=30, blank=True, null=True, verbose_name='Cor Uniforme Principal')
     cor_uniforme_alternativo = models.CharField(max_length=30, blank=True, null=True, verbose_name='Cor Uniforme Alternativo')
-    fundacao = models.DateField(null=True, blank=True, verbose_name='Fundação')
+    fundacao      = models.DateField(null=True, blank=True, verbose_name='Fundação')
+    data_filiacao = models.DateField(null=True, blank=True, verbose_name='Data de Filiação')
+    situacao      = models.CharField(
+        max_length=20, choices=SITUACAO_CHOICES,
+        default=SITUACAO_REGULARIZACAO, verbose_name='Situação',
+    )
+    telefone  = models.CharField(max_length=20, blank=True, verbose_name='Telefone')
+    instagram = models.CharField(max_length=100, blank=True, verbose_name='Instagram')
+    facebook  = models.CharField(max_length=100, blank=True, verbose_name='Facebook')
     cadastrado = models.DateTimeField(auto_now_add=True)
     atualizado = models.DateTimeField(auto_now=True)
 
@@ -53,9 +70,10 @@ class Atleta(models.Model):
         ('ESQUERDO', 'Esquerdo'),
         ('AMBIDESTRO', 'Ambidestro'),
     ]
+    # Situação física/administrativa do atleta na equipe. Suspensão
+    # disciplinar é uma preocupação separada — usa Atleta.esta_suspenso(comp).
     SITUACAO_CHOICES = [
         ('APTO', 'Apto'),
-        ('SUSPENSO', 'Suspenso'),
         ('LESIONADO', 'Lesionado'),
         ('FORA', 'Fora do Elenco'),
     ]
@@ -85,10 +103,11 @@ class Atleta(models.Model):
     def __str__(self):
         return self.nome
 
-    def nome_equipe(self):
-        return self.equipe.nome_equipe
-
-    nome_equipe.short_description = 'Equipe'
+    def esta_suspenso(self, competicao):
+        from apps.competicao.models import Suspensao
+        return Suspensao.objects.filter(
+            atleta=self, competicao=competicao, cumprida=False,
+        ).exists()
 
     class Meta:
         verbose_name = "Atleta"

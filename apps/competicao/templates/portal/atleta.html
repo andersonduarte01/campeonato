@@ -4,39 +4,39 @@
 {% block conteudo %}
 
 <!-- Cabeçalho do atleta -->
-<section class="bg-base-200 border-b border-base-300 relative overflow-hidden">
+<section class="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 relative overflow-hidden">
   <div class="absolute inset-0 opacity-[0.03]"
        style="background-image: repeating-linear-gradient(45deg, oklch(80% 0.18 85) 0px, transparent 1px, transparent 24px, oklch(80% 0.18 85) 25px, transparent 26px);">
   </div>
   <div class="max-w-6xl mx-auto px-4 py-10 relative">
     <div class="flex items-center gap-6">
       {% if atleta.foto %}
-      <div class="w-24 h-24 rounded-2xl overflow-hidden border border-base-300 bg-base-300/50 shrink-0">
+      <div class="w-24 h-24 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-200/50 dark:bg-gray-700/50 shrink-0">
         <img src="{{ atleta.foto.url }}" alt="{{ atleta.nome }}" class="w-full h-full object-cover">
       </div>
       {% else %}
-      <div class="w-24 h-24 rounded-2xl bg-base-300/50 border border-base-300 flex items-center justify-center shrink-0">
-        <i class="bi bi-person-fill text-5xl text-base-content/20"></i>
+      <div class="w-24 h-24 rounded-2xl bg-gray-200/50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-700 flex items-center justify-center shrink-0">
+        <i class="ti ti-user text-5xl text-gray-300 dark:text-gray-600"></i>
       </div>
       {% endif %}
       <div>
         <div class="flex items-center gap-2 mb-1">
-          <i class="bi bi-person-badge text-warning text-xs"></i>
-          <span class="text-xs font-bold uppercase tracking-widest text-base-content/40">Atleta</span>
+          <i class="ti ti-id-badge-2 text-yellow-500 text-xs"></i>
+          <span class="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">Atleta</span>
           {% if atleta.posicao %}
-          <span class="badge badge-xs badge-outline text-base-content/40">{{ atleta.get_posicao_display }}</span>
+          <span class="badge badge-xs badge-gray text-gray-400 dark:text-gray-500">{{ atleta.get_posicao_display }}</span>
           {% endif %}
         </div>
-        <h1 class="font-title text-5xl text-base-content leading-none">{{ atleta.nome|upper }}</h1>
+        <h1 class="font-title text-5xl text-gray-900 dark:text-white leading-none">{{ atleta.nome|upper }}</h1>
         {% if atleta.equipe %}
         <a href="{% url 'competicao:portal_clube' atleta.equipe.pk %}"
-           class="flex items-center gap-1.5 mt-1 text-sm text-warning/70 hover:text-warning transition-colors">
-          <i class="bi bi-shield-fill text-xs"></i>
+           class="flex items-center gap-1.5 mt-1 text-sm text-yellow-500/70 hover:text-yellow-500 transition-colors">
+          <i class="ti ti-shield text-xs"></i>
           {{ atleta.equipe.nome_equipe }}
         </a>
         {% endif %}
         {% if atleta.data_nascimento %}
-        <p class="text-xs text-base-content/30 mt-0.5">{{ atleta.data_nascimento|date:"d/m/Y" }}</p>
+        <p class="text-xs text-gray-400 dark:text-gray-600 mt-0.5">{{ atleta.data_nascimento|date:"d/m/Y" }}</p>
         {% endif %}
       </div>
     </div>
@@ -47,25 +47,25 @@
 
   <!-- KPIs -->
   <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
-    <div class="card bg-base-200 border border-base-300 p-5 text-center">
-      <p class="stat-number text-3xl text-warning">{{ total_jogos }}</p>
-      <p class="text-xs text-base-content/40 mt-1 font-semibold uppercase tracking-wider">Partidas</p>
+    <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-5 text-center">
+      <p class="stat-number text-3xl text-yellow-500">{{ total_jogos }}</p>
+      <p class="text-xs text-gray-400 dark:text-gray-500 mt-1 font-semibold uppercase tracking-wider">Partidas</p>
     </div>
-    <div class="card bg-base-200 border border-base-300 p-5 text-center">
-      <p class="stat-number text-3xl text-success">{{ total_gols }}</p>
-      <p class="text-xs text-base-content/40 mt-1 font-semibold uppercase tracking-wider">Gols</p>
+    <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-5 text-center">
+      <p class="stat-number text-3xl text-green-500">{{ total_gols }}</p>
+      <p class="text-xs text-gray-400 dark:text-gray-500 mt-1 font-semibold uppercase tracking-wider">Gols</p>
     </div>
-    <div class="card bg-base-200 border border-base-300 p-5 text-center">
-      <p class="stat-number text-3xl text-info/70">{{ total_assistencias }}</p>
-      <p class="text-xs text-base-content/40 mt-1 font-semibold uppercase tracking-wider">Assistências</p>
+    <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-5 text-center">
+      <p class="stat-number text-3xl text-blue-500/70">{{ total_assistencias }}</p>
+      <p class="text-xs text-gray-400 dark:text-gray-500 mt-1 font-semibold uppercase tracking-wider">Assistências</p>
     </div>
-    <div class="card bg-base-200 border border-base-300 p-5 text-center">
-      <p class="stat-number text-3xl text-warning/70">{{ total_amarelos }}</p>
-      <p class="text-xs text-base-content/40 mt-1 font-semibold uppercase tracking-wider">Amarelos</p>
+    <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-5 text-center">
+      <p class="stat-number text-3xl text-yellow-500/70">{{ total_amarelos }}</p>
+      <p class="text-xs text-gray-400 dark:text-gray-500 mt-1 font-semibold uppercase tracking-wider">Amarelos</p>
     </div>
-    <div class="card bg-base-200 border border-base-300 p-5 text-center">
-      <p class="stat-number text-3xl text-error/70">{{ total_vermelhos }}</p>
-      <p class="text-xs text-base-content/40 mt-1 font-semibold uppercase tracking-wider">Vermelhos</p>
+    <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-5 text-center">
+      <p class="stat-number text-3xl text-red-500/70">{{ total_vermelhos }}</p>
+      <p class="text-xs text-gray-400 dark:text-gray-500 mt-1 font-semibold uppercase tracking-wider">Vermelhos</p>
     </div>
   </div>
 
@@ -76,14 +76,14 @@
 
       {% if gols_recentes %}
       <div class="flex items-center gap-2">
-        <i class="bi bi-bullseye text-warning text-sm"></i>
-        <h2 class="section-heading text-2xl text-base-content">GOLS MARCADOS</h2>
+        <i class="ti ti-target text-yellow-500 text-sm"></i>
+        <h2 class="section-heading text-2xl text-gray-900 dark:text-white">GOLS MARCADOS</h2>
       </div>
-      <div class="card bg-base-200 border border-base-300 overflow-hidden">
+      <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div class="overflow-x-auto">
           <table class="table table-sm w-full">
             <thead>
-              <tr class="text-xs font-bold uppercase tracking-wider text-base-content/40 border-b border-base-300">
+              <tr class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 border-b border-gray-200 dark:border-gray-700">
                 <th class="py-3">Partida</th>
                 <th>Competição</th>
                 <th>Min.</th>
@@ -92,24 +92,24 @@
             </thead>
             <tbody>
               {% for gol in gols_recentes %}
-              <tr class="border-b border-base-300/40 hover:bg-base-300/20 transition-colors">
+              <tr class="border-b border-gray-200 dark:border-gray-700/40 hover:bg-gray-200/20 dark:bg-gray-700/20 transition-colors">
                 <td class="text-sm">
-                  <p class="font-medium text-base-content truncate max-w-40">
+                  <p class="font-medium text-gray-900 dark:text-white truncate max-w-40">
                     {{ gol.jogo.equipe_casa.nome_equipe }} × {{ gol.jogo.equipe_fora.nome_equipe }}
                   </p>
-                  <p class="text-xs text-base-content/30">{{ gol.jogo.data_hora|date:"d/m/Y" }}</p>
+                  <p class="text-xs text-gray-400 dark:text-gray-600">{{ gol.jogo.data_hora|date:"d/m/Y" }}</p>
                 </td>
-                <td class="text-xs text-base-content/40 truncate max-w-28">
+                <td class="text-xs text-gray-400 dark:text-gray-500 truncate max-w-28">
                   {{ gol.jogo.rodada.competicao.nome }}
                 </td>
-                <td class="text-xs font-mono text-base-content/50">
+                <td class="text-xs font-mono text-gray-500 dark:text-gray-400">
                   {% if gol.minuto %}{{ gol.minuto }}'{% else %}—{% endif %}
                 </td>
                 <td>
                   <span class="badge badge-xs
-                    {% if gol.tipo == 'penalti' %}badge-warning
-                    {% elif gol.tipo == 'contra' %}badge-error
-                    {% else %}badge-success{% endif %}">
+                    {% if gol.tipo == 'penalti' %}badge-yellow
+                    {% elif gol.tipo == 'contra' %}badge-red
+                    {% else %}badge-green{% endif %}">
                     {{ gol.get_tipo_display|default:"Normal" }}
                   </span>
                 </td>
@@ -128,25 +128,25 @@
 
       <!-- Info física -->
       {% if atleta.altura or atleta.peso or atleta.pe_dominante %}
-      <div class="card bg-base-200 border border-base-300 p-4 space-y-3">
-        <span class="section-heading text-sm text-base-content/70 tracking-widest">DADOS FÍSICOS</span>
+      <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 space-y-3">
+        <span class="section-heading text-sm text-gray-700 dark:text-gray-300 tracking-widest">DADOS FÍSICOS</span>
         <div class="grid grid-cols-3 gap-3 mt-2">
           {% if atleta.altura %}
           <div class="text-center">
-            <p class="stat-number text-lg text-warning">{{ atleta.altura }}</p>
-            <p class="text-xs text-base-content/35 uppercase tracking-wider">cm</p>
+            <p class="stat-number text-lg text-yellow-500">{{ atleta.altura }}</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider">cm</p>
           </div>
           {% endif %}
           {% if atleta.peso %}
           <div class="text-center">
-            <p class="stat-number text-lg text-warning">{{ atleta.peso }}</p>
-            <p class="text-xs text-base-content/35 uppercase tracking-wider">kg</p>
+            <p class="stat-number text-lg text-yellow-500">{{ atleta.peso }}</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider">kg</p>
           </div>
           {% endif %}
           {% if atleta.pe_dominante %}
           <div class="text-center">
-            <p class="stat-number text-lg text-warning capitalize">{{ atleta.pe_dominante|slice:":1"|upper }}</p>
-            <p class="text-xs text-base-content/35 uppercase tracking-wider">Pé</p>
+            <p class="stat-number text-lg text-yellow-500 capitalize">{{ atleta.pe_dominante|slice:":1"|upper }}</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider">Pé</p>
           </div>
           {% endif %}
         </div>
@@ -154,24 +154,24 @@
       {% endif %}
 
       {% if competicoes %}
-      <div class="card bg-base-200 border border-base-300 overflow-hidden">
-        <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300">
-          <i class="bi bi-trophy text-warning text-sm"></i>
-          <span class="section-heading text-sm text-base-content/70 tracking-widest">COMPETIÇÕES</span>
+      <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+          <i class="ti ti-trophy text-yellow-500 text-sm"></i>
+          <span class="section-heading text-sm text-gray-700 dark:text-gray-300 tracking-widest">COMPETIÇÕES</span>
         </div>
-        <div class="divide-y divide-base-300">
+        <div class="divide-y divide-gray-100 dark:divide-gray-700">
           {% for ins in competicoes %}
           <a href="{% url 'competicao:public_classificacao' ins.competicao.pk %}"
-             class="flex items-center gap-3 px-4 py-3 hover:bg-base-300/30 transition-colors group">
-            <div class="w-7 h-7 rounded-lg bg-warning/10 flex items-center justify-center shrink-0">
-              <i class="bi bi-trophy-fill text-warning text-xs"></i>
+             class="flex items-center gap-3 px-4 py-3 hover:bg-gray-200/30 dark:bg-gray-700/30 transition-colors group">
+            <div class="w-7 h-7 rounded-lg bg-yellow-400/10 flex items-center justify-center shrink-0">
+              <i class="ti ti-trophy text-yellow-500 text-xs"></i>
             </div>
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-base-content group-hover:text-warning transition-colors truncate">
+              <p class="text-sm font-medium text-gray-900 dark:text-white group-hover:text-yellow-500 transition-colors truncate">
                 {{ ins.competicao.nome }}
               </p>
               {% if ins.competicao.data_inicio %}
-              <p class="text-xs text-base-content/30">{{ ins.competicao.data_inicio|date:"Y" }}</p>
+              <p class="text-xs text-gray-400 dark:text-gray-600">{{ ins.competicao.data_inicio|date:"Y" }}</p>
               {% endif %}
             </div>
           </a>

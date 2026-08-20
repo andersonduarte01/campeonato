@@ -1,13 +1,29 @@
 {% extends 'base/indice.html' %}
 {% block titulo %}{{ jogo.equipe_casa }} × {{ jogo.equipe_fora }}{% endblock %}
 
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
+    <ul>
+      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-gray-700 dark:hover:text-gray-300">Dashboard</a></li>
+      <li><a href="{% url 'competicao:competicao_lista' %}" class="hover:text-gray-700 dark:hover:text-gray-300">Competições</a></li>
+      {% if jogo.rodada %}
+      <li><a href="{% url 'competicao:classificacao' jogo.rodada.competicao.pk %}" class="hover:text-gray-700 dark:hover:text-gray-300">{{ jogo.rodada.competicao.nome }}</a></li>
+      {% block breadcrumb_rodadas %}<li><a href="{% url 'competicao:rodadas' jogo.rodada.competicao.pk %}" class="hover:text-gray-700 dark:hover:text-gray-300">Rodadas</a></li>{% endblock %}
+      {% endif %}
+      <li><span class="text-gray-600 dark:text-gray-400">Jogo</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
 {% block conteudo %}
-<div class="p-4 md:p-6 max-w-[1200px] mx-auto space-y-5">
+<div class="p-4 md:p-6 space-y-5">
 
   <!-- ── Alerta: suspensos ──────────────────────────────────────────── -->
   {% if suspensos %}
-  <div class="alert alert-error border-error/30 text-sm py-3">
-    <i class="bi bi-exclamation-triangle-fill text-lg shrink-0"></i>
+  <div class="alert alert-danger text-sm">
+    <i class="ti ti-alert-triangle text-lg shrink-0"></i>
     <div>
       <p class="font-bold mb-1">Jogadores suspensos nesta competição:</p>
       <ul class="space-y-0.5">
@@ -26,14 +42,14 @@
   <!-- ═══════════════════════════════════════════════════════════════
        HERO SCOREBOARD
   ════════════════════════════════════════════════════════════════ -->
-  <div class="card bg-base-200 border border-base-300 overflow-hidden">
+  <div class="card overflow-hidden">
 
     <!-- Barra de status no topo -->
     <div class="h-1 w-full
-      {% if jogo.em_andamento %}bg-error animate-pulse
-      {% elif jogo.finalizado %}bg-success
-      {% elif jogo.anulado %}bg-error
-      {% else %}bg-base-300{% endif %}">
+      {% if jogo.em_andamento %}bg-red-500 animate-pulse
+      {% elif jogo.finalizado %}bg-green-500
+      {% elif jogo.anulado %}bg-red-500
+      {% else %}bg-gray-200 dark:bg-gray-700{% endif %}">
     </div>
 
     <div class="p-5 md:p-8">
@@ -46,20 +62,20 @@
           {% if jogo.equipe_casa.escudo %}
           <img src="{{ jogo.equipe_casa.escudo.thumbnail.url }}"
                class="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover
-                      border-2 border-warning/30 shadow-lg shadow-warning/10">
+                      border-2 border-yellow-400/30 shadow-lg shadow-yellow-400/10">
           {% else %}
-          <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-warning/10 border-2 border-warning/20
+          <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-yellow-400/10 border-2 border-yellow-400/20
                       flex items-center justify-center shadow-lg">
-            <span class="text-2xl md:text-3xl font-black text-warning">
+            <span class="text-2xl md:text-3xl font-black text-yellow-500">
               {{ jogo.equipe_casa.nome_equipe|first|upper }}
             </span>
           </div>
           {% endif %}
           <div>
-            <p class="font-black text-sm md:text-base text-base-content leading-snug truncate max-w-[120px] md:max-w-full">
+            <p class="font-black text-sm md:text-base text-gray-900 dark:text-white leading-snug truncate max-w-[120px] md:max-w-full">
               {{ jogo.equipe_casa.nome_equipe }}
             </p>
-            <p class="text-[11px] text-base-content/35 font-medium uppercase tracking-wider mt-0.5">Mandante</p>
+            <p class="text-[11px] text-gray-400 dark:text-gray-500 font-medium uppercase tracking-wider mt-0.5">Mandante</p>
           </div>
         </div>
 
@@ -67,56 +83,64 @@
         <div class="shrink-0 text-center flex flex-col items-center gap-2">
 
           {% if jogo.anulado %}
-          <span class="badge badge-error badge-lg px-4 font-bold">Anulado</span>
+          <span class="badge badge-red px-4 py-1 text-sm font-bold">Anulado</span>
 
-          {% elif jogo.finalizado or jogo.em_andamento %}
+          {% elif jogo.finalizado or jogo.em_andamento or jogo.status == 'provisorio' %}
           <div class="flex items-center gap-1 md:gap-3">
             <span class="score-display-lg
-              {% if jogo.gols_casa > jogo.gols_fora %}text-base-content
-              {% else %}text-base-content/40{% endif %}">
+              {% if jogo.gols_casa > jogo.gols_fora %}text-gray-900 dark:text-white
+              {% else %}text-gray-400 dark:text-gray-500{% endif %}">
               {{ jogo.gols_casa }}
             </span>
-            <span class="text-2xl md:text-3xl text-base-content/20 font-black select-none">—</span>
+            <span class="text-2xl md:text-3xl text-gray-300 dark:text-gray-600 font-black select-none">—</span>
             <span class="score-display-lg
-              {% if jogo.gols_fora > jogo.gols_casa %}text-base-content
-              {% else %}text-base-content/40{% endif %}">
+              {% if jogo.gols_fora > jogo.gols_casa %}text-gray-900 dark:text-white
+              {% else %}text-gray-400 dark:text-gray-500{% endif %}">
               {{ jogo.gols_fora }}
             </span>
           </div>
 
           {% else %}
           <div class="flex items-center gap-3">
-            <span class="score-display text-base-content/15">-</span>
-            <span class="text-2xl text-base-content/15 font-black">×</span>
-            <span class="score-display text-base-content/15">-</span>
+            <span class="score-display text-gray-300 dark:text-gray-700">-</span>
+            <span class="text-2xl text-gray-300 dark:text-gray-700 font-black">×</span>
+            <span class="score-display text-gray-300 dark:text-gray-700">-</span>
           </div>
           {% endif %}
 
           <!-- Status badges -->
           <div class="flex flex-wrap justify-center gap-1.5 mt-1">
             {% if jogo.em_andamento %}
-            <span class="flex items-center gap-1.5 px-2.5 py-1 bg-error/10 border border-error/20
-                          rounded-full text-xs font-bold text-error/80">
+            <span class="flex items-center gap-1.5 px-2.5 py-1 bg-red-500/10 border border-red-500/20
+                          rounded-full text-xs font-bold text-red-500/80">
               <span class="live-dot"></span> AO VIVO
             </span>
             {% endif %}
-            {% if jogo.finalizado %}
-            <span class="badge badge-success badge-sm font-semibold">Finalizado</span>
-            {% elif jogo.anulado %}
-            <span class="badge badge-error badge-sm font-semibold">Anulado</span>
+            {% if jogo.anulado %}
+            <span class="badge badge-red badge-sm font-semibold">Anulado</span>
+            {% elif jogo.status == 'homologado' %}
+            <span class="badge badge-green badge-sm font-semibold flex items-center gap-1">
+              <i class="ti ti-circle-check text-xs"></i> Homologado
+            </span>
+            {% elif jogo.status == 'finalizado' %}
+            <span class="badge badge-blue badge-sm font-semibold">Finalizado</span>
+            {% elif jogo.status == 'provisorio' %}
+            <span class="badge badge-yellow badge-sm font-semibold flex items-center gap-1">
+              <i class="ti ti-clock-exclamation text-xs"></i> Provisório
+            </span>
             {% elif not jogo.em_andamento %}
-            <span class="badge badge-ghost badge-sm">Pendente</span>
+            <span class="badge badge-gray badge-sm">Pendente</span>
             {% endif %}
             {% if jogo.wo %}
-            <span class="badge badge-neutral badge-sm font-semibold">W.O.</span>
+            <span class="badge badge-yellow badge-sm font-semibold">W.O.</span>
             {% endif %}
           </div>
 
           <!-- Data/hora -->
           {% if jogo.data_hora %}
-          <p class="text-xs text-base-content/35 font-medium mt-0.5">
+          <p class="text-xs text-gray-400 dark:text-gray-500 font-medium mt-0.5">
             {{ jogo.data_hora|date:"d/m/Y" }}
-            <span class="text-base-content/50 font-semibold">{{ jogo.data_hora|date:"H:i" }}</span>
+            <span class="text-gray-600 dark:text-gray-400 font-semibold">{{ jogo.data_hora|date:"H:i" }}</span>
           </p>
           {% endif %}
         </div>
@@ -126,94 +150,155 @@
           {% if jogo.equipe_fora.escudo %}
           <img src="{{ jogo.equipe_fora.escudo.thumbnail.url }}"
                class="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover
-                      border-2 border-base-300 shadow-lg">
+                      border-2 border-gray-200 dark:border-gray-700 shadow-lg">
           {% else %}
-          <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-base-300 border-2 border-base-content/15
+          <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gray-100 dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-700
                       flex items-center justify-center shadow-lg">
-            <span class="text-2xl md:text-3xl font-black text-base-content/40">
+            <span class="text-2xl md:text-3xl font-black text-gray-400 dark:text-gray-500">
               {{ jogo.equipe_fora.nome_equipe|first|upper }}
             </span>
           </div>
           {% endif %}
           <div>
-            <p class="font-black text-sm md:text-base text-base-content leading-snug truncate max-w-[120px] md:max-w-full">
+            <p class="font-black text-sm md:text-base text-gray-900 dark:text-white leading-snug truncate max-w-[120px] md:max-w-full">
               {{ jogo.equipe_fora.nome_equipe }}
             </p>
-            <p class="text-[11px] text-base-content/35 font-medium uppercase tracking-wider mt-0.5">Visitante</p>
+            <p class="text-[11px] text-gray-400 dark:text-gray-500 font-medium uppercase tracking-wider mt-0.5">Visitante</p>
           </div>
         </div>
 
       </div>
 
       <!-- Metadados: local / árbitro / público -->
-      {% with tem_meta=jogo.local or jogo.arbitro or arbitros_jogo or jogo.publico %}
-      {% if tem_meta %}
-      <div class="flex flex-wrap justify-center gap-x-4 gap-y-1.5 mt-5 pt-4 border-t border-base-300
-                  text-xs text-base-content/40">
+      {% if jogo.local or jogo.arbitro or arbitros_jogo or jogo.publico %}
+      <div class="flex flex-wrap justify-center gap-x-4 gap-y-1.5 mt-5 pt-4 border-t border-gray-200 dark:border-gray-700
+                  text-xs text-gray-400 dark:text-gray-500">
         {% if jogo.local %}
         <span class="flex items-center gap-1">
-          <i class="bi bi-geo-alt-fill text-warning/50 shrink-0"></i>
+          <i class="ti ti-map-pin text-yellow-500/50 shrink-0"></i>
           {{ jogo.local.nome }}{% if jogo.local.cidade %}, {{ jogo.local.cidade }}{% endif %}
         </span>
         {% endif %}
         {% if jogo.arbitro %}
         <span class="flex items-center gap-1">
-          <i class="bi bi-person-badge-fill text-warning/50 shrink-0"></i>
+          <i class="ti ti-id-badge-2 text-yellow-500/50 shrink-0"></i>
           {{ jogo.arbitro.nome }}
         </span>
         {% endif %}
         {% for arb in arbitros_jogo %}
         <span class="flex items-center gap-1">
-          <i class="bi bi-person-badge text-warning/40 shrink-0"></i>
+          <i class="ti ti-id-badge-2 text-yellow-500/40 shrink-0"></i>
           {{ arb.arbitro.nome }}
           <span class="opacity-50">({{ arb.get_tipo_display }})</span>
         </span>
         {% endfor %}
         {% if jogo.publico %}
         <span class="flex items-center gap-1">
-          <i class="bi bi-people-fill shrink-0"></i>
+          <i class="ti ti-users shrink-0"></i>
           {{ jogo.publico|floatformat:"0" }} pessoas
         </span>
         {% endif %}
       </div>
       {% endif %}
-      {% endwith %}
 
       {% if jogo.observacoes %}
-      <div class="mt-3 mx-auto max-w-lg bg-base-300/40 rounded-xl px-4 py-2
-                  text-xs text-base-content/50 text-center italic">
+      <div class="mt-3 mx-auto max-w-lg bg-gray-100 dark:bg-gray-700/40 rounded-xl px-4 py-2
+                  text-xs text-gray-500 dark:text-gray-400 text-center italic">
         "{{ jogo.observacoes }}"
       </div>
       {% endif %}
 
       <!-- Botões de ação -->
-      <div class="flex flex-wrap gap-2 justify-center md:justify-end mt-5 pt-4 border-t border-base-300">
-        {% if jogo.rodada %}
-        <a href="{% url 'competicao:rodadas' jogo.rodada.competicao.pk %}"
-           class="btn btn-ghost btn-sm gap-1 border border-base-content/10 text-base-content/50">
-          <i class="bi bi-arrow-left text-sm"></i> Rodadas
-        </a>
-        {% endif %}
-        <a href="{% url 'competicao:escalacao' jogo.pk %}"
-           class="btn btn-ghost btn-sm gap-1 border border-base-content/10">
-          <i class="bi bi-people-fill text-sm"></i> Escalação
-        </a>
-        <a href="{% url 'competicao:escala_inteligente' jogo.pk %}"
-           class="btn btn-ghost btn-sm gap-1 border border-base-content/10">
-          <i class="bi bi-cpu-fill text-sm"></i> Escala
-        </a>
-        <a href="{% url 'competicao:sumula_digital' jogo.pk %}"
-           class="btn btn-ghost btn-sm gap-1 border border-warning/30 text-warning hover:bg-warning/10">
-          <i class="bi bi-file-earmark-check-fill text-sm"></i> Súmula Digital
+      <div class="flex flex-wrap items-center gap-2 justify-between mt-5 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <div class="flex flex-wrap gap-2">
+          {% block btn_rodadas %}
+          {% if jogo.rodada %}
+          <a href="{% url 'competicao:rodadas' jogo.rodada.competicao.pk %}"
+             class="btn btn-ghost btn-sm gap-1 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
+            <i class="ti ti-arrow-left text-sm"></i> Rodadas
+          </a>
+          {% endif %}
+          {% endblock %}
+        {% if not is_secretario_only or jogo.finalizado %}
+        <a href="{% url 'competicao:sumula' jogo.pk %}"
+           class="btn btn-ghost btn-sm gap-1.5 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 font-semibold">
+          <i class="ti ti-file-check text-sm"></i>
+          Súmula Digital
+          {% if sumula %}
+          <span class="badge badge-xs font-bold
+            {% if sumula.status == 'homologada' %}badge-green
+            {% elif sumula.status == 'encerrada' %}badge-yellow
+            {% elif sumula.status == 'aberta' %}badge-blue
+            {% elif sumula.status == 'anulada' %}badge-red
+            {% else %}badge-gray{% endif %}">
+            {{ sumula.get_status_display }}
+          </span>
+          {% endif %}
         </a>
         <a href="{% url 'competicao:pdf_sumula' jogo.pk %}" target="_blank"
-           class="btn btn-ghost btn-sm gap-1 border border-base-content/10">
-          <i class="bi bi-printer text-sm"></i> Súmula
+           class="btn btn-ghost btn-sm gap-1 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
+          <i class="ti ti-printer text-sm"></i> PDF
         </a>
+        {% endif %}
+        </div>
+        <div class="flex flex-wrap gap-2">
+        {% if not is_arbitro_only and not is_dirigente_only %}
+
+        {% if jogo.status == 'agendado' %}
+        <!-- Iniciar Partida -->
+        <form method="post" action="{% url 'competicao:jogo_iniciar' jogo.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm gap-1 font-semibold shadow-md shadow-red-600/30
+                         bg-red-600 text-white border border-red-800 hover:bg-red-700 focus:ring-red-300
+                         dark:bg-transparent dark:text-red-400 dark:border-red-500 dark:shadow-none
+                         dark:hover:bg-red-500/10 dark:focus:ring-red-800">
+            <i class="ti ti-player-play text-sm"></i> Iniciar Partida
+          </button>
+        </form>
+        {% endif %}
+
+        {% if not jogo.finalizado and not jogo.anulado %}
+        <!-- W.O. -->
+        <button type="button"
+                data-modal-target="modal-wo" data-modal-toggle="modal-wo"
+                class="btn btn-outline btn-sm gap-1">
+          <i class="ti ti-square-letter-w text-sm"></i> W.O.
+        </button>
+        {% endif %}
+
+        {% if jogo.status == 'provisorio' or jogo.status == 'finalizado' %}
+        <!-- Homologar -->
+        <form method="post" action="{% url 'competicao:jogo_homologar' jogo.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-outline btn-sm gap-1 border-green-500 text-green-600 dark:text-green-400
+                         hover:bg-green-50 dark:hover:bg-green-500/10">
+            <i class="ti ti-circle-check text-sm"></i> Homologar
+          </button>
+        </form>
+        {% endif %}
+
+        {% if is_admin_op and not jogo.anulado %}
+        <!-- Anular -->
+        <button type="button"
+                data-modal-target="modal-anular" data-modal-toggle="modal-anular"
+                class="btn btn-ghost btn-sm gap-1 border border-red-200 dark:border-red-900/60 text-red-500
+                       hover:bg-red-50 dark:hover:bg-red-900/20">
+          <i class="ti ti-ban text-sm"></i> Anular
+        </button>
+        {% endif %}
+
+        {% block btn_editar %}
+        {% if not jogo.anulado and not jogo.homologado %}
+        <!-- Editar resultado -->
         <a href="{% url 'competicao:jogo_editar' jogo.pk %}"
-           class="btn btn-warning btn-sm gap-1 shadow-sm shadow-warning/20 font-semibold">
-          <i class="bi bi-pencil-fill text-sm"></i> Editar Jogo
+           class="btn btn-ghost btn-sm gap-1 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
+          <i class="ti ti-pencil text-sm"></i> Editar resultado
         </a>
+        {% endif %}
+        {% endblock %}
+
+        {% endif %}
+        </div>
       </div>
 
     </div>
@@ -227,13 +312,13 @@
     <div class="lg:col-span-3 space-y-4">
 
       <!-- Linha do Tempo cronológica (montada por JS) -->
-      {% if gols_casa or gols_fora or cartoes %}
-      <div class="card bg-base-200 border border-base-300 overflow-hidden" id="timeline-card">
-        <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
-          <i class="bi bi-clock-history text-warning text-sm"></i>
-          <span class="section-heading text-base text-base-content/70 tracking-widest">LINHA DO TEMPO</span>
+      {% if gols_casa or gols_fora or cartoes or substituicoes or ocorrencias %}
+      <div class="card overflow-hidden" id="timeline-card">
+        <div class="card-header">
+          <i class="ti ti-history text-blue-600 dark:text-blue-400 text-base"></i>
+          <span class="section-title">Linha do Tempo</span>
         </div>
-        <div id="timeline-body" class="divide-y divide-base-300 py-1 min-h-[40px]"></div>
+        <div id="timeline-body" class="divide-y divide-gray-100 dark:divide-gray-700 py-1 min-h-[40px]"></div>
       </div>
 
       <!-- Dados para o script da timeline -->
@@ -246,15 +331,21 @@
       <script id="tl-cartoes" type="application/json">
         [{% for c in cartoes %}{"t":"cartao","eq_pk":"{{ c.jogador.equipe.pk }}","min":{{ c.minuto|default:0 }},"nome":"{{ c.jogador.nome|escapejs }}","sub":"{{ c.tipo }}"}{% if not forloop.last %},{% endif %}{% endfor %}]
       </script>
+      <script id="tl-subs" type="application/json">
+        [{% for s in substituicoes %}{"t":"sub","eq_pk":"{{ s.equipe.pk }}","min":{{ s.minuto|default:0 }},"nome":"{{ s.atleta_entrou.nome|escapejs }}","sub":"{{ s.atleta_saiu.nome|escapejs }}"}{% if not forloop.last %},{% endif %}{% endfor %}]
+      </script>
+      <script id="tl-ocorr" type="application/json">
+        [{% for o in ocorrencias %}{"t":"ocorr","min":{{ o.minuto|default:0 }},"nome":"{{ o.get_tipo_display|escapejs }}","sub":"{{ o.descricao|truncatechars:80|escapejs }}"}{% if not forloop.last %},{% endif %}{% endfor %}]
+      </script>
       {% endif %}
 
       <!-- Gols -->
-      <div class="card bg-base-200 border border-base-300 overflow-hidden">
-        <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
-          <span class="text-base">⚽</span>
-          <span class="section-heading text-base text-base-content/70 tracking-widest">GOLS</span>
+      <div class="card overflow-hidden">
+        <div class="card-header">
+          <i class="ti ti-ball-football text-blue-600 dark:text-blue-400 text-base"></i>
+          <span class="section-title">Gols</span>
           {% with total=gols_casa|length|add:gols_fora|length %}
-          {% if total %}<span class="badge badge-warning badge-sm ml-auto">{{ total }}</span>{% endif %}
+          {% if total %}<span class="badge badge-blue badge-sm ml-auto">{{ total }}</span>{% endif %}
           {% endwith %}
         </div>
 
@@ -263,202 +354,155 @@
 
           <!-- Gols Casa -->
           <div class="p-3 space-y-1.5">
-            <p class="text-[10px] font-bold uppercase tracking-widest text-base-content/30 mb-2 truncate">
+            <p class="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-2 truncate">
               {{ jogo.equipe_casa.nome_equipe }}
             </p>
             {% for gol in gols_casa %}
             <div class="flex items-start gap-2 group">
-              <span class="shrink-0 min-w-[32px] text-center px-1.5 py-0.5 bg-warning/10 border border-warning/20
-                            rounded text-[11px] font-bold text-warning leading-tight">
+              <span class="shrink-0 min-w-[32px] text-center px-1.5 py-0.5 bg-yellow-50 dark:bg-yellow-400/10 border border-yellow-200 dark:border-yellow-400/20
+                            rounded text-[11px] font-bold text-yellow-600 dark:text-yellow-500 leading-tight">
                 {{ gol.minuto }}'
               </span>
               <div class="flex-1 min-w-0">
-                <p class="text-xs font-semibold text-base-content leading-snug truncate">
+                <p class="text-xs font-semibold text-gray-900 dark:text-white leading-snug truncate">
                   {{ gol.atleta.nome|default:"?" }}
                 </p>
                 <div class="flex items-center gap-1 flex-wrap">
                   {% if gol.tipo == 'contra' %}
-                  <span class="text-[10px] text-error/70 font-bold">contra</span>
+                  <span class="text-[10px] text-red-500 font-bold">contra</span>
                   {% elif gol.tipo == 'penalti' %}
-                  <span class="text-[10px] text-info/70 font-bold">pênalti</span>
+                  <span class="text-[10px] text-blue-500 dark:text-blue-400 font-bold">pênalti</span>
                   {% endif %}
                   {% if gol.assistencia %}
-                  <span class="text-[10px] text-base-content/35">▸ {{ gol.assistencia.nome }}</span>
+                  <span class="text-[10px] text-gray-400 dark:text-gray-500">▸ {{ gol.assistencia.nome }}</span>
                   {% endif %}
                 </div>
               </div>
+              {% if not is_arbitro_only or not jogo.em_andamento %}
               <form method="post" action="{% url 'competicao:gol_excluir' gol.pk %}" class="shrink-0">
                 {% csrf_token %}
                 <button type="submit"
                         class="w-5 h-5 rounded flex items-center justify-center opacity-0 group-hover:opacity-100
-                               text-error hover:bg-error/10 transition-all"
+                               text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
                         title="Remover gol">
-                  <i class="bi bi-x text-sm"></i>
+                  <i class="ti ti-x text-sm"></i>
                 </button>
               </form>
+              {% endif %}
             </div>
             {% empty %}
-            <p class="text-xs text-base-content/25 italic">sem gols</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 italic">sem gols</p>
             {% endfor %}
           </div>
 
           <!-- Divisor vertical -->
-          <div class="border-l border-base-300 p-3 space-y-1.5">
-            <p class="text-[10px] font-bold uppercase tracking-widest text-base-content/30 mb-2 truncate">
+          <div class="border-l border-gray-200 dark:border-gray-700 p-3 space-y-1.5">
+            <p class="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-2 truncate">
               {{ jogo.equipe_fora.nome_equipe }}
             </p>
             {% for gol in gols_fora %}
             <div class="flex items-start gap-2 group">
-              <span class="shrink-0 min-w-[32px] text-center px-1.5 py-0.5 bg-base-300
-                            rounded text-[11px] font-bold text-base-content/40 leading-tight">
+              <span class="shrink-0 min-w-[32px] text-center px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700
+                            rounded text-[11px] font-bold text-gray-500 dark:text-gray-400 leading-tight">
                 {{ gol.minuto }}'
               </span>
               <div class="flex-1 min-w-0">
-                <p class="text-xs font-semibold text-base-content leading-snug truncate">
+                <p class="text-xs font-semibold text-gray-900 dark:text-white leading-snug truncate">
                   {{ gol.atleta.nome|default:"?" }}
                 </p>
                 <div class="flex items-center gap-1 flex-wrap">
                   {% if gol.tipo == 'contra' %}
-                  <span class="text-[10px] text-error/70 font-bold">contra</span>
+                  <span class="text-[10px] text-red-500 font-bold">contra</span>
                   {% elif gol.tipo == 'penalti' %}
-                  <span class="text-[10px] text-info/70 font-bold">pênalti</span>
+                  <span class="text-[10px] text-blue-500 dark:text-blue-400 font-bold">pênalti</span>
                   {% endif %}
                   {% if gol.assistencia %}
-                  <span class="text-[10px] text-base-content/35">▸ {{ gol.assistencia.nome }}</span>
+                  <span class="text-[10px] text-gray-400 dark:text-gray-500">▸ {{ gol.assistencia.nome }}</span>
                   {% endif %}
                 </div>
               </div>
+              {% if not is_arbitro_only or not jogo.em_andamento %}
               <form method="post" action="{% url 'competicao:gol_excluir' gol.pk %}" class="shrink-0">
                 {% csrf_token %}
                 <button type="submit"
                         class="w-5 h-5 rounded flex items-center justify-center opacity-0 group-hover:opacity-100
-                               text-error hover:bg-error/10 transition-all"
+                               text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
                         title="Remover gol">
-                  <i class="bi bi-x text-sm"></i>
+                  <i class="ti ti-x text-sm"></i>
                 </button>
               </form>
+              {% endif %}
             </div>
             {% empty %}
-            <p class="text-xs text-base-content/25 italic">sem gols</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 italic">sem gols</p>
             {% endfor %}
           </div>
 
         </div>
         {% else %}
-        <div class="py-8 text-center text-base-content/25">
-          <span class="text-3xl block mb-2">⚽</span>
-          <p class="text-sm">Nenhum gol registrado</p>
-        </div>
+        {% include 'components/empty_state.html' with icon="ball-football" title="Nenhum gol registrado." %}
         {% endif %}
       </div>
 
       <!-- Cartões -->
-      <div class="card bg-base-200 border border-base-300 overflow-hidden">
-        <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
-          <i class="bi bi-square-fill text-warning text-sm"></i>
-          <span class="section-heading text-base text-base-content/70 tracking-widest">CARTÕES</span>
+      <div class="card overflow-hidden">
+        <div class="card-header">
+          <div class="flex items-center gap-0.5 shrink-0">
+            <div class="w-3 h-4 rounded-sm bg-yellow-400"></div>
+            <div class="w-3 h-4 rounded-sm bg-red-500"></div>
+          </div>
+          <span class="section-title">Cartões</span>
           {% if cartoes %}
-          <span class="badge badge-warning badge-sm ml-auto">{{ cartoes|length }}</span>
+          <span class="badge badge-yellow badge-sm ml-auto">{{ cartoes|length }}</span>
           {% endif %}
         </div>
 
         {% if cartoes %}
-        <div class="divide-y divide-base-300">
+        <div class="divide-y divide-gray-100 dark:divide-gray-700">
           {% for cartao in cartoes %}
-          <div class="flex items-center gap-3 px-4 py-2.5 group hover:bg-base-300/30 transition-colors">
+          <div class="flex items-center gap-3 px-4 py-2.5 group hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
 
             <!-- Minuto + tipo -->
             <div class="flex items-center gap-2 shrink-0">
               {% if cartao.tipo == 'Amarelo' %}
-              <div class="w-4 h-5 rounded-sm bg-warning shadow-sm shadow-warning/30 shrink-0"></div>
+              <div class="w-4 h-5 rounded-sm bg-yellow-400 shadow-sm shadow-yellow-400/30 shrink-0"></div>
               {% else %}
-              <div class="w-4 h-5 rounded-sm bg-error shadow-sm shadow-error/30 shrink-0"></div>
+              <div class="w-4 h-5 rounded-sm bg-red-500 shadow-sm shadow-red-500/30 shrink-0"></div>
               {% endif %}
-              <span class="text-xs font-bold text-base-content/50 w-8">{{ cartao.minuto }}'</span>
+              <span class="text-xs font-bold text-gray-500 dark:text-gray-400 w-8">{{ cartao.minuto }}'</span>
             </div>
 
             <!-- Jogador e equipe -->
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-semibold text-base-content truncate">{{ cartao.jogador.nome }}</p>
-              <p class="text-xs text-base-content/40 truncate">{{ cartao.jogador.equipe.nome_equipe }}</p>
+              <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ cartao.jogador.nome }}</p>
+              <p class="text-xs text-gray-400 dark:text-gray-500 truncate">{{ cartao.jogador.equipe.nome_equipe }}</p>
             </div>
 
             <!-- Tipo de cartão -->
             <span class="text-[11px] font-bold shrink-0
-              {% if cartao.tipo == 'Amarelo' %}text-warning/70{% else %}text-error/70{% endif %}">
+              {% if cartao.tipo == 'Amarelo' %}text-yellow-600 dark:text-yellow-400{% else %}text-red-500{% endif %}">
               {{ cartao.tipo }}
             </span>
 
             <!-- Excluir -->
+            {% if not is_arbitro_only or not jogo.em_andamento %}
             <form method="post" action="{% url 'competicao:cartao_excluir' cartao.pk %}" class="shrink-0">
               {% csrf_token %}
               <button type="submit"
                       class="w-6 h-6 rounded flex items-center justify-center opacity-0 group-hover:opacity-100
-                             text-error hover:bg-error/10 transition-all">
-                <i class="bi bi-x text-base"></i>
+                             text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all">
+                <i class="ti ti-x text-base"></i>
               </button>
             </form>
+            {% endif %}
 
           </div>
           {% endfor %}
         </div>
         {% else %}
-        <div class="py-8 text-center text-base-content/25">
-          <i class="bi bi-square text-3xl block mb-2"></i>
-          <p class="text-sm">Nenhum cartão registrado</p>
-        </div>
+        {% include 'components/empty_state.html' with icon="alert-triangle" title="Nenhum cartão registrado." %}
         {% endif %}
       </div>
-
-      <!-- Avaliação do Árbitro -->
-      {% if jogo.finalizado and jogo.arbitro %}
-      <div class="card bg-base-200 border border-base-300 overflow-hidden">
-        <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
-          <i class="bi bi-star-fill text-warning text-sm"></i>
-          <span class="section-heading text-base text-base-content/70 tracking-widest">ÁRBITRO</span>
-          {% if avaliacao_arbitro %}
-          <span class="badge badge-success badge-sm ml-auto">Avaliado</span>
-          {% endif %}
-        </div>
-        <div class="p-4 space-y-4">
-          {% if avaliacao_arbitro %}
-          <div class="flex items-center gap-4">
-            <div class="shrink-0 text-center">
-              <div class="stat-number text-4xl text-warning leading-none">{{ avaliacao_arbitro.nota }}</div>
-              <div class="text-xs text-base-content/40 mt-0.5">/10</div>
-            </div>
-            <div class="min-w-0">
-              <p class="font-semibold text-sm text-base-content">{{ jogo.arbitro.nome }}</p>
-              {% if avaliacao_arbitro.observacoes %}
-              <p class="text-xs text-base-content/50 mt-0.5 italic">{{ avaliacao_arbitro.observacoes }}</p>
-              {% endif %}
-              <p class="text-xs text-base-content/30 mt-1">
-                por {{ avaliacao_arbitro.avaliado_por.nome|default:avaliacao_arbitro.avaliado_por.email }}
-              </p>
-            </div>
-          </div>
-          {% endif %}
-          <form method="post" action="{% url 'competicao:avaliacao_arbitro' jogo.pk %}"
-                class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {% csrf_token %}
-            <div>
-              <label class="label py-0 mb-1"><span class="label-text text-xs font-semibold">Nota (1-10)</span></label>
-              {{ form_avaliacao.nota }}
-            </div>
-            <div>
-              <label class="label py-0 mb-1"><span class="label-text text-xs font-semibold">Observações</span></label>
-              {{ form_avaliacao.observacoes }}
-            </div>
-            <div class="flex items-end">
-              <button type="submit" class="btn btn-warning btn-sm w-full gap-1">
-                <i class="bi bi-star-fill text-xs"></i>
-                {% if avaliacao_arbitro %}Atualizar{% else %}Avaliar{% endif %}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-      {% endif %}
 
     </div>
     <!-- /timeline -->
@@ -466,11 +510,25 @@
     <!-- ── Formulários (2/5) ─────────────────────────────────────── -->
     <div class="lg:col-span-2 space-y-4">
 
+      {% if is_arbitro_only and jogo.em_andamento %}
+      <div class="card overflow-hidden">
+        <div class="flex items-start gap-2.5 px-4 py-3 bg-amber-500/10 border-l-4 border-amber-500
+                    text-xs text-amber-600 dark:text-amber-400">
+          <i class="ti ti-lock text-base shrink-0 mt-0.5"></i>
+          <div>
+            <p class="font-semibold">Partida ao vivo</p>
+            <p class="mt-0.5">Durante o jogo, os eventos são registrados pela secretaria.
+            Ao final da partida você poderá lançar os dados oficiais da súmula,
+            que servirão de base para a homologação.</p>
+          </div>
+        </div>
+      </div>
+      {% else %}
       <!-- Registrar Gol -->
-      <div class="card bg-base-200 border border-base-300 overflow-hidden">
-        <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
-          <span class="text-sm">⚽</span>
-          <span class="section-heading text-base text-base-content/70 tracking-widest">REGISTRAR GOL</span>
+      <div class="card overflow-hidden">
+        <div class="card-header">
+          <i class="ti ti-ball-football text-blue-600 dark:text-blue-400 text-base"></i>
+          <span class="section-title">Registrar Gol</span>
         </div>
         <div class="p-4">
           <form method="post" action="{% url 'competicao:gol_criar' jogo.pk %}" id="form-gol" class="space-y-3">
@@ -478,18 +536,18 @@
 
             <!-- Seleção de equipe por radio visual -->
             <div>
-              <p class="text-xs font-semibold text-base-content/60 mb-2 uppercase tracking-wider">Equipe</p>
+              <p class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wider">Equipe</p>
               <div class="grid grid-cols-2 gap-2">
-                <label class="flex items-center gap-2 p-2 rounded-xl border border-base-300
-                               cursor-pointer transition-all has-[:checked]:border-warning has-[:checked]:bg-warning/10">
+                <label class="flex items-center gap-2 p-2 rounded-lg border border-gray-200 dark:border-gray-700
+                               cursor-pointer transition-all has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/10">
                   <input type="radio" name="equipe_radio" value="{{ jogo.equipe_casa.pk }}"
-                         class="radio radio-warning radio-xs" id="radio_casa">
+                         class="w-3.5 h-3.5 accent-blue-600 cursor-pointer" id="radio_casa">
                   <span class="text-xs font-semibold truncate">{{ jogo.equipe_casa.nome_equipe }}</span>
                 </label>
-                <label class="flex items-center gap-2 p-2 rounded-xl border border-base-300
-                               cursor-pointer transition-all has-[:checked]:border-info has-[:checked]:bg-info/10">
+                <label class="flex items-center gap-2 p-2 rounded-lg border border-gray-200 dark:border-gray-700
+                               cursor-pointer transition-all has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/10">
                   <input type="radio" name="equipe_radio" value="{{ jogo.equipe_fora.pk }}"
-                         class="radio radio-info radio-xs" id="radio_fora">
+                         class="w-3.5 h-3.5 accent-blue-600 cursor-pointer" id="radio_fora">
                   <span class="text-xs font-semibold truncate">{{ jogo.equipe_fora.nome_equipe }}</span>
                 </label>
               </div>
@@ -500,63 +558,65 @@
             </div>
 
             <div>
-              <label class="label py-0 mb-1"><span class="label-text text-xs font-semibold">Atleta (gol)</span></label>
+              <p class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Atleta (gol)</p>
               {{ form_gol.atleta }}
             </div>
             <div>
-              <label class="label py-0 mb-1">
-                <span class="label-text text-xs font-semibold">
-                  Assistência <span class="text-base-content/35 font-normal">(opcional)</span>
-                </span>
-              </label>
+              <p class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                Assistência <span class="text-gray-400 dark:text-gray-500 font-normal">(opcional)</span>
+              </p>
               {{ form_gol.assistencia }}
             </div>
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="label py-0 mb-1"><span class="label-text text-xs font-semibold">Minuto</span></label>
+                <p class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Minuto</p>
                 {{ form_gol.minuto }}
               </div>
               <div>
-                <label class="label py-0 mb-1"><span class="label-text text-xs font-semibold">Tipo</span></label>
+                <p class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Tipo</p>
                 {{ form_gol.tipo }}
               </div>
             </div>
-            <button type="submit" class="btn btn-warning btn-sm w-full gap-1 font-semibold">
-              <i class="bi bi-plus-circle text-sm"></i> Adicionar Gol
+            <button type="submit" class="btn btn-primary btn-sm w-full gap-1 font-semibold">
+              <i class="ti ti-circle-plus text-sm"></i> Adicionar Gol
             </button>
           </form>
         </div>
       </div>
 
       <!-- Registrar Cartão -->
-      <div class="card bg-base-200 border border-base-300 overflow-hidden">
-        <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
-          <div class="w-3 h-4 rounded-sm bg-warning shrink-0"></div>
-          <span class="section-heading text-base text-base-content/70 tracking-widest">REGISTRAR CARTÃO</span>
+      <div class="card overflow-hidden">
+        <div class="card-header">
+          <div class="flex items-center gap-0.5 shrink-0">
+            <div class="w-3 h-4 rounded-sm bg-yellow-400"></div>
+            <div class="w-3 h-4 rounded-sm bg-red-500"></div>
+          </div>
+          <span class="section-title">Registrar Cartão</span>
         </div>
         <div class="p-4">
           <form method="post" action="{% url 'competicao:cartao_criar' jogo.pk %}" class="space-y-3">
             {% csrf_token %}
             <div>
-              <label class="label py-0 mb-1"><span class="label-text text-xs font-semibold">Atleta</span></label>
+              <p class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Atleta</p>
               {{ form_cartao.jogador }}
             </div>
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="label py-0 mb-1"><span class="label-text text-xs font-semibold">Minuto</span></label>
+                <p class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Minuto</p>
                 {{ form_cartao.minuto }}
               </div>
               <div>
-                <label class="label py-0 mb-1"><span class="label-text text-xs font-semibold">Tipo</span></label>
+                <p class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Tipo</p>
                 {{ form_cartao.tipo }}
               </div>
             </div>
-            <button type="submit" class="btn btn-warning btn-sm w-full gap-1 font-semibold">
-              <i class="bi bi-plus-circle text-sm"></i> Adicionar Cartão
+            <button type="submit" class="btn btn-primary btn-sm w-full gap-1 font-semibold">
+              <i class="ti ti-circle-plus text-sm"></i> Adicionar Cartão
             </button>
           </form>
         </div>
       </div>
+      {% endif %}
 
     </div>
     <!-- /forms -->
@@ -564,6 +624,132 @@
   </div>
 
 </div>
+
+<!-- ── Modal: Declarar W.O. ──────────────────────────────────────────── -->
+{% if not is_arbitro_only and not is_dirigente_only %}
+<div id="modal-wo" tabindex="-1" aria-hidden="true"
+     class="hidden fixed inset-0 z-50 flex justify-center items-start pt-10
+            overflow-y-auto bg-gray-900/60 dark:bg-gray-900/80 backdrop-blur-sm">
+  <div class="relative w-full max-w-sm mx-4 mb-10">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl ring-1 ring-black/5 dark:ring-white/5">
+
+      <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 rounded-t-xl">
+        <div class="flex items-center gap-2">
+          <i class="ti ti-square-letter-w text-yellow-500 text-base"></i>
+          <h5 class="font-semibold text-gray-900 dark:text-white text-sm">Declarar W.O.</h5>
+        </div>
+        <button type="button" data-modal-hide="modal-wo"
+                class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300
+                       hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg p-1 transition-colors">
+          <i class="ti ti-x text-base"></i>
+        </button>
+      </div>
+
+      <form method="post" action="{% url 'competicao:jogo_declarar_wo' jogo.pk %}">
+        {% csrf_token %}
+        <div class="p-4 space-y-3">
+          <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">
+            Selecione a equipe que vence por W.O. (3×0 aplicado automaticamente):
+          </p>
+
+          <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700
+                        cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/30
+                        has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/10">
+            <input type="radio" name="vencedor" value="{{ jogo.equipe_casa.pk }}"
+                   class="w-4 h-4 accent-blue-600 shrink-0" required>
+            <div class="flex items-center gap-2 min-w-0">
+              {% if jogo.equipe_casa.escudo %}
+              <img src="{{ jogo.equipe_casa.escudo.thumbnail.url }}"
+                   class="w-7 h-7 rounded-full object-cover border border-gray-200 dark:border-gray-700 shrink-0">
+              {% else %}
+              <div class="w-7 h-7 rounded-full bg-yellow-400/10 border border-yellow-400/20
+                          flex items-center justify-center shrink-0">
+                <span class="text-xs font-black text-yellow-500">{{ jogo.equipe_casa.nome_equipe|first|upper }}</span>
+              </div>
+              {% endif %}
+              <div class="min-w-0">
+                <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ jogo.equipe_casa.nome_equipe }}</p>
+                <p class="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wide">Mandante</p>
+              </div>
+            </div>
+          </label>
+
+          <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700
+                        cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/30
+                        has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/10">
+            <input type="radio" name="vencedor" value="{{ jogo.equipe_fora.pk }}"
+                   class="w-4 h-4 accent-blue-600 shrink-0" required>
+            <div class="flex items-center gap-2 min-w-0">
+              {% if jogo.equipe_fora.escudo %}
+              <img src="{{ jogo.equipe_fora.escudo.thumbnail.url }}"
+                   class="w-7 h-7 rounded-full object-cover border border-gray-200 dark:border-gray-700 shrink-0">
+              {% else %}
+              <div class="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-700
+                          flex items-center justify-center shrink-0">
+                <span class="text-xs font-black text-gray-500 dark:text-gray-400">{{ jogo.equipe_fora.nome_equipe|first|upper }}</span>
+              </div>
+              {% endif %}
+              <div class="min-w-0">
+                <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ jogo.equipe_fora.nome_equipe }}</p>
+                <p class="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wide">Visitante</p>
+              </div>
+            </div>
+          </label>
+        </div>
+
+        <div class="flex justify-end gap-2 px-4 pb-4">
+          <button type="button" data-modal-hide="modal-wo" class="btn btn-ghost btn-sm">Cancelar</button>
+          <button type="submit" class="btn btn-primary btn-sm gap-1">
+            <i class="ti ti-check text-sm"></i> Confirmar W.O.
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- ── Modal: Anular Jogo ───────────────────────────────────────────── -->
+{% if is_admin_op and not jogo.anulado %}
+<div id="modal-anular" tabindex="-1" aria-hidden="true"
+     class="hidden fixed inset-0 z-50 flex justify-center items-start pt-10
+            overflow-y-auto bg-gray-900/60 dark:bg-gray-900/80 backdrop-blur-sm">
+  <div class="relative w-full max-w-sm mx-4 mb-10">
+    <div class="card overflow-hidden shadow-xl">
+      <div class="card-header">
+        <i class="ti ti-ban text-red-500 text-base"></i>
+        <h5 class="font-semibold text-gray-900 dark:text-white text-sm">Anular Jogo</h5>
+        <button type="button" data-modal-hide="modal-anular"
+                class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300
+                       hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg p-1 transition-colors ml-auto">
+          <i class="ti ti-x text-base"></i>
+        </button>
+      </div>
+      <div class="p-4 space-y-3">
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+          Esta ação anula o jogo e remove seu resultado da classificação. A ação não pode ser desfeita
+          sem intervenção manual.
+        </p>
+        <p class="text-sm font-semibold text-gray-800 dark:text-gray-200 text-center bg-gray-100 dark:bg-gray-700/50 rounded-lg py-2">
+          {{ jogo.equipe_casa }} × {{ jogo.equipe_fora }}
+        </p>
+      </div>
+      <form method="post" action="{% url 'competicao:jogo_anular' jogo.pk %}">
+        {% csrf_token %}
+        <div class="flex justify-end gap-2 px-4 pb-4">
+          <button type="button" data-modal-hide="modal-anular" class="btn btn-ghost btn-sm">Cancelar</button>
+          <button type="submit"
+                  class="btn btn-sm gap-1 bg-red-600 text-white border border-red-800 hover:bg-red-700">
+            <i class="ti ti-ban text-sm"></i> Confirmar Anulação
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
+
 {% endblock %}
 
 {% block script %}
@@ -574,18 +760,16 @@
   if (!body) return;
 
   var casaPk  = '{{ jogo.equipe_casa.pk }}';
-  var casaNome = '{{ jogo.equipe_casa.nome_equipe|escapejs }}';
 
   function parse(id) {
     try { return JSON.parse(document.getElementById(id).textContent); }
     catch(e) { return []; }
   }
 
-  var eventos = [].concat(parse('tl-casa'), parse('tl-fora'), parse('tl-cartoes'));
+  var eventos = [].concat(parse('tl-casa'), parse('tl-fora'), parse('tl-cartoes'), parse('tl-subs'), parse('tl-ocorr'));
 
-  // Normaliza equipe dos cartões
   eventos.forEach(function (ev) {
-    if (ev.t === 'cartao') {
+    if (ev.t === 'cartao' || ev.t === 'sub') {
       ev.eq = (ev.eq_pk === casaPk) ? 'casa' : 'fora';
     }
   });
@@ -597,33 +781,36 @@
   eventos.forEach(function (ev) {
     var isCasa = ev.eq === 'casa';
     var row = document.createElement('div');
-    row.className = 'flex items-center gap-2 px-4 py-2.5 ' + (isCasa ? 'flex-row' : 'flex-row-reverse') + ' group hover:bg-base-300/30 transition-colors';
+    row.className = 'flex items-center gap-2 px-4 py-2.5 ' + (isCasa ? 'flex-row' : 'flex-row-reverse') + ' group hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors';
 
-    // Ícone
     var icon = document.createElement('div');
     if (ev.t === 'gol') {
       icon.className = 'shrink-0 text-base leading-none';
       icon.textContent = ev.sub === 'contra' ? '🥅' : '⚽';
+    } else if (ev.t === 'sub') {
+      icon.className = 'shrink-0 leading-none';
+      icon.innerHTML = '<i class="ti ti-arrows-exchange text-blue-500 text-base"></i>';
+    } else if (ev.t === 'ocorr') {
+      icon.className = 'shrink-0 leading-none';
+      icon.innerHTML = '<i class="ti ti-alert-circle text-amber-500 text-base"></i>';
     } else {
-      icon.className = 'w-3 h-4 rounded-sm shrink-0 ' + (ev.sub === 'Amarelo' ? 'bg-warning shadow-warning/30' : 'bg-error shadow-error/30') + ' shadow-sm';
+      icon.className = 'w-3 h-4 rounded-sm shrink-0 ' + (ev.sub === 'Amarelo' ? 'bg-yellow-400 shadow-yellow-400/30' : 'bg-red-500 shadow-red-500/30') + ' shadow-sm';
     }
 
-    // Minuto
     var min = document.createElement('span');
-    min.className = 'shrink-0 text-[11px] font-bold px-1.5 py-0.5 rounded bg-base-300 text-base-content/50 min-w-[32px] text-center';
-    min.textContent = ev.min + "'";
+    min.className = 'shrink-0 text-[11px] font-bold px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 min-w-[32px] text-center';
+    min.textContent = (ev.t === 'ocorr' && !ev.min) ? '—' : ev.min + "'";
 
-    // Info
     var info = document.createElement('div');
     info.className = 'flex-1 min-w-0 ' + (isCasa ? 'text-left' : 'text-right');
     var nome = document.createElement('p');
-    nome.className = 'text-xs font-semibold text-base-content truncate';
+    nome.className = 'text-xs font-semibold text-gray-900 dark:text-white truncate';
     nome.textContent = ev.nome;
     info.appendChild(nome);
 
     if (ev.t === 'gol' && (ev.sub !== 'normal' || ev.assist)) {
       var sub = document.createElement('p');
-      sub.className = 'text-[10px] text-base-content/40 truncate';
+      sub.className = 'text-[10px] text-gray-400 dark:text-gray-500 truncate';
       var parts = [];
       if (ev.sub === 'contra') parts.push('gol contra');
       else if (ev.sub === 'penalti') parts.push('pênalti');
@@ -633,9 +820,25 @@
     }
     if (ev.t === 'cartao') {
       var sub = document.createElement('p');
-      sub.className = 'text-[10px] ' + (ev.sub === 'Amarelo' ? 'text-warning/60' : 'text-error/60');
+      sub.className = 'text-[10px] ' + (ev.sub === 'Amarelo' ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-500');
       sub.textContent = 'Cartão ' + ev.sub;
       info.appendChild(sub);
+    }
+    if (ev.t === 'sub') {
+      var sub = document.createElement('p');
+      sub.className = 'text-[10px] text-gray-400 dark:text-gray-500 truncate';
+      sub.textContent = 'entrou ▸ saiu ' + ev.sub;
+      info.appendChild(sub);
+    }
+    if (ev.t === 'ocorr') {
+      row.className = 'flex items-center gap-2 px-4 py-2.5 justify-center group hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors';
+      info.className = 'min-w-0 text-center';
+      if (ev.sub) {
+        var sub = document.createElement('p');
+        sub.className = 'text-[10px] text-gray-400 dark:text-gray-500 truncate';
+        sub.textContent = ev.sub;
+        info.appendChild(sub);
+      }
     }
 
     if (isCasa) {

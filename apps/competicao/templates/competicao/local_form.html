@@ -1,50 +1,71 @@
 {% extends 'base/indice.html' %}
 {% block titulo %}Editar Local — {{ local.nome }}{% endblock %}
 
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
+    <ul>
+      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-gray-700 dark:text-gray-300">Dashboard</a></li>
+      <li><a href="{% url 'competicao:local_lista' %}" class="hover:text-gray-700 dark:text-gray-300">Locais</a></li>
+      <li><span class="text-gray-600 dark:text-gray-400">{{ local.nome }}</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
 {% block conteudo %}
-<div class="p-4 md:p-6 max-w-xl mx-auto">
-  <div class="card bg-base-200 border border-base-300">
-    <div class="px-5 py-3 border-b border-base-300 flex items-center gap-2">
-      <i class="bi bi-geo-alt-fill text-warning text-sm"></i>
-      <h1 class="font-bold text-sm">Editar Local</h1>
-    </div>
-    <div class="card-body p-5">
-      <form method="post" class="space-y-4">
-        {% csrf_token %}
+<div class="p-4 md:p-6 space-y-5">
+
+  <!-- Cabeçalho -->
+  <div class="flex items-center gap-3">
+    <a href="{% url 'competicao:local_lista' %}"
+       class="btn btn-ghost btn-sm btn-square border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
+      <i class="ti ti-arrow-left text-sm"></i>
+    </a>
+    <h1 class="section-heading text-4xl text-gray-900 dark:text-white leading-none">EDITAR LOCAL</h1>
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="card overflow-hidden">
+
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30">
+        <i class="ti ti-map-pin text-blue-500 text-sm"></i>
+        <span class="section-heading text-sm text-gray-700 dark:text-gray-300 tracking-widest">DADOS DO LOCAL</span>
+      </div>
+
+      <div class="p-5 space-y-4">
         <div>
-          <label class="label py-0 mb-1">
-            <span class="label-text font-semibold text-sm">Nome *</span>
+          <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">
+            Nome <span class="text-blue-500">*</span>
           </label>
           {{ form.nome }}
         </div>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="label py-0 mb-1">
-              <span class="label-text font-semibold text-sm">Cidade</span>
-            </label>
+            <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Cidade</label>
             {{ form.cidade }}
           </div>
           <div>
-            <label class="label py-0 mb-1">
-              <span class="label-text font-semibold text-sm">Capacidade</span>
-            </label>
+            <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Capacidade</label>
             {{ form.capacidade }}
           </div>
         </div>
         <div>
-          <label class="label py-0 mb-1">
-            <span class="label-text font-semibold text-sm">Endereço</span>
-          </label>
+          <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Endereço</label>
           {{ form.endereco }}
         </div>
-        <div class="flex gap-2 pt-2">
-          <button type="submit" class="btn btn-warning flex-1">
-            <i class="bi bi-save"></i> Salvar
-          </button>
-          <a href="{% url 'competicao:local_lista' %}" class="btn btn-ghost">Cancelar</a>
-        </div>
-      </form>
+      </div>
+
+      <div class="flex justify-end gap-3 px-5 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/20">
+        <a href="{% url 'competicao:local_lista' %}" class="btn btn-ghost">Cancelar</a>
+        <button type="submit" class="btn btn-primary">
+          <i class="ti ti-device-floppy"></i> Salvar
+        </button>
+      </div>
+
     </div>
-  </div>
+  </form>
+
 </div>
 {% endblock %}

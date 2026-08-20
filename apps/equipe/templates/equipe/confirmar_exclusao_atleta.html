@@ -1,41 +1,41 @@
-{% extends 'base/indice.html' %}
+﻿{% extends 'base/indice.html' %}
 {% block titulo %}Excluir Atleta{% endblock %}
 
 {% block conteudo %}
 <div class="p-4 md:p-6 flex items-center justify-center min-h-[60vh]">
   <div class="w-full max-w-md animate-fade-up">
 
-    <div class="card bg-base-200 border border-error/30 overflow-hidden shadow-2xl">
+    <div class="card bg-gray-50 dark:bg-gray-800 border border-red-500/30 overflow-hidden shadow-2xl">
 
-      <div class="h-1 w-full bg-error"></div>
+      <div class="h-1 w-full bg-red-500"></div>
 
       <div class="card-body p-6 space-y-5">
 
         <!-- Ícone + título -->
         <div class="flex flex-col items-center text-center gap-3 pt-2">
-          <div class="w-16 h-16 rounded-full bg-error/10 border-2 border-error/25
+          <div class="w-16 h-16 rounded-full bg-red-500/10 border-2 border-red-500/25
                       flex items-center justify-center">
-            <i class="bi bi-person-x-fill text-error text-2xl"></i>
+            <i class="ti ti-user-x text-red-500 text-2xl"></i>
           </div>
           <div>
-            <h1 class="section-heading text-2xl text-error leading-none">EXCLUIR ATLETA</h1>
-            <p class="text-sm text-base-content/60 mt-2">
+            <h1 class="section-heading text-2xl text-red-500 leading-none">EXCLUIR ATLETA</h1>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">
               Você está prestes a excluir permanentemente
             </p>
-            <p class="font-black text-base text-base-content mt-0.5">
+            <p class="font-black text-base text-gray-900 dark:text-white mt-0.5">
               {{ atleta.nome }}
             </p>
-            <p class="text-xs text-base-content/40 mt-1 flex items-center justify-center gap-1">
-              <i class="bi bi-shield-fill text-warning/50"></i>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1 flex items-center justify-center gap-1">
+              <i class="ti ti-shield text-yellow-500/50"></i>
               {{ atleta.equipe.nome_equipe }}
             </p>
           </div>
         </div>
 
         <!-- Aviso -->
-        <div class="bg-error/8 border border-error/20 rounded-xl p-3.5 flex items-start gap-2.5">
-          <i class="bi bi-shield-exclamation text-error/70 text-sm shrink-0 mt-0.5"></i>
-          <p class="text-xs text-error/80 leading-relaxed">
+        <div class="bg-red-500/8 border border-red-500/20 rounded-xl p-3.5 flex items-start gap-2.5">
+          <i class="ti ti-shield-exclamation text-red-500/70 text-sm shrink-0 mt-0.5"></i>
+          <p class="text-xs text-red-500/80 leading-relaxed">
             Esta ação é <strong>irreversível</strong>. O histórico de gols, cartões e
             participações em jogos associados a este atleta será removido permanentemente.
           </p>
@@ -44,15 +44,15 @@
         <!-- Campo de confirmação -->
         <div>
           <label class="label py-0 mb-2">
-            <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">
-              Digite <span class="text-error font-black">EXCLUIR</span> para confirmar
+            <span class="label-text text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              Digite <span class="text-red-500 font-black">EXCLUIR</span> para confirmar
             </span>
           </label>
           <input type="text" id="confirm-input"
                  placeholder="EXCLUIR"
                  autocomplete="off"
-                 class="input input-bordered w-full bg-base-300/50 border-base-content/15
-                        focus:border-error/50 transition-colors font-mono tracking-widest text-center">
+                 class="input  w-full bg-gray-200/50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-700
+                        focus:border-red-500/50 transition-colors font-mono tracking-widest text-center">
         </div>
 
         <!-- Botões -->
@@ -60,12 +60,12 @@
           {% csrf_token %}
           <button type="submit" id="btn-excluir"
                   disabled
-                  class="btn btn-error w-full gap-2 font-semibold opacity-40 transition-all duration-200">
-            <i class="bi bi-person-dash-fill"></i> Sim, excluir permanentemente
+                  class="btn btn-danger-outline w-full gap-2 font-semibold opacity-40 transition-all duration-200">
+            <i class="ti ti-user-minus"></i> Sim, excluir permanentemente
           </button>
           <a href="{% url 'equipe:detalhe' atleta.equipe.pk %}"
-             class="btn btn-ghost w-full border border-base-content/10 text-base-content/60">
-            <i class="bi bi-arrow-left text-sm"></i> Cancelar, manter atleta
+             class="btn btn-ghost w-full border border-gray-200/60 dark:border-gray-700/60 text-gray-600 dark:text-gray-400">
+            <i class="ti ti-arrow-left text-sm"></i> Cancelar, manter atleta
           </a>
         </form>
 

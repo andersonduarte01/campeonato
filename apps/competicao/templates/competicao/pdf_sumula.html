@@ -39,15 +39,15 @@
   /* Tables */
   .table { width: 100%; border-collapse: collapse; margin-bottom: 0; font-size: .82rem; }
   .table th, .table td { padding: 4px 6px; vertical-align: top; }
-  .table-bordered th, .table-bordered td { border: 1px solid #dee2e6; }
+  . th, . td { border: 1px solid #dee2e6; }
   .table-sm th, .table-sm td { padding: 3px 5px; }
   th { font-size: .78rem; background: #f8f9fa; }
 
   /* Buttons */
   .btn { display: inline-block; padding: 4px 10px; border-radius: 4px; border: 1px solid transparent; cursor: pointer; font-size: 0.8rem; font-weight: 400; }
   .btn-sm { padding: 2px 8px; font-size: 0.75rem; }
-  .btn-light { background: #f8f9fa; color: #212529; border-color: #ddd; }
-  .btn-outline-light { background: transparent; color: #fff; border-color: rgba(255,255,255,.5); }
+  .btn-secondary { background: #f8f9fa; color: #212529; border-color: #ddd; }
+  .btn-ghost { background: transparent; color: #fff; border-color: rgba(255,255,255,.5); }
 
   /* Custom */
   @media print {
@@ -79,8 +79,8 @@
     </div>
   </div>
   <div class="no-print d-flex gap-2">
-    <button onclick="window.print()" class="btn btn-light btn-sm">Imprimir / PDF</button>
-    <button onclick="window.close()" class="btn btn-outline-light btn-sm">Fechar</button>
+    <button onclick="window.print()" class="btn btn-secondary btn-sm">Imprimir / PDF</button>
+    <button onclick="window.close()" class="btn btn-ghost btn-sm">Fechar</button>
   </div>
 </div>
 
@@ -125,7 +125,7 @@
   <div class="section-title">Escalações</div>
   <div class="row g-2">
     <div class="col-6">
-      <table class="table table-bordered table-sm" style="margin-bottom: 0;">
+      <table class="table  table-sm" style="margin-bottom: 0;">
         <thead>
           <tr><th colspan="3" class="text-center">{{ jogo.equipe_casa.nome_equipe }}</th></tr>
           <tr><th>#</th><th>Atleta</th><th>T</th></tr>
@@ -144,7 +144,7 @@
       </table>
     </div>
     <div class="col-6">
-      <table class="table table-bordered table-sm" style="margin-bottom: 0;">
+      <table class="table  table-sm" style="margin-bottom: 0;">
         <thead>
           <tr><th colspan="3" class="text-center">{{ jogo.equipe_fora.nome_equipe }}</th></tr>
           <tr><th>#</th><th>Atleta</th><th>T</th></tr>
@@ -165,7 +165,7 @@
   </div>
 
   <div class="section-title">Gols</div>
-  <table class="table table-bordered table-sm">
+  <table class="table  table-sm">
     <thead><tr><th>Min.</th><th>Atleta</th><th>Assistência</th><th>Tipo</th><th>Equipe</th></tr></thead>
     <tbody>
       {% for gol in gols_casa %}
@@ -193,7 +193,7 @@
   </table>
 
   <div class="section-title">Cartões Disciplinares</div>
-  <table class="table table-bordered table-sm">
+  <table class="table  table-sm">
     <thead><tr><th>Min.</th><th>Atleta</th><th>Equipe</th><th>Cartão</th></tr></thead>
     <tbody>
       {% for cartao in cartoes %}
@@ -217,7 +217,7 @@
 
   {% if substituicoes %}
   <div class="section-title">Substituições</div>
-  <table class="table table-bordered table-sm">
+  <table class="table  table-sm">
     <thead><tr><th>Min.</th><th>Entra</th><th>Sai</th><th>Equipe</th></tr></thead>
     <tbody>
       {% for sub in substituicoes %}
@@ -240,7 +240,7 @@
   {% if sumula %}
   <!-- Condições da partida -->
   <div class="section-title">Condições da Partida</div>
-  <table class="table table-bordered table-sm">
+  <table class="table  table-sm">
     <tbody>
       <tr>
         <th style="width:50%">Condição Climática</th>
@@ -258,7 +258,7 @@
 
   {% if ocorrencias %}
   <div class="section-title">Ocorrências Registradas</div>
-  <table class="table table-bordered table-sm">
+  <table class="table  table-sm">
     <thead><tr><th>Min.</th><th>Tipo</th><th>Descrição</th></tr></thead>
     <tbody>
       {% for oc in ocorrencias %}
@@ -275,7 +275,7 @@
   <!-- Assinaturas digitais -->
   <div class="section-title" style="margin-top:32px">Assinaturas Digitais</div>
   {% if assinaturas %}
-  <table class="table table-bordered table-sm">
+  <table class="table  table-sm">
     <thead><tr><th>Papel</th><th>Nome</th><th>Data/Hora</th><th>IP</th></tr></thead>
     <tbody>
       {% for ass in assinaturas %}

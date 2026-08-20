@@ -1,0 +1,285 @@
+{% extends 'base/indice.html' %}
+{% block titulo %}Inscrições — {{ equipe.nome_equipe }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
+    <ul>
+      <li><a href="{% url 'competicao:dirigente_dashboard' %}" class="hover:text-gray-700 dark:text-gray-300">Meu Painel</a></li>
+      <li><span class="text-gray-600 dark:text-gray-400">Inscrições — {{ competicao.nome }}</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block conteudo %}
+<div class="p-4 md:p-6 space-y-5">
+
+  <!-- ── Cabeçalho ──────────────────────────────────────────────────── -->
+  <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2 mb-1">
+        <i class="ti ti-id-badge-2 text-yellow-500 text-base"></i>
+        <span class="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">
+          Inscrições · {{ competicao.nome }}
+        </span>
+      </div>
+      <h1 class="section-heading text-4xl text-gray-900 dark:text-white leading-none">
+        {{ equipe.nome_equipe|upper }}
+      </h1>
+      <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
+        {{ inscritos.count }} inscrito{{ inscritos.count|pluralize }}
+        {% if competicao.limite_atletas %} · limite {{ competicao.limite_atletas }}{% endif %}
+      </p>
+    </div>
+    <a href="{% url 'competicao:dirigente_dashboard' %}"
+       class="btn btn-ghost btn-sm gap-1 border border-gray-200/60 dark:border-gray-700/60 shrink-0">
+      <i class="ti ti-arrow-left"></i> Voltar
+    </a>
+  </div>
+
+  <!-- ── Mensagens ──────────────────────────────────────────────────── -->
+  {% if messages %}
+  <div class="space-y-2">
+    {% for message in messages %}
+    <div class="alert {% if message.tags == 'error' or message.tags == 'warning' %}alert-danger{% elif message.tags == 'success' %}alert-success{% else %}alert-info{% endif %} text-sm">
+      <i class="ti ti-info-circle shrink-0"></i> {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- ── Aviso prazo ────────────────────────────────────────────────── -->
+  {% if aviso_prazo %}
+  <div class="flex items-start gap-2 px-4 py-3 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 text-sm text-yellow-700 dark:text-yellow-400">
+    <i class="ti ti-clock-off shrink-0 mt-0.5"></i>
+    <span>{{ aviso_prazo }}</span>
+  </div>
+  {% endif %}
+
+  <!-- ── Layout: lista + formulário ────────────────────────────────── -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+    <!-- Inscritos (2/3) -->
+    <div class="lg:col-span-2 card overflow-hidden">
+      <div class="card-header">
+        <i class="ti ti-users text-green-500 text-base shrink-0"></i>
+        <span class="section-title flex-1">Atletas Inscritos</span>
+        <span class="badge badge-gray badge-sm">{{ inscritos.count }}</span>
+      </div>
+
+      {% if inscritos %}
+      <div class="overflow-x-auto">
+        <table class="table table-sm">
+          <thead>
+            <tr class="bg-gray-50 dark:bg-gray-700/50 text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <th class="w-10">#</th>
+              <th>Atleta</th>
+              <th class="text-center">Posição</th>
+              <th class="text-center w-8" title="Amarelos">
+                <div class="w-3 h-4 rounded-sm bg-yellow-400 mx-auto"></div>
+              </th>
+              <th class="text-center w-8" title="Vermelhos">
+                <div class="w-3 h-4 rounded-sm bg-red-500 mx-auto"></div>
+              </th>
+              <th class="w-14"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for inscricao in inscritos %}
+            {% with aid=inscricao.atleta.pk %}
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors
+                       {% if aid in suspensos_ids %}bg-red-500/5{% endif %}">
+              <td>
+                {% if inscricao.numero_camisa %}
+                <span class="badge badge-gray badge-sm">{{ inscricao.numero_camisa }}</span>
+                {% else %}
+                <span class="text-gray-400 dark:text-gray-600">—</span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="flex items-center gap-2">
+                  <span class="text-sm {% if aid in suspensos_ids %}text-red-500/80{% endif %}">
+                    {{ inscricao.atleta.nome }}
+                  </span>
+                  {% if aid in suspensos_ids %}
+                  <span class="badge badge-red badge-xs">SUSPENSO</span>
+                  {% endif %}
+                </div>
+              </td>
+              <td class="text-center text-xs text-gray-500 dark:text-gray-400">
+                {{ inscricao.atleta.get_posicao_display }}
+              </td>
+              <td class="text-center text-sm {% if amarelos_map|default_if_none:aid %}font-bold text-yellow-500{% else %}text-gray-400{% endif %}">
+                {{ amarelos_map|default_if_none:aid|default:0 }}
+              </td>
+              <td class="text-center text-sm {% if vermelhos_map|default_if_none:aid %}font-bold text-red-500{% else %}text-gray-400{% endif %}">
+                {{ vermelhos_map|default_if_none:aid|default:0 }}
+              </td>
+              <td class="text-right">
+                <button type="button"
+                        class="btn btn-ghost btn-xs text-red-500 js-remover-inscricao"
+                        data-nome="{{ inscricao.atleta.nome }}"
+                        data-action="{% url 'competicao:inscricao_excluir' inscricao.pk %}"
+                        data-modal-target="modal-remover-inscricao"
+                        data-modal-toggle="modal-remover-inscricao"
+                        {% if not inscricoes_abertas %}disabled title="{{ aviso_prazo }}"{% endif %}>
+                  <i class="ti ti-user-minus"></i>
+                </button>
+              </td>
+            </tr>
+            {% endwith %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="flex flex-col items-center justify-center py-10 gap-2 text-center">
+        <i class="ti ti-user-off text-3xl text-gray-300 dark:text-gray-600"></i>
+        <p class="text-sm text-gray-400 dark:text-gray-600">Nenhum atleta inscrito ainda</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Formulário (1/3) -->
+    <div class="space-y-4">
+
+      <!-- Card adicionar atleta -->
+      <div class="card overflow-hidden">
+        <div class="card-header">
+          <i class="ti ti-user-plus text-blue-500 text-base shrink-0"></i>
+          <span class="section-title">Adicionar Atleta</span>
+        </div>
+
+        <div class="p-4 space-y-3">
+
+          {% if not inscricoes_abertas %}
+          <div class="flex items-start gap-2 px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700/40 text-xs text-gray-500 dark:text-gray-400">
+            <i class="ti ti-lock shrink-0 mt-0.5"></i>
+            <span>{{ aviso_prazo }}</span>
+          </div>
+
+          {% elif limite_atingido %}
+          <div class="flex items-start gap-2 px-3 py-2 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 text-xs text-yellow-700 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800">
+            <i class="ti ti-alert-circle shrink-0 mt-0.5"></i>
+            <span>Limite de {{ competicao.limite_atletas }} atletas atingido.</span>
+          </div>
+
+          {% else %}
+          <form method="post" action="{% url 'competicao:inscricao_criar' competicao.pk equipe.pk %}"
+                class="space-y-3">
+            {% csrf_token %}
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">
+                Atleta
+              </label>
+              {{ form.atleta }}
+              {% if not form.atleta.field.queryset.exists %}
+              <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Todos os atletas do elenco já estão inscritos.</p>
+              {% endif %}
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">
+                Número da camisa <span class="text-gray-400 font-normal normal-case">(opcional)</span>
+              </label>
+              {{ form.numero_camisa }}
+            </div>
+            <div class="flex justify-end">
+              <button type="submit" class="btn btn-primary btn-sm gap-1"
+                      {% if not form.atleta.field.queryset.exists %}disabled{% endif %}>
+                <i class="ti ti-user-plus"></i> Inscrever
+              </button>
+            </div>
+          </form>
+          {% endif %}
+
+        </div>
+      </div>
+
+      <!-- Info da competição -->
+      <div class="card p-4 space-y-2">
+        <p class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Competição</p>
+        {% if competicao.data_abertura_inscricao %}
+        <div class="flex items-center justify-between text-xs">
+          <span class="text-gray-400 dark:text-gray-500">Abertura</span>
+          <span class="text-gray-700 dark:text-gray-300">{{ competicao.data_abertura_inscricao|date:"d/m/Y" }}</span>
+        </div>
+        {% endif %}
+        {% if competicao.data_encerramento_inscricao %}
+        <div class="flex items-center justify-between text-xs">
+          <span class="text-gray-400 dark:text-gray-500">Encerramento</span>
+          <span class="text-gray-700 dark:text-gray-300">{{ competicao.data_encerramento_inscricao|date:"d/m/Y" }}</span>
+        </div>
+        {% endif %}
+        {% if competicao.limite_atletas %}
+        <div class="flex items-center justify-between text-xs">
+          <span class="text-gray-400 dark:text-gray-500">Limite</span>
+          <span class="text-gray-700 dark:text-gray-300">{{ inscritos.count }} / {{ competicao.limite_atletas }}</span>
+        </div>
+        {% endif %}
+        {% if competicao.taxa_inscricao %}
+        <div class="flex items-center justify-between text-xs">
+          <span class="text-gray-400 dark:text-gray-500">Taxa</span>
+          <span class="text-gray-700 dark:text-gray-300">R$ {{ competicao.taxa_inscricao }}</span>
+        </div>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal: confirmar remoção de atleta inscrito -->
+<div id="modal-remover-inscricao" tabindex="-1" aria-hidden="true"
+     class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50
+            justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+  <div class="relative p-4 w-full max-w-sm max-h-full">
+    <div class="relative bg-white rounded-2xl shadow-xl dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+
+      <div class="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl border border-red-400 dark:border-red-500 flex items-center justify-center shrink-0">
+            <i class="ti ti-user-minus text-red-500 dark:text-red-400 text-base"></i>
+          </div>
+          <h3 class="text-base font-bold text-gray-900 dark:text-white">Remover Atleta</h3>
+        </div>
+        <button type="button" data-modal-hide="modal-remover-inscricao"
+                class="btn-icon text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+          <i class="ti ti-x text-lg"></i>
+        </button>
+      </div>
+
+      <div class="p-5">
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+          Remover <span id="modal-inscricao-nome" class="font-semibold text-gray-900 dark:text-white"></span> da inscrição desta competição?
+        </p>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 p-5 border-t border-gray-200 dark:border-gray-700">
+        <button type="button" data-modal-hide="modal-remover-inscricao" class="btn btn-ghost">
+          Cancelar
+        </button>
+        <form id="form-remover-inscricao" method="post">
+          {% csrf_token %}
+          <button type="submit"
+                  class="btn border border-red-500 text-red-500 hover:bg-red-50
+                         dark:border-red-400 dark:text-red-400 dark:hover:bg-red-500/10">
+            <i class="ti ti-user-minus"></i> Remover
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('.js-remover-inscricao').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    document.getElementById('modal-inscricao-nome').textContent = this.dataset.nome;
+    document.getElementById('form-remover-inscricao').action = this.dataset.action;
+  });
+});
+</script>
+{% endblock %}

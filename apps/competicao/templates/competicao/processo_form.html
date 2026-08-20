@@ -1,13 +1,13 @@
-{% extends 'base/indice.html' %}
+﻿{% extends 'base/indice.html' %}
 {% block titulo %}{% if processo %}Editar Processo{% else %}Novo Processo{% endif %}{% endblock %}
 
 {% block breadcrumbs %}
 <div class="px-4 md:px-6 pt-3 pb-0">
-  <div class="breadcrumbs text-xs text-base-content/40">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
     <ul>
-      <li><a href="{% url 'competicao:tribunal_dashboard' %}" class="hover:text-base-content/70">Tribunal</a></li>
-      <li><a href="{% url 'competicao:processo_lista' %}" class="hover:text-base-content/70">Processos</a></li>
-      <li><span class="text-base-content/60">{% if processo %}Editar{{ else }}Novo{% endif %}</span></li>
+      <li><a href="{% url 'competicao:tribunal_dashboard' %}" class="hover:text-gray-700 dark:text-gray-300">Tribunal</a></li>
+      <li><a href="{% url 'competicao:processo_lista' %}" class="hover:text-gray-700 dark:text-gray-300">Processos</a></li>
+      <li><span class="text-gray-600 dark:text-gray-400">{% if processo %}Editar{{ else }}Novo{% endif %}</span></li>
     </ul>
   </div>
 </div>
@@ -19,17 +19,17 @@
   <div class="flex items-end justify-between gap-4">
     <div>
       <div class="flex items-center gap-2 mb-1">
-        <i class="bi bi-hammer text-warning text-sm"></i>
-        <span class="text-xs font-bold uppercase tracking-widest text-base-content/40">Tribunal Desportivo</span>
+        <i class="ti ti-hammer text-yellow-500 text-sm"></i>
+        <span class="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">Tribunal Desportivo</span>
       </div>
-      <h1 class="section-heading text-4xl text-base-content leading-none">
+      <h1 class="section-heading text-4xl text-gray-900 dark:text-white leading-none">
         {% if processo %}EDITAR PROCESSO{% else %}NOVO PROCESSO{% endif %}
       </h1>
-      {% if processo %}<p class="text-sm text-base-content/40 mt-1 font-mono">{{ processo.numero }}</p>{% endif %}
+      {% if processo %}<p class="text-sm text-gray-400 dark:text-gray-500 mt-1 font-mono">{{ processo.numero }}</p>{% endif %}
     </div>
     <a href="{% if processo %}{% url 'competicao:processo_detalhe' processo.pk %}{% else %}{% url 'competicao:processo_lista' %}{% endif %}"
-       class="btn btn-ghost btn-sm border border-base-content/10">
-      <i class="bi bi-arrow-left text-sm"></i> Voltar
+       class="btn btn-ghost btn-sm border border-gray-200/60 dark:border-gray-700/60">
+      <i class="ti ti-arrow-left text-sm"></i> Voltar
     </a>
   </div>
 
@@ -37,37 +37,37 @@
     {% csrf_token %}
 
     <!-- Identificação -->
-    <div class="card bg-base-200 border border-base-300 overflow-hidden">
-      <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
-        <i class="bi bi-info-circle text-warning text-sm"></i>
-        <span class="section-heading text-sm text-base-content/70 tracking-widest">IDENTIFICAÇÃO</span>
+    <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-200/30 dark:bg-gray-700/30">
+        <i class="ti ti-info-circle text-yellow-500 text-sm"></i>
+        <span class="section-heading text-sm text-gray-700 dark:text-gray-300 tracking-widest">IDENTIFICAÇÃO</span>
       </div>
       <div class="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
 
         <div>
           <label class="label py-0 mb-1">
-            <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Tipo de Processo *</span>
+            <span class="label-text text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Tipo de Processo *</span>
           </label>
           {{ form.tipo }}
         </div>
 
         <div>
           <label class="label py-0 mb-1">
-            <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Denunciante / Requerente *</span>
+            <span class="label-text text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Denunciante / Requerente *</span>
           </label>
           {{ form.denunciante }}
         </div>
 
         <div>
           <label class="label py-0 mb-1">
-            <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Competição (opcional)</span>
+            <span class="label-text text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Competição (opcional)</span>
           </label>
           {{ form.competicao }}
         </div>
 
         <div>
           <label class="label py-0 mb-1">
-            <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Partida relacionada (opcional)</span>
+            <span class="label-text text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Partida relacionada (opcional)</span>
           </label>
           {{ form.jogo }}
         </div>
@@ -76,24 +76,24 @@
     </div>
 
     <!-- Denunciado -->
-    <div class="card bg-base-200 border border-base-300 overflow-hidden">
-      <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
-        <i class="bi bi-person-exclamation text-warning text-sm"></i>
-        <span class="section-heading text-sm text-base-content/70 tracking-widest">DENUNCIADO</span>
-        <span class="text-xs text-base-content/30 ml-1">(preencha um ou nenhum)</span>
+    <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-200/30 dark:bg-gray-700/30">
+        <i class="ti ti-user-exclamation text-yellow-500 text-sm"></i>
+        <span class="section-heading text-sm text-gray-700 dark:text-gray-300 tracking-widest">DENUNCIADO</span>
+        <span class="text-xs text-gray-400 dark:text-gray-600 ml-1">(preencha um ou nenhum)</span>
       </div>
       <div class="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
 
         <div>
           <label class="label py-0 mb-1">
-            <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Atleta denunciado</span>
+            <span class="label-text text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Atleta denunciado</span>
           </label>
           {{ form.denunciado_atleta }}
         </div>
 
         <div>
           <label class="label py-0 mb-1">
-            <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Equipe denunciada</span>
+            <span class="label-text text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Equipe denunciada</span>
           </label>
           {{ form.denunciado_equipe }}
         </div>
@@ -102,21 +102,21 @@
     </div>
 
     <!-- Descrição e prazo -->
-    <div class="card bg-base-200 border border-base-300 overflow-hidden">
-      <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
-        <i class="bi bi-journal-text text-warning text-sm"></i>
-        <span class="section-heading text-sm text-base-content/70 tracking-widest">DESCRIÇÃO DOS FATOS</span>
+    <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-200/30 dark:bg-gray-700/30">
+        <i class="ti ti-notes text-yellow-500 text-sm"></i>
+        <span class="section-heading text-sm text-gray-700 dark:text-gray-300 tracking-widest">DESCRIÇÃO DOS FATOS</span>
       </div>
       <div class="p-4 space-y-3">
         <div>
           {{ form.descricao }}
           {% if form.descricao.errors %}
-          <p class="text-error text-xs mt-1">{{ form.descricao.errors|join:", " }}</p>
+          <p class="text-red-500 text-xs mt-1">{{ form.descricao.errors|join:", " }}</p>
           {% endif %}
         </div>
         <div class="w-48">
           <label class="label py-0 mb-1">
-            <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Prazo para defesa</span>
+            <span class="label-text text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Prazo para defesa</span>
           </label>
           {{ form.prazo_defesa }}
         </div>
@@ -125,9 +125,9 @@
 
     <div class="flex justify-end gap-2">
       <a href="{% if processo %}{% url 'competicao:processo_detalhe' processo.pk %}{% else %}{% url 'competicao:processo_lista' %}{% endif %}"
-         class="btn btn-ghost btn-sm border border-base-content/10">Cancelar</a>
-      <button type="submit" class="btn btn-warning gap-1.5 font-semibold shadow shadow-warning/20">
-        <i class="bi bi-floppy2"></i>
+         class="btn btn-ghost btn-sm border border-gray-200/60 dark:border-gray-700/60">Cancelar</a>
+      <button type="submit" class="btn btn-primary gap-1.5">
+        <i class="ti ti-device-floppy"></i>
         {% if processo %}Salvar alterações{% else %}Abrir Processo{% endif %}
       </button>
     </div>

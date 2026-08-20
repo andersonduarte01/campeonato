@@ -1,56 +1,194 @@
 {% extends 'base/indice.html' %}
 {% block titulo %}Editar Usuário{% endblock %}
 
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
+    <ul>
+      {% if is_admin_op or not editando_proprio_perfil %}
+      <li><a href="{% url 'core:usuarios_lista' %}" class="hover:text-gray-700 dark:text-gray-300">Usuários</a></li>
+      {% else %}
+      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-gray-700 dark:text-gray-300">Painel</a></li>
+      {% endif %}
+      <li><span class="text-gray-600 dark:text-gray-400">Editar perfil</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
 {% block conteudo %}
-<div class="p-4 md:p-6 max-w-md mx-auto">
-  <div class="card bg-base-200 border border-base-300">
-    <div class="px-5 py-3 border-b border-base-300 flex items-center gap-2">
-      <i class="bi bi-person-gear text-warning text-sm"></i>
-      <div>
-        <h1 class="font-bold text-sm">Editar Usuário</h1>
-        <p class="text-xs text-base-content/50">{{ usuario.email }}</p>
-      </div>
+<div class="p-4 md:p-6 space-y-5">
+
+  <!-- Cabeçalho -->
+  <div class="flex items-center gap-3">
+    <a href="{% url 'core:usuarios_lista' %}"
+       class="btn btn-ghost btn-sm btn-square border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
+      <i class="ti ti-arrow-left text-sm"></i>
+    </a>
+    <div>
+      <h1 class="section-heading text-4xl text-gray-900 dark:text-white leading-none">EDITAR USUÁRIO</h1>
+      <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ usuario.email }}</p>
     </div>
-    <div class="card-body p-5">
-      <form method="post" class="space-y-4">
-        {% csrf_token %}
+  </div>
+
+  <!-- Card principal -->
+  <form method="post">
+    {% csrf_token %}
+    <div class="card overflow-hidden">
+
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30">
+        <i class="ti ti-user-cog text-blue-500 text-sm"></i>
+        <span class="section-heading text-sm text-gray-700 dark:text-gray-300 tracking-widest">DADOS DO USUÁRIO</span>
+      </div>
+
+      <div class="p-5 space-y-4">
+
+        {% if editando_proprio_perfil %}
+        <div class="flex items-start gap-2 px-4 py-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 text-sm text-blue-700 dark:text-blue-400">
+          <i class="ti ti-info-circle shrink-0 mt-0.5"></i>
+          <span>Você está editando o seu próprio perfil. Papel e status de conta não podem ser alterados.</span>
+        </div>
+        {% endif %}
 
         <div>
-          <label class="label py-0 mb-1">
-            <span class="label-text font-semibold text-sm">Nome</span>
-          </label>
+          <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1"
+                 for="{{ form.nome.id_for_label }}">Nome completo</label>
           {{ form.nome }}
+          {% if form.nome.errors %}<p class="text-xs text-red-500 mt-1">{{ form.nome.errors|join:' ' }}</p>{% endif %}
         </div>
 
         <div>
-          <label class="label py-0 mb-1">
-            <span class="label-text font-semibold text-sm">Perfil de acesso</span>
-          </label>
-          {{ form.perfil }}
-          <p class="text-xs text-base-content/40 mt-2 leading-relaxed">
-            <strong>Administrador:</strong> acesso total ·
-            <strong>Organizador:</strong> gerencia competições ·
-            <strong>Delegado:</strong> gerencia seu time ·
-            <strong>Árbitro:</strong> registra resultados ·
-            <strong>Visitante:</strong> somente leitura
-          </p>
+          <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1"
+                 for="{{ form.papel.id_for_label }}">Papel em {{ request.federacao.nome }}</label>
+          {{ form.papel }}
+          {% if form.papel.errors %}<p class="text-xs text-red-500 mt-1">{{ form.papel.errors|join:' ' }}</p>{% endif %}
+          <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+            {% if is_admin_op %}
+            <div class="flex items-start gap-2 text-xs text-gray-500 dark:text-gray-400">
+              <span class="w-1.5 h-1.5 rounded-full bg-red-500 mt-1 shrink-0"></span>
+              <span><strong class="text-gray-700 dark:text-gray-300">Administrador</strong> — acesso total, gerencia usuários</span>
+            </div>
+            <div class="flex items-start gap-2 text-xs text-gray-500 dark:text-gray-400">
+              <span class="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1 shrink-0"></span>
+              <span><strong class="text-gray-700 dark:text-gray-300">Secretário</strong> — registros e transferências</span>
+            </div>
+            {% endif %}
+            <div class="flex items-start gap-2 text-xs text-gray-500 dark:text-gray-400">
+              <span class="w-1.5 h-1.5 rounded-full bg-orange-400 mt-1 shrink-0"></span>
+              <span><strong class="text-gray-700 dark:text-gray-300">Árbitro</strong> — lança resultados de jogos</span>
+            </div>
+            <div class="flex items-start gap-2 text-xs text-gray-500 dark:text-gray-400">
+              <span class="w-1.5 h-1.5 rounded-full bg-green-500 mt-1 shrink-0"></span>
+              <span><strong class="text-gray-700 dark:text-gray-300">Dirigente</strong> — gerencia o clube afiliado</span>
+            </div>
+          </div>
         </div>
 
-        <div class="flex items-center gap-3 p-3 bg-base-300/50 rounded-xl">
-          {{ form.is_active }}
-          <label class="text-sm font-medium cursor-pointer" for="{{ form.is_active.id_for_label }}">
-            Conta ativa
+        <!-- Clube gerenciado (apenas para dirigentes) -->
+        <div id="campo-equipe" class="hidden">
+          <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1"
+                 for="{{ form.equipe.id_for_label }}">
+            Clube gerenciado
           </label>
+          {{ form.equipe }}
+          {% if form.equipe.errors %}<p class="text-xs text-red-500 mt-1">{{ form.equipe.errors|join:' ' }}</p>{% endif %}
         </div>
 
-        <div class="flex gap-2 pt-2">
-          <button type="submit" class="btn btn-warning flex-1">
-            <i class="bi bi-floppy"></i> Salvar
+        <div class="space-y-2 p-3 bg-gray-100/60 dark:bg-gray-700/40 rounded-xl border border-gray-200 dark:border-gray-700">
+          <div class="flex items-center gap-3">
+            {{ form.ativo_vinculo }}
+            <label class="text-sm font-medium cursor-pointer text-gray-700 dark:text-gray-300"
+                   for="{{ form.ativo_vinculo.id_for_label }}">
+              Vínculo ativo nesta federação
+            </label>
+          </div>
+          <div class="flex items-center gap-3">
+            {{ form.conta_ativa }}
+            <label class="text-sm font-medium cursor-pointer text-gray-700 dark:text-gray-300"
+                   for="{{ form.conta_ativa.id_for_label }}">
+              Conta ativa (acesso ao sistema)
+            </label>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="flex justify-end gap-3 px-5 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/20">
+        <a href="{% if is_admin_op or not editando_proprio_perfil %}{% url 'core:usuarios_lista' %}{% else %}{% url 'competicao:dashboard' %}{% endif %}"
+           class="btn btn-ghost">Cancelar</a>
+        <button type="submit" class="btn btn-primary">
+          <i class="ti ti-device-floppy"></i> Salvar alterações
+        </button>
+      </div>
+
+    </div>
+  </form>
+
+  <!-- Zona de perigo -->
+  {% if usuario != request.user and is_admin_op %}
+  <div class="card overflow-hidden border border-red-200 dark:border-red-900">
+    <div class="flex items-center gap-2 px-4 py-3 border-b border-red-200 dark:border-red-900 bg-red-50/50 dark:bg-red-900/10">
+      <i class="ti ti-alert-triangle text-red-500 text-sm"></i>
+      <span class="section-heading text-sm text-red-600 dark:text-red-400 tracking-widest">ZONA DE PERIGO</span>
+    </div>
+    <div class="p-5 flex items-center justify-between gap-4">
+      <div>
+        <p class="text-sm font-semibold text-gray-900 dark:text-white">Remover da federação</p>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+          Remove o vínculo de {{ usuario.nome }} com {{ request.federacao.nome }}. A conta permanece ativa.
+        </p>
+      </div>
+      <button type="button"
+              data-modal-target="modal-remover-usuario"
+              data-modal-toggle="modal-remover-usuario"
+              class="btn btn-danger-outline btn-sm shrink-0 gap-1.5">
+        <i class="ti ti-user-x"></i> Remover
+      </button>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+<!-- Modal: remover usuário da federação -->
+<div id="modal-remover-usuario" tabindex="-1" aria-hidden="true"
+     class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 flex justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+  <div class="relative p-4 w-full max-w-md max-h-full">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 space-y-4">
+      <div class="flex items-center gap-3">
+        <i class="ti ti-alert-triangle text-red-500 text-xl"></i>
+        <h2 class="font-semibold text-gray-900 dark:text-white">Remover da federação</h2>
+      </div>
+      <p class="text-sm text-gray-600 dark:text-gray-400">
+        Remover <strong class="text-gray-900 dark:text-white">{{ usuario.email }}</strong> desta federação?
+        A conta permanece ativa, mas o acesso será revogado.
+      </p>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" data-modal-hide="modal-remover-usuario" class="btn btn-ghost btn-sm">Cancelar</button>
+        <form method="post" action="{% url 'core:usuario_remover' usuario.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger-outline btn-sm gap-1.5">
+            <i class="ti ti-user-x"></i> Remover
           </button>
-          <a href="{% url 'core:usuarios_lista' %}" class="btn btn-ghost">Cancelar</a>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   </div>
 </div>
+
+<script>
+(function () {
+  var papelSel = document.getElementById('id_papel');
+  var campoEquipe = document.getElementById('campo-equipe');
+  function toggleEquipe() {
+    if (papelSel && campoEquipe) {
+      campoEquipe.classList.toggle('hidden', papelSel.value !== 'DIR');
+    }
+  }
+  if (papelSel) {
+    papelSel.addEventListener('change', toggleEquipe);
+    toggleEquipe();
+  }
+}());
+</script>
 {% endblock %}

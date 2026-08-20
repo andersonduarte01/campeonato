@@ -4,10 +4,10 @@
 
 {% block breadcrumbs %}
 <div class="px-4 md:px-6 pt-3 pb-0">
-  <div class="breadcrumbs text-xs text-base-content/40">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
     <ul>
-      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-base-content/70">Dashboard</a></li>
-      <li><span class="text-base-content/60">Calendário</span></li>
+      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-gray-700 dark:text-gray-300">Dashboard</a></li>
+      <li><span class="text-gray-600 dark:text-gray-400">Calendário</span></li>
     </ul>
   </div>
 </div>
@@ -15,245 +15,253 @@
 
 {% block conteudo %}
 {% regroup jogos by data_hora.date as jogos_por_data %}
-<div class="p-4 md:p-6 max-w-[1000px] mx-auto space-y-5">
+<div class="p-4 md:p-6 space-y-5">
 
   <!-- Cabeçalho -->
   <div class="flex items-end justify-between gap-4">
     <div>
-      <h1 class="section-heading text-4xl text-base-content leading-none">CALENDÁRIO</h1>
-      <p class="text-sm text-base-content/40 mt-1">Jogos agendados e resultados</p>
+      <h1 class="section-heading text-4xl text-gray-900 dark:text-white leading-none">CALENDÁRIO</h1>
+      <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Jogos agendados e resultados</p>
     </div>
   </div>
 
-  <!-- Filtros -->
-  <form method="get" id="cal-form" class="flex flex-wrap gap-3 items-end">
+  <!-- Card principal -->
+  <div class="card overflow-hidden">
 
-    <!-- Competição -->
-    <div class="flex-1 min-w-48">
-      <label class="label py-0 mb-1.5">
-        <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">
-          Competição
-        </span>
-      </label>
-      <select name="competicao" class="select select-sm w-full bg-base-200 border-base-300"
-              onchange="this.form.submit()">
-        <option value="">— Todas as competições —</option>
-        {% for c in competicoes %}
-        <option value="{{ c.pk }}" {% if c.pk|stringformat:"s" == competicao_id %}selected{% endif %}>
-          {{ c.nome }}
-        </option>
+    <!-- Filtros -->
+    <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+      <form method="get" id="cal-form" class="flex flex-wrap gap-3 items-end">
+
+        <!-- Competição -->
+        <div class="flex-1 min-w-48">
+          <label class="label py-0 mb-1.5">
+            <span class="label-text text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              Competição
+            </span>
+          </label>
+          <select name="competicao" class="select select-sm w-full bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700"
+                  onchange="this.form.submit()">
+            <option value="">— Todas as competições —</option>
+            {% for c in competicoes %}
+            <option value="{{ c.pk }}" {% if c.pk|stringformat:"s" == competicao_id %}selected{% endif %}>
+              {{ c.nome }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Filtros rápidos de período -->
+        <div class="flex gap-1 flex-wrap">
+          <a href="{% url 'competicao:calendario' %}{% if competicao_id %}?competicao={{ competicao_id }}&periodo=hoje{% else %}?periodo=hoje{% endif %}"
+             class="btn border font-medium
+                    {% if periodo == 'hoje' %}btn-primary{% else %}btn-ghost border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400{% endif %}">
+            Hoje
+          </a>
+          <a href="{% url 'competicao:calendario' %}{% if competicao_id %}?competicao={{ competicao_id }}&periodo=semana{% else %}?periodo=semana{% endif %}"
+             class="btn border font-medium
+                    {% if periodo == 'semana' %}btn-primary{% else %}btn-ghost border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400{% endif %}">
+            7 dias
+          </a>
+          <a href="{% url 'competicao:calendario' %}{% if competicao_id %}?competicao={{ competicao_id }}&periodo=mes{% else %}?periodo=mes{% endif %}"
+             class="btn border font-medium
+                    {% if periodo == 'mes' %}btn-primary{% else %}btn-ghost border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400{% endif %}">
+            Este mês
+          </a>
+          {% if competicao_id or periodo %}
+          <a href="{% url 'competicao:calendario' %}"
+             class="btn btn-ghost border border-gray-200/60 dark:border-gray-700/60 text-gray-400 dark:text-gray-500">
+            <i class="ti ti-x text-sm"></i> Limpar
+          </a>
+          {% endif %}
+        </div>
+
+      </form>
+    </div>
+
+    <!-- Conteúdo -->
+    <div class="p-4 md:p-6">
+
+      {% if jogos %}
+
+      <!-- Lista agrupada por data -->
+      <div class="space-y-5">
+        {% for grupo in jogos_por_data %}
+
+        <div>
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-700 border border-gray-200/60 dark:border-gray-700/60
+                        flex flex-col items-center justify-center shrink-0">
+              <span class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase leading-none">
+                {{ grupo.grouper|date:"M" }}
+              </span>
+              <span class="section-heading text-base leading-none text-gray-700 dark:text-gray-300">
+                {{ grupo.grouper|date:"d" }}
+              </span>
+            </div>
+            <div>
+              <p class="section-heading text-lg text-gray-700 dark:text-gray-300 leading-none">
+                {{ grupo.grouper|date:"l, d \d\e F" }}
+              </p>
+              <p class="text-xs text-gray-400 dark:text-gray-600 mt-0.5">
+                {{ grupo.list|length }} jogo{{ grupo.list|length|pluralize }}
+              </p>
+            </div>
+            <div class="flex-1 h-px bg-gray-900/8 dark:bg-white/8 ml-2"></div>
+          </div>
+
+          <!-- Cards de jogos do dia -->
+          <div class="space-y-2 ml-0 sm:ml-14">
+            {% for jogo in grupo.list %}
+            <a href="{% url 'competicao:jogo_detalhe' jogo.pk %}"
+               class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden card-sport group block
+                      {% if jogo.em_andamento %}border-l-2 border-l-error{% endif %}">
+
+              <!-- Linha de status no topo -->
+              <div class="h-0.5 w-full
+                {% if jogo.em_andamento %}bg-red-500 animate-pulse
+                {% elif jogo.finalizado %}bg-green-500
+                {% elif jogo.anulado %}bg-red-500/50
+                {% else %}bg-gray-100 dark:bg-gray-700{% endif %}">
+              </div>
+
+              <div class="p-3 sm:p-4">
+                <div class="flex items-center gap-3">
+
+                  <!-- Hora -->
+                  <div class="shrink-0 w-12 text-center">
+                    {% if jogo.data_hora %}
+                    <p class="text-sm font-bold text-blue-600 dark:text-blue-400 leading-none">{{ jogo.data_hora|date:"H:i" }}</p>
+                    {% else %}
+                    <p class="text-xs text-gray-400 dark:text-gray-600">A def.</p>
+                    {% endif %}
+                  </div>
+
+                  <!-- Divisor vertical -->
+                  <div class="w-px h-10 bg-gray-900/10 dark:bg-white/10 shrink-0"></div>
+
+                  <!-- Times e placar -->
+                  <div class="flex-1 grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4 min-w-0">
+
+                    <!-- Time casa -->
+                    <div class="flex items-center gap-2 justify-end min-w-0">
+                      <span class="text-sm font-semibold truncate text-right
+                        {% if jogo.finalizado %}
+                          {% if jogo.gols_casa > jogo.gols_fora %}text-gray-900 dark:text-white{% else %}text-gray-500 dark:text-gray-400{% endif %}
+                        {% else %}text-gray-900 dark:text-white{% endif %}">
+                        {{ jogo.equipe_casa.nome_equipe }}
+                      </span>
+                      {% if jogo.equipe_casa.escudo %}
+                      <img src="{{ jogo.equipe_casa.escudo.thumbnail.url }}"
+                           class="w-7 h-7 rounded-full object-cover border border-gray-200 dark:border-gray-700 shrink-0">
+                      {% else %}
+                      <div class="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-700 border border-gray-200/60 dark:border-gray-700/60
+                                  flex items-center justify-center text-[10px] font-black text-gray-400 dark:text-gray-500 shrink-0">
+                        {{ jogo.equipe_casa.nome_equipe|first|upper }}
+                      </div>
+                      {% endif %}
+                    </div>
+
+                    <!-- Placar / Status central -->
+                    <div class="shrink-0 text-center min-w-[64px]">
+                      {% if jogo.em_andamento %}
+                      <div class="flex items-center gap-1 justify-center">
+                        <span class="live-dot"></span>
+                        <span class="stat-number text-base text-red-500">{{ jogo.gols_casa }}–{{ jogo.gols_fora }}</span>
+                      </div>
+                      {% elif jogo.finalizado %}
+                      <div class="flex items-center gap-1.5 px-2.5 py-1 bg-gray-200/60 dark:bg-gray-700/60 rounded-lg justify-center">
+                        <span class="stat-number text-sm
+                          {% if jogo.gols_casa > jogo.gols_fora %}text-win
+                          {% elif jogo.gols_casa == jogo.gols_fora %}text-draw
+                          {% else %}text-gray-400 dark:text-gray-500{% endif %}">{{ jogo.gols_casa }}</span>
+                        <span class="text-gray-300 dark:text-gray-600 text-xs">–</span>
+                        <span class="stat-number text-sm
+                          {% if jogo.gols_fora > jogo.gols_casa %}text-win
+                          {% elif jogo.gols_casa == jogo.gols_fora %}text-draw
+                          {% else %}text-gray-400 dark:text-gray-500{% endif %}">{{ jogo.gols_fora }}</span>
+                      </div>
+                      {% elif jogo.anulado %}
+                      <span class="badge badge-red badge-sm">Anulado</span>
+                      {% else %}
+                      <span class="text-gray-400 dark:text-gray-600 font-bold text-sm tracking-widest">×</span>
+                      {% endif %}
+                    </div>
+
+                    <!-- Time fora -->
+                    <div class="flex items-center gap-2 min-w-0">
+                      {% if jogo.equipe_fora.escudo %}
+                      <img src="{{ jogo.equipe_fora.escudo.thumbnail.url }}"
+                           class="w-7 h-7 rounded-full object-cover border border-gray-200 dark:border-gray-700 shrink-0">
+                      {% else %}
+                      <div class="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-700 border border-gray-200/60 dark:border-gray-700/60
+                                  flex items-center justify-center text-[10px] font-black text-gray-400 dark:text-gray-500 shrink-0">
+                        {{ jogo.equipe_fora.nome_equipe|first|upper }}
+                      </div>
+                      {% endif %}
+                      <span class="text-sm font-semibold truncate
+                        {% if jogo.finalizado %}
+                          {% if jogo.gols_fora > jogo.gols_casa %}text-gray-900 dark:text-white{% else %}text-gray-500 dark:text-gray-400{% endif %}
+                        {% else %}text-gray-900 dark:text-white{% endif %}">
+                        {{ jogo.equipe_fora.nome_equipe }}
+                      </span>
+                    </div>
+
+                  </div>
+
+                  <!-- Meta: competição + local (desktop) -->
+                  <div class="hidden md:flex flex-col items-end gap-0.5 shrink-0 text-right min-w-0 max-w-[140px]">
+                    <span class="text-[10px] text-gray-400 dark:text-gray-500 font-medium truncate w-full">
+                      {{ jogo.rodada.competicao.nome }}
+                    </span>
+                    {% if jogo.local %}
+                    <span class="text-[10px] text-gray-400 dark:text-gray-600 flex items-center gap-0.5 truncate w-full justify-end">
+                      <i class="ti ti-map-pin shrink-0"></i>{{ jogo.local.nome }}
+                    </span>
+                    {% endif %}
+                  </div>
+
+                  <!-- Chevron -->
+                  <i class="ti ti-chevron-right text-xs text-gray-300 dark:text-gray-600 shrink-0
+                            group-hover:text-gray-500 dark:text-gray-400 transition-colors"></i>
+
+                </div>
+              </div>
+            </a>
+            {% endfor %}
+          </div>
+
+        </div>
         {% endfor %}
-      </select>
-    </div>
+      </div>
 
-    <!-- Filtros rápidos de período -->
-    <div class="flex gap-1 flex-wrap">
-      <a href="{% url 'competicao:calendario' %}{% if competicao_id %}?competicao={{ competicao_id }}&periodo=hoje{% else %}?periodo=hoje{% endif %}"
-         class="btn btn-sm gap-1 border font-medium
-                {% if periodo == 'hoje' %}btn-warning{% else %}btn-ghost border-base-content/15 text-base-content/50{% endif %}">
-        Hoje
-      </a>
-      <a href="{% url 'competicao:calendario' %}{% if competicao_id %}?competicao={{ competicao_id }}&periodo=semana{% else %}?periodo=semana{% endif %}"
-         class="btn btn-sm gap-1 border font-medium
-                {% if periodo == 'semana' %}btn-warning{% else %}btn-ghost border-base-content/15 text-base-content/50{% endif %}">
-        7 dias
-      </a>
-      <a href="{% url 'competicao:calendario' %}{% if competicao_id %}?competicao={{ competicao_id }}&periodo=mes{% else %}?periodo=mes{% endif %}"
-         class="btn btn-sm gap-1 border font-medium
-                {% if periodo == 'mes' %}btn-warning{% else %}btn-ghost border-base-content/15 text-base-content/50{% endif %}">
-        Este mês
-      </a>
-      {% if competicao_id or periodo %}
-      <a href="{% url 'competicao:calendario' %}"
-         class="btn btn-ghost btn-sm border border-base-content/10 text-base-content/40">
-        <i class="bi bi-x text-sm"></i> Limpar
-      </a>
-      {% endif %}
-    </div>
-
-  </form>
-
-  {% if jogos %}
-
-  <!-- Lista agrupada por data -->
-  <div class="space-y-5">
-    {% for grupo in jogos_por_data %}
-
-    <!-- Header do dia -->
-    <div>
-      <div class="flex items-center gap-3 mb-3">
-        <div class="w-10 h-10 rounded-xl bg-base-300 border border-base-content/10
-                    flex flex-col items-center justify-center shrink-0">
-          <span class="text-[10px] font-bold text-base-content/40 uppercase leading-none">
-            {{ grupo.grouper|date:"M" }}
-          </span>
-          <span class="section-heading text-base leading-none text-base-content/70">
-            {{ grupo.grouper|date:"d" }}
-          </span>
+      {% else %}
+      <!-- Empty state -->
+      <div class="flex flex-col items-center justify-center py-20 gap-4 text-center">
+        <div class="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 border border-gray-200/60 dark:border-gray-700/60
+                    flex items-center justify-center">
+          <i class="ti ti-calendar-x text-2xl text-gray-300 dark:text-gray-600"></i>
         </div>
         <div>
-          <p class="section-heading text-lg text-base-content/70 leading-none">
-            {{ grupo.grouper|date:"l, d \d\e F" }}
-          </p>
-          <p class="text-xs text-base-content/30 mt-0.5">
-            {{ grupo.list|length }} jogo{{ grupo.list|length|pluralize }}
+          <p class="section-heading text-xl text-gray-400 dark:text-gray-500">NENHUM JOGO</p>
+          <p class="text-sm text-gray-400 dark:text-gray-600 mt-1.5">
+            {% if competicao_id %}
+            Nenhum jogo encontrado para esta competição no período selecionado.
+            {% else %}
+            Nenhum jogo agendado encontrado.
+            {% endif %}
           </p>
         </div>
-        <div class="flex-1 h-px bg-base-content/8 ml-2"></div>
-      </div>
-
-      <!-- Cards de jogos do dia -->
-      <div class="space-y-2 ml-0 sm:ml-14">
-        {% for jogo in grupo.list %}
-        <a href="{% url 'competicao:jogo_detalhe' jogo.pk %}"
-           class="card bg-base-200 border border-base-300 overflow-hidden card-sport group block
-                  {% if jogo.em_andamento %}border-l-2 border-l-error{% endif %}">
-
-          <!-- Linha de status no topo -->
-          <div class="h-0.5 w-full
-            {% if jogo.em_andamento %}bg-error animate-pulse
-            {% elif jogo.finalizado %}bg-success
-            {% elif jogo.anulado %}bg-error/50
-            {% else %}bg-base-300{% endif %}">
-          </div>
-
-          <div class="p-3 sm:p-4">
-            <div class="flex items-center gap-3">
-
-              <!-- Hora -->
-              <div class="shrink-0 w-12 text-center">
-                {% if jogo.data_hora %}
-                <p class="text-sm font-bold text-warning leading-none">{{ jogo.data_hora|date:"H:i" }}</p>
-                {% else %}
-                <p class="text-xs text-base-content/30">A def.</p>
-                {% endif %}
-              </div>
-
-              <!-- Divisor vertical -->
-              <div class="w-px h-10 bg-base-content/10 shrink-0"></div>
-
-              <!-- Times e placar -->
-              <div class="flex-1 grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4 min-w-0">
-
-                <!-- Time casa -->
-                <div class="flex items-center gap-2 justify-end min-w-0">
-                  <span class="text-sm font-semibold truncate text-right
-                    {% if jogo.finalizado %}
-                      {% if jogo.gols_casa > jogo.gols_fora %}text-base-content{% else %}text-base-content/45{% endif %}
-                    {% else %}text-base-content{% endif %}">
-                    {{ jogo.equipe_casa.nome_equipe }}
-                  </span>
-                  {% if jogo.equipe_casa.escudo %}
-                  <img src="{{ jogo.equipe_casa.escudo.thumbnail.url }}"
-                       class="w-7 h-7 rounded-full object-cover border border-base-300 shrink-0">
-                  {% else %}
-                  <div class="w-7 h-7 rounded-full bg-base-300 border border-base-content/10
-                              flex items-center justify-center text-[10px] font-black text-base-content/40 shrink-0">
-                    {{ jogo.equipe_casa.nome_equipe|first|upper }}
-                  </div>
-                  {% endif %}
-                </div>
-
-                <!-- Placar / Status central -->
-                <div class="shrink-0 text-center min-w-[64px]">
-                  {% if jogo.em_andamento %}
-                  <div class="flex items-center gap-1 justify-center">
-                    <span class="live-dot"></span>
-                    <span class="stat-number text-base text-error">{{ jogo.gols_casa }}–{{ jogo.gols_fora }}</span>
-                  </div>
-                  {% elif jogo.finalizado %}
-                  <div class="flex items-center gap-1.5 px-2.5 py-1 bg-base-300/60 rounded-lg justify-center">
-                    <span class="stat-number text-sm
-                      {% if jogo.gols_casa > jogo.gols_fora %}text-win
-                      {% elif jogo.gols_casa == jogo.gols_fora %}text-draw
-                      {% else %}text-base-content/40{% endif %}">{{ jogo.gols_casa }}</span>
-                    <span class="text-base-content/20 text-xs">–</span>
-                    <span class="stat-number text-sm
-                      {% if jogo.gols_fora > jogo.gols_casa %}text-win
-                      {% elif jogo.gols_casa == jogo.gols_fora %}text-draw
-                      {% else %}text-base-content/40{% endif %}">{{ jogo.gols_fora }}</span>
-                  </div>
-                  {% elif jogo.anulado %}
-                  <span class="badge badge-error badge-sm">Anulado</span>
-                  {% else %}
-                  <span class="text-base-content/25 font-bold text-sm tracking-widest">×</span>
-                  {% endif %}
-                </div>
-
-                <!-- Time fora -->
-                <div class="flex items-center gap-2 min-w-0">
-                  {% if jogo.equipe_fora.escudo %}
-                  <img src="{{ jogo.equipe_fora.escudo.thumbnail.url }}"
-                       class="w-7 h-7 rounded-full object-cover border border-base-300 shrink-0">
-                  {% else %}
-                  <div class="w-7 h-7 rounded-full bg-base-300 border border-base-content/10
-                              flex items-center justify-center text-[10px] font-black text-base-content/40 shrink-0">
-                    {{ jogo.equipe_fora.nome_equipe|first|upper }}
-                  </div>
-                  {% endif %}
-                  <span class="text-sm font-semibold truncate
-                    {% if jogo.finalizado %}
-                      {% if jogo.gols_fora > jogo.gols_casa %}text-base-content{% else %}text-base-content/45{% endif %}
-                    {% else %}text-base-content{% endif %}">
-                    {{ jogo.equipe_fora.nome_equipe }}
-                  </span>
-                </div>
-
-              </div>
-
-              <!-- Meta: competição + local (desktop) -->
-              <div class="hidden md:flex flex-col items-end gap-0.5 shrink-0 text-right min-w-0 max-w-[140px]">
-                <span class="text-[10px] text-base-content/35 font-medium truncate w-full">
-                  {{ jogo.rodada.competicao.nome }}
-                </span>
-                {% if jogo.local %}
-                <span class="text-[10px] text-base-content/25 flex items-center gap-0.5 truncate w-full justify-end">
-                  <i class="bi bi-geo-alt shrink-0"></i>{{ jogo.local.nome }}
-                </span>
-                {% endif %}
-              </div>
-
-              <!-- Chevron -->
-              <i class="bi bi-chevron-right text-xs text-base-content/20 shrink-0
-                        group-hover:text-base-content/50 transition-colors"></i>
-
-            </div>
-          </div>
+        {% if competicao_id or periodo %}
+        <a href="{% url 'competicao:calendario' %}"
+           class="btn btn-ghost btn-sm border border-gray-200/60 dark:border-gray-700/60">
+          <i class="ti ti-x text-sm"></i> Limpar filtros
         </a>
-        {% endfor %}
+        {% endif %}
       </div>
-
-    </div>
-    {% endfor %}
-  </div>
-
-  {% else %}
-  <!-- Empty state -->
-  <div class="card bg-base-200 border border-base-300">
-    <div class="flex flex-col items-center justify-center py-20 gap-4 text-center">
-      <div class="w-16 h-16 rounded-full bg-base-300 border border-base-content/10
-                  flex items-center justify-center">
-        <i class="bi bi-calendar-x text-2xl text-base-content/20"></i>
-      </div>
-      <div>
-        <p class="section-heading text-xl text-base-content/40">NENHUM JOGO</p>
-        <p class="text-sm text-base-content/30 mt-1.5">
-          {% if competicao_id %}
-          Nenhum jogo encontrado para esta competição no período selecionado.
-          {% else %}
-          Nenhum jogo agendado encontrado.
-          {% endif %}
-        </p>
-      </div>
-      {% if competicao_id or periodo %}
-      <a href="{% url 'competicao:calendario' %}"
-         class="btn btn-ghost btn-sm border border-base-content/10">
-        <i class="bi bi-x text-sm"></i> Limpar filtros
-      </a>
       {% endif %}
+
     </div>
   </div>
-  {% endif %}
 
 </div>
 {% endblock %}

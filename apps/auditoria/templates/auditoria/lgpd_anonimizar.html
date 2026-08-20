@@ -1,81 +1,41 @@
-{% extends 'base/indice.html' %}
-{% block titulo %}Exclusão de Dados Pessoais{% endblock %}
-
-{% block breadcrumbs %}
-<div class="px-4 md:px-6 pt-3 pb-0">
-  <div class="breadcrumbs text-xs text-base-content/40">
-    <ul>
-      <li><a href="{% url 'auditoria:lgpd_dashboard' %}" class="hover:text-base-content/70">LGPD</a></li>
-      <li><span class="text-base-content/60">Exclusão de dados</span></li>
-    </ul>
-  </div>
-</div>
-{% endblock %}
+﻿{% extends 'base/indice.html' %}
+{% block titulo %}Anonimizar Conta{% endblock %}
 
 {% block conteudo %}
-<div class="p-4 md:p-6 max-w-[600px] mx-auto space-y-6">
-
-  <!-- Aviso grave -->
-  <div class="card bg-error/5 border border-error/30 overflow-hidden">
-    <div class="flex items-center gap-3 px-5 py-4 border-b border-error/20 bg-error/10">
-      <div class="w-10 h-10 rounded-full bg-error/20 flex items-center justify-center shrink-0">
-        <i class="bi bi-exclamation-triangle-fill text-error text-xl"></i>
-      </div>
-      <div>
-        <h1 class="section-heading text-2xl text-error leading-none">AÇÃO IRREVERSÍVEL</h1>
-        <p class="text-xs text-error/60 mt-0.5">Exclusão e anonimização de dados pessoais</p>
-      </div>
+<div class="p-4 md:p-6 max-w-md mx-auto">
+  <div class="card bg-gray-50 dark:bg-gray-800 border border-red-200 dark:border-red-900">
+    <div class="px-5 py-3 border-b border-red-200 dark:border-red-900 flex items-center gap-2">
+      <i class="ti ti-alert-triangle text-red-500 text-sm"></i>
+      <h1 class="font-bold text-sm text-red-600 dark:text-red-400">Anonimizar Conta</h1>
     </div>
-    <div class="p-5 space-y-4">
-      <p class="text-sm text-base-content/70 leading-relaxed">
-        Ao confirmar, as seguintes ações serão executadas <strong>imediatamente</strong>:
+    <div class="card-body p-5 space-y-4">
+
+      <div class="alert alert-danger text-sm" role="alert">
+        <i class="ti ti-alert-circle shrink-0 text-base"></i>
+        <span>Esta ação é <strong>irreversível</strong>. Seu nome e e-mail serão removidos e sua conta será desativada permanentemente.</span>
+      </div>
+
+      <p class="text-sm text-gray-600 dark:text-gray-400">
+        Para confirmar, digite <span class="font-mono font-bold text-gray-900 dark:text-white">CONFIRMAR</span> no campo abaixo.
       </p>
-      <ul class="space-y-2 text-sm text-base-content/60">
-        <li class="flex items-start gap-2">
-          <i class="bi bi-x-circle-fill text-error mt-0.5 shrink-0"></i>
-          Seu <strong>nome</strong> será substituído por "Usuário Anonimizado #{{ request.user.pk }}"
-        </li>
-        <li class="flex items-start gap-2">
-          <i class="bi bi-x-circle-fill text-error mt-0.5 shrink-0"></i>
-          Seu <strong>e-mail</strong> será anonimizado e deixará de ser possível fazer login
-        </li>
-        <li class="flex items-start gap-2">
-          <i class="bi bi-x-circle-fill text-error mt-0.5 shrink-0"></i>
-          Sua conta será <strong>desativada</strong> imediatamente
-        </li>
-        <li class="flex items-start gap-2">
-          <i class="bi bi-info-circle text-warning mt-0.5 shrink-0"></i>
-          Os <strong>logs de auditoria</strong> são retidos por obrigação legal (LGPD art. 16)
-        </li>
-      </ul>
 
-      <div class="divider my-2 opacity-30"></div>
-
-      <form method="post">
+      <form method="post" class="space-y-4">
         {% csrf_token %}
-        <div class="space-y-3">
-          <label class="label py-0">
-            <span class="label-text text-sm font-bold text-base-content">
-              Para confirmar, digite <span class="font-mono text-error bg-error/10 px-1 rounded">CONFIRMAR</span> abaixo:
-            </span>
-          </label>
-          <input type="text" name="confirmacao" placeholder="CONFIRMAR"
-                 class="input input-bordered input-error w-full font-mono"
-                 autocomplete="off">
-        </div>
-        <div class="flex items-center gap-3 mt-4">
-          <a href="{% url 'auditoria:lgpd_dashboard' %}"
-             class="btn btn-ghost btn-sm border border-base-content/10 flex-1">
-            Cancelar
-          </a>
-          <button type="submit"
-                  class="btn btn-error btn-sm flex-1 gap-1.5 font-semibold">
-            <i class="bi bi-person-x-fill"></i> Confirmar exclusão
+        <input type="text"
+               name="confirmacao"
+               placeholder="CONFIRMAR"
+               autocomplete="off"
+               class="form-input font-mono"
+               required>
+        <div class="flex gap-2">
+          <button type="submit" class="btn btn-danger-outline flex-1">
+            <i class="ti ti-user-off"></i> Anonimizar minha conta
           </button>
+          <a href="{% url 'auditoria:lgpd_dashboard' %}" class="btn btn-ghost">Cancelar</a>
         </div>
       </form>
+
     </div>
   </div>
-
 </div>
 {% endblock %}

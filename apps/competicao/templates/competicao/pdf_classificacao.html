@@ -38,17 +38,17 @@
   /* Tables */
   .table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; font-size: .85rem; }
   .table th, .table td { padding: 5px 7px; vertical-align: top; }
-  .table-bordered th, .table-bordered td { border: 1px solid #dee2e6; }
+  . th, . td { border: 1px solid #dee2e6; }
   .table-sm th, .table-sm td { padding: 3px 5px; }
   th { font-size: .8rem; }
-  .table-dark thead tr th { background: #212529; color: #fff; border-color: #373b3e; }
+  . thead tr th { background: #212529; color: #fff; border-color: #373b3e; }
   .table-secondary thead tr th { background: #adb5bd; color: #000; }
 
   /* Buttons */
   .btn { display: inline-block; padding: 3px 10px; border-radius: 4px; border: 1px solid transparent; cursor: pointer; font-size: 0.8rem; }
   .btn-sm { padding: 2px 8px; font-size: 0.75rem; }
-  .btn-light { background: #f8f9fa; color: #212529; border-color: #ddd; }
-  .btn-outline-light { background: transparent; color: #fff; border-color: rgba(255,255,255,.5); }
+  .btn-secondary { background: #f8f9fa; color: #212529; border-color: #ddd; }
+  .btn-ghost { background: transparent; color: #fff; border-color: rgba(255,255,255,.5); }
 
   /* Print */
   @media print {
@@ -74,18 +74,18 @@
     </div>
   </div>
   <div class="no-print d-flex gap-2">
-    <button onclick="window.print()" class="btn btn-light btn-sm">
-      <i class="bi bi-printer"></i> Imprimir / PDF
+    <button onclick="window.print()" class="btn btn-secondary btn-sm">
+      <i class="ti ti-printer"></i> Imprimir / PDF
     </button>
-    <button onclick="window.close()" class="btn btn-outline-light btn-sm">Fechar</button>
+    <button onclick="window.close()" class="btn btn-ghost btn-sm">Fechar</button>
   </div>
 </div>
 
 <div class="container-fluid px-4 py-3">
 
   <div class="section-title">Classificação Geral</div>
-  <table class="table table-bordered table-sm">
-    <thead class="table-dark">
+  <table class="table  table-sm">
+    <thead class="">
       <tr>
         <th class="text-center">#</th>
         <th>Equipe</th>
@@ -119,14 +119,13 @@
     </tbody>
   </table>
 
-  {% if fases_grupos_data %}
-  {% for fase_item in fases_grupos_data %}
-  <div class="section-title">{{ fase_item.fase.nome }}</div>
+  {% if grupos_data %}
+  <div class="section-title">Fase de Grupos</div>
   <div class="row g-3">
-    {% for gd in fase_item.grupos %}
+    {% for gd in grupos_data %}
     <div class="col-md-6">
       <div class="fw-semibold mb-1 small">Grupo {{ gd.grupo.nome }}</div>
-      <table class="table table-bordered table-sm">
+      <table class="table table-sm">
         <thead class="table-secondary">
           <tr>
             <th>#</th><th>Equipe</th>
@@ -138,7 +137,7 @@
         </thead>
         <tbody>
           {% for cl in gd.classificacao %}
-          <tr {% if forloop.counter <= fase_item.fase.qtd_classificados_por_grupo %}style="background:#d1e7dd"{% endif %}>
+          <tr {% if forloop.counter <= competicao.qtd_classificados_por_grupo %}style="background:#d1e7dd"{% endif %}>
             <td class="fw-bold">{{ forloop.counter }}</td>
             <td>{{ cl.equipe.nome_equipe }}</td>
             <td class="text-center fw-bold">{{ cl.pontos }}</td>
@@ -152,14 +151,13 @@
     </div>
     {% endfor %}
   </div>
-  {% endfor %}
   {% endif %}
 
   <div class="row">
     <div class="col-md-5">
       <div class="section-title">Artilharia</div>
-      <table class="table table-bordered table-sm">
-        <thead class="table-dark">
+      <table class="table  table-sm">
+        <thead class="">
           <tr><th>#</th><th>Atleta</th><th>Equipe</th><th class="text-center">Gols</th></tr>
         </thead>
         <tbody>

@@ -1,0 +1,126 @@
+{% extends 'base/indice.html' %}
+{% block titulo %}Fair Play — {{ competicao.nome }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
+    <ul>
+      <li><a href="{% url 'competicao:dashboard' %}">Dashboard</a></li>
+      <li><a href="{% url 'competicao:classificacao' competicao.pk %}">{{ competicao.nome }}</a></li>
+      <li>Fair Play</li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block conteudo %}
+<div class="p-4 md:p-6 max-w-[1100px] mx-auto space-y-5">
+
+  <div>
+    <div class="flex items-center gap-2 mb-1">
+      <i class="ti ti-heart text-yellow-500 text-sm"></i>
+      <span class="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">Disciplina</span>
+    </div>
+    <h1 class="text-2xl font-black text-gray-900 dark:text-white">Ranking Fair Play — {{ competicao.nome }}</h1>
+    <p class="text-sm text-gray-400 mt-0.5">Menor pontuação = melhor comportamento (1 pt por amarelo, 3 pts por vermelho)</p>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+    <!-- Ranking por equipe -->
+    <div class="card bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
+        <span class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Por Equipe</span>
+      </div>
+      <div class="divide-y divide-gray-100 dark:divide-gray-800">
+        {% for eq in fair_play %}
+        <div class="flex items-center justify-between px-5 py-3 gap-3">
+          <div class="flex items-center gap-3">
+            <span class="w-6 text-xs font-mono text-gray-400 text-center font-bold">{{ forloop.counter }}</span>
+            <p class="font-semibold text-sm text-gray-900 dark:text-white">{{ eq.jogador__equipe__nome_equipe }}</p>
+          </div>
+          <div class="flex items-center gap-3 text-xs">
+            <span class="flex items-center gap-1">
+              <i class="ti ti-cards text-yellow-500"></i>
+              <span class="font-bold text-gray-700 dark:text-gray-300">{{ eq.amarelos }}</span>
+            </span>
+            <span class="flex items-center gap-1">
+              <i class="ti ti-cards text-red-500"></i>
+              <span class="font-bold text-gray-700 dark:text-gray-300">{{ eq.vermelhos }}</span>
+            </span>
+            <span class="font-black text-base {% if forloop.counter == 1 %}text-yellow-500{% else %}text-gray-700 dark:text-gray-300{% endif %}">
+              {{ eq.pontos_fair_play }} pts
+            </span>
+          </div>
+        </div>
+        {% empty %}
+        <div class="flex flex-col items-center py-10 text-gray-400 gap-2">
+          <i class="ti ti-heart text-3xl"></i>
+          <p class="text-sm">Sem dados de cartões</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Ranking por atleta -->
+    <div class="card bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
+        <span class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Atletas mais Advertidos</span>
+      </div>
+      <div class="divide-y divide-gray-100 dark:divide-gray-800">
+        {% for a in atletas_fair_play %}
+        <div class="flex items-center justify-between px-5 py-3 gap-3">
+          <div>
+            <p class="font-semibold text-sm text-gray-900 dark:text-white">{{ a.jogador__nome }}</p>
+            <p class="text-xs text-gray-400">{{ a.jogador__equipe__nome_equipe }}</p>
+          </div>
+          <div class="flex items-center gap-3 text-xs">
+            {% if a.amarelos %}<span class="badge badge-sm" style="background:#fbbf24;color:#0f172a;font-weight:700">{{ a.amarelos }} <i class="ti ti-cards ml-0.5"></i></span>{% endif %}
+            {% if a.vermelhos %}<span class="badge badge-sm badge-error font-bold">{{ a.vermelhos }} <i class="ti ti-cards ml-0.5"></i></span>{% endif %}
+          </div>
+        </div>
+        {% empty %}
+        <div class="flex flex-col items-center py-10 text-gray-400 gap-2">
+          <p class="text-sm">Sem cartões registrados</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Suspensões ativas -->
+  {% if suspensoes %}
+  <div class="card bg-white dark:bg-gray-900 border border-red-500/20 overflow-hidden">
+    <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
+      <i class="ti ti-ban text-red-500 text-sm"></i>
+      <span class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Suspensões</span>
+    </div>
+    <div class="divide-y divide-gray-100 dark:divide-gray-800">
+      {% for s in suspensoes %}
+      <div class="flex items-center justify-between px-5 py-3 gap-3">
+        <div>
+          <p class="font-semibold text-sm text-gray-900 dark:text-white">{{ s.atleta.nome }}</p>
+          <p class="text-xs text-gray-400">{{ s.atleta.equipe.nome_equipe }} · {{ s.get_motivo_display }}</p>
+        </div>
+        <div class="flex items-center gap-2">
+          {% if s.cumprida %}
+          <span class="badge badge-sm badge-success">Cumprida</span>
+          {% else %}
+          <span class="badge badge-sm badge-error font-semibold">{{ s.rodadas_pendentes }} rod. pendente{{ s.rodadas_pendentes|pluralize }}</span>
+          <form method="post" action="{% url 'competicao:suspensao_cumprir' s.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-ghost btn-xs border border-gray-200 dark:border-gray-700 text-xs">
+              Marcar cumprida
+            </button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

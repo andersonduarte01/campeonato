@@ -1,0 +1,74 @@
+{% extends 'base/indice.html' %}
+{% block titulo %}{{ titulo }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
+    <ul>
+      <li><a href="{% url 'registro:dashboard' %}" class="hover:text-gray-700 dark:text-gray-300">Federação</a></li>
+      <li><a href="{% url 'registro:registro_lista' %}" class="hover:text-gray-700 dark:text-gray-300">Registros</a></li>
+      <li><span class="text-gray-500 dark:text-gray-400">{{ titulo }}</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block conteudo %}
+<div class="p-4 md:p-6 space-y-5">
+
+  <!-- Cabeçalho -->
+  <div class="flex items-center gap-3">
+    <a href="{% url 'registro:registro_lista' %}"
+       class="btn btn-ghost btn-sm btn-square border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
+      <i class="ti ti-arrow-left text-sm"></i>
+    </a>
+    <h1 class="section-heading text-4xl text-gray-900 dark:text-white leading-none">{{ titulo|upper }}</h1>
+  </div>
+
+  <!-- Card -->
+  <form method="post">
+    {% csrf_token %}
+    <div class="card overflow-hidden">
+
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30">
+        <i class="ti ti-id-badge-2 text-blue-500 text-sm"></i>
+        <span class="section-heading text-sm text-gray-700 dark:text-gray-300 tracking-widest">DADOS DO REGISTRO</span>
+      </div>
+
+      <div class="p-5 space-y-4">
+        {% if form.non_field_errors %}
+        <div class="flex items-center gap-2 px-4 py-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-sm text-red-600 dark:text-red-400">
+          <i class="ti ti-alert-circle shrink-0"></i>
+          {{ form.non_field_errors }}
+        </div>
+        {% endif %}
+
+        {% for field in form %}
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1"
+                 for="{{ field.id_for_label }}">
+            {{ field.label }}{% if field.field.required %}<span class="text-blue-500 ml-1">*</span>{% endif %}
+          </label>
+          {{ field }}
+          {% if field.errors %}
+          {% for e in field.errors %}
+          <p class="text-red-500 text-xs mt-1">{{ e }}</p>
+          {% endfor %}
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Botões -->
+      <div class="flex justify-end gap-3 px-5 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/20">
+        <a href="{% url 'registro:registro_lista' %}" class="btn btn-ghost">Cancelar</a>
+        <button type="submit" class="btn btn-primary">
+          <i class="ti ti-device-floppy"></i> Salvar
+        </button>
+      </div>
+
+    </div>
+  </form>
+
+</div>
+{% endblock %}

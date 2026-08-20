@@ -3,318 +3,314 @@
 
 {% block breadcrumbs %}
 <div class="px-4 md:px-6 pt-3 pb-0">
-  <div class="breadcrumbs text-xs text-base-content/40">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
     <ul>
-      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-base-content/70">Dashboard</a></li>
-      <li><span class="text-base-content/60">Competições</span></li>
+      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-gray-700 dark:text-gray-300">Dashboard</a></li>
+      <li><span class="text-gray-600 dark:text-gray-400">Competições</span></li>
     </ul>
   </div>
 </div>
 {% endblock %}
 
 {% block conteudo %}
-<div class="p-4 md:p-6 max-w-[1400px] mx-auto">
+<div class="p-4 md:p-6 space-y-5">
 
-  <!-- ── Cabeçalho ──────────────────────────────────────────────────── -->
-  <div class="flex items-end justify-between gap-4 mb-5">
+  <!-- Cabeçalho -->
+  <div class="flex items-end justify-between gap-4">
     <div>
-      <h1 class="section-heading text-4xl text-base-content leading-none">COMPETIÇÕES</h1>
-      <p class="text-sm text-base-content/40 mt-1" id="comp-counter">
-        {% if competicoes %}
-          {{ competicoes|length }} competiç{{ competicoes|length|pluralize:"ão,ões" }}
-        {% else %}
-          Nenhuma competição cadastrada ainda
-        {% endif %}
+      <h1 class="section-heading text-4xl text-gray-900 dark:text-white leading-none">COMPETIÇÕES</h1>
+      <p class="text-sm text-gray-400 dark:text-gray-500 mt-1" id="comp-counter">
+        {% if competicoes %}{{ competicoes|length }} competiç{{ competicoes|length|pluralize:"ão,ões" }}
+        {% else %}Nenhuma competição cadastrada ainda{% endif %}
       </p>
     </div>
-    <a href="{% url 'competicao:competicao_add' %}"
-       class="btn btn-warning gap-2 shadow-lg shadow-warning/20 font-semibold shrink-0">
-      <i class="bi bi-plus-lg"></i>
+    {% if is_admin_op %}
+    <a href="{% url 'competicao:competicao_add' %}" class="btn btn-outline shrink-0">
+      <i class="ti ti-plus text-base"></i>
       <span class="hidden sm:inline">Nova Competição</span>
       <span class="sm:hidden">Nova</span>
     </a>
+    {% endif %}
   </div>
 
-  <!-- ── Filtro de tabs ─────────────────────────────────────────────── -->
-  {% if competicoes %}
-  <div class="flex gap-1 border-b border-base-300 mb-6 overflow-x-auto -mx-4 px-4 md:-mx-0 md:px-0">
-    <button class="comp-filter-tab shrink-0 px-4 py-2.5 text-xs font-bold border-b-2 border-warning
-                   text-warning bg-warning/5 rounded-t-lg transition-all duration-150"
-            data-filter="all">
-      Todas
-      <span class="badge badge-ghost badge-xs ml-1" id="count-all">{{ competicoes|length }}</span>
-    </button>
-    <button class="comp-filter-tab shrink-0 px-4 py-2.5 text-xs font-bold border-b-2 border-transparent
-                   text-base-content/40 hover:text-base-content/70 rounded-t-lg transition-all duration-150"
-            data-filter="andamento">
-      Em Andamento
-      <span class="badge badge-ghost badge-xs ml-1" id="count-andamento">0</span>
-    </button>
-    <button class="comp-filter-tab shrink-0 px-4 py-2.5 text-xs font-bold border-b-2 border-transparent
-                   text-base-content/40 hover:text-base-content/70 rounded-t-lg transition-all duration-150"
-            data-filter="aberto">
-      Abertas / Futuras
-      <span class="badge badge-ghost badge-xs ml-1" id="count-aberto">0</span>
-    </button>
-    <button class="comp-filter-tab shrink-0 px-4 py-2.5 text-xs font-bold border-b-2 border-transparent
-                   text-base-content/40 hover:text-base-content/70 rounded-t-lg transition-all duration-150"
-            data-filter="finalizado">
-      Encerradas
-      <span class="badge badge-ghost badge-xs ml-1" id="count-finalizado">0</span>
-    </button>
-  </div>
-  {% endif %}
+  <!-- Card principal -->
+  <div class="card overflow-hidden">
 
-  {% if competicoes %}
-  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+    <!-- Tabs de filtro -->
+    {% if competicoes %}
+    <div class="flex flex-wrap gap-0.5 border-b border-gray-200 dark:border-gray-700 px-4">
+      <button class="comp-filter-tab shrink-0 px-4 py-3 text-xs font-semibold border-b-2 border-blue-600
+                     text-blue-600 dark:text-blue-400 transition-all duration-150 -mb-px"
+              data-filter="all">
+        Todas
+        <span class="ml-1 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded text-[10px] font-bold" id="count-all">{{ competicoes|length }}</span>
+      </button>
+      <button class="comp-filter-tab shrink-0 px-4 py-3 text-xs font-semibold border-b-2 border-transparent
+                     text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-all duration-150 -mb-px"
+              data-filter="andamento">
+        Em Andamento
+        <span class="ml-1 px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded text-[10px] font-bold" id="count-andamento">0</span>
+      </button>
+      <button class="comp-filter-tab shrink-0 px-4 py-3 text-xs font-semibold border-b-2 border-transparent
+                     text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-all duration-150 -mb-px"
+              data-filter="aberto">
+        Abertas / Futuras
+        <span class="ml-1 px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded text-[10px] font-bold" id="count-aberto">0</span>
+      </button>
+      <button class="comp-filter-tab shrink-0 px-4 py-3 text-xs font-semibold border-b-2 border-transparent
+                     text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-all duration-150 -mb-px"
+              data-filter="finalizado">
+        Encerradas
+        <span class="ml-1 px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded text-[10px] font-bold" id="count-finalizado">0</span>
+      </button>
+    </div>
+    {% endif %}
 
-    {% for comp in competicoes %}
+    <!-- Conteúdo -->
+    <div class="p-4 md:p-6">
 
-    <!-- ── Card da Competição ──────────────────────────────────────── -->
-    <div class="card bg-base-200 border border-base-300 overflow-hidden card-sport group flex flex-col comp-card"
-         data-status="{{ comp.status }}">
+      {% if competicoes %}
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
 
-      <!-- Barra de status colorida no topo -->
-      <div class="h-1 w-full shrink-0
-        {% if comp.status == 'andamento' %}bg-warning
-        {% elif comp.status == 'finalizado' %}bg-success
-        {% elif comp.status == 'cancelado' %}bg-error
-        {% else %}bg-info{% endif %}">
-      </div>
+        {% for comp in competicoes %}
+        <div class="card overflow-hidden flex flex-col card-hover comp-card" data-status="{{ comp.status }}">
 
-      <div class="card-body p-5 flex flex-col gap-4 flex-1">
-
-        <!-- Topo: nome + status badge -->
-        <div class="flex items-start justify-between gap-3">
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2 mb-1">
-              {% if comp.status == 'andamento' %}
-              <span class="live-dot shrink-0"></span>
-              {% endif %}
-              <h2 class="font-black text-base text-base-content leading-snug truncate
-                          group-hover:text-warning transition-colors duration-200">
-                {{ comp.nome }}
-              </h2>
-            </div>
-            <!-- Modalidade / categoria / gênero -->
-            <div class="flex flex-wrap gap-1 mt-1">
-              {% if comp.modalidade %}
-              <span class="px-2 py-0.5 bg-base-300 rounded-md text-[11px] font-medium text-base-content/50">
-                {{ comp.get_modalidade_display }}
-              </span>
-              {% endif %}
-              {% if comp.categoria %}
-              <span class="px-2 py-0.5 bg-base-300 rounded-md text-[11px] font-medium text-base-content/50">
-                {{ comp.get_categoria_display }}
-              </span>
-              {% endif %}
-              {% if comp.genero %}
-              <span class="px-2 py-0.5 bg-base-300 rounded-md text-[11px] font-medium text-base-content/50">
-                {{ comp.get_genero_display }}
-              </span>
-              {% endif %}
-            </div>
+          <!-- Barra de status colorida no topo -->
+          <div class="h-1 w-full shrink-0
+            {% if comp.status == 'andamento' %}bg-blue-500
+            {% elif comp.status == 'finalizado' %}bg-green-500
+            {% elif comp.status == 'cancelado' %}bg-red-500
+            {% else %}bg-indigo-400{% endif %}">
           </div>
-          <span class="badge badge-sm shrink-0 font-semibold
-            {% if comp.status == 'andamento' %}badge-warning
-            {% elif comp.status == 'finalizado' %}badge-success
-            {% elif comp.status == 'cancelado' %}badge-error
-            {% else %}badge-info{% endif %}">
-            {{ comp.get_status_display }}
-          </span>
-        </div>
 
-        <!-- Datas -->
-        {% if comp.data_inicio %}
-        <div class="flex items-center gap-1.5 text-xs text-base-content/40">
-          <i class="bi bi-calendar3 text-warning/50 shrink-0"></i>
-          <span>{{ comp.data_inicio|date:"d/m/Y" }}</span>
-          {% if comp.data_fim %}
-          <span class="text-base-content/20">—</span>
-          <span>{{ comp.data_fim|date:"d/m/Y" }}</span>
-          {% endif %}
-        </div>
-        {% endif %}
+          <div class="card-body p-5 flex flex-col gap-4 flex-1">
 
-        <!-- Separador -->
-        <div class="h-px bg-base-content/8"></div>
-
-        <!-- Setup: contadores rápidos -->
-        <div class="grid grid-cols-2 gap-2">
-
-          <!-- Equipes -->
-          <a href="{% url 'competicao:buscar_equipes_view' pk=comp.pk %}"
-             class="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-base-300/50 hover:bg-base-300 transition-colors group/item">
-            <i class="bi bi-shield-fill text-warning/50 text-sm shrink-0"></i>
-            <div class="min-w-0">
-              <p class="text-xs text-base-content/40 leading-none mb-0.5">Equipes</p>
-              <p class="text-sm font-bold text-base-content leading-none">
-                {{ comp.equipes.count }}{% if comp.formato %}<span class="text-base-content/30 font-normal">/{{ comp.formato.qtd_times }}</span>{% endif %}
-              </p>
-            </div>
-          </a>
-
-          <!-- Fases -->
-          <a href="{% url 'competicao:fases' pk=comp.pk %}"
-             class="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-base-300/50 hover:bg-base-300 transition-colors group/item">
-            <i class="bi bi-layers text-warning/50 text-sm shrink-0"></i>
-            <div class="min-w-0">
-              <p class="text-xs text-base-content/40 leading-none mb-0.5">Fases</p>
-              <p class="text-sm font-bold text-base-content leading-none">{{ comp.fases.count }}</p>
-            </div>
-          </a>
-
-        </div>
-
-        <!-- Checklist de configuração -->
-        <ul class="space-y-1.5">
-
-          <li class="flex items-center gap-2 text-sm">
-            {% if comp.formato %}
-            <i class="bi bi-check-circle-fill text-success text-sm shrink-0"></i>
-            <a href="{% url 'criterios:formato_add' pk=comp.pk %}"
-               class="text-base-content/60 hover:text-base-content transition-colors truncate">
-              Formato
-              <span class="text-base-content/30 text-xs">({{ comp.formato.get_tipo_display }})</span>
-            </a>
-            {% else %}
-            <i class="bi bi-x-circle text-error/70 text-sm shrink-0"></i>
-            <a href="{% url 'criterios:formato_add' pk=comp.pk %}"
-               class="text-error/70 hover:text-error transition-colors font-medium">
-              Definir Formato
-            </a>
-            {% endif %}
-          </li>
-
-          <li class="flex items-center gap-2 text-sm">
-            {% if comp.criterio_classificacao %}
-            <i class="bi bi-check-circle-fill text-success text-sm shrink-0"></i>
-            <a href="{% url 'criterios:criterio_add' pk=comp.pk %}"
-               class="text-base-content/60 hover:text-base-content transition-colors truncate">
-              Critérios de Classificação
-            </a>
-            {% else %}
-            <i class="bi bi-x-circle text-error/70 text-sm shrink-0"></i>
-            <a href="{% url 'criterios:criterio_add' pk=comp.pk %}"
-               class="text-error/70 hover:text-error transition-colors font-medium">
-              Definir Critérios
-            </a>
-            {% endif %}
-          </li>
-
-          <li class="flex items-center gap-2 text-sm">
-            <i class="bi bi-person-badge text-warning/40 text-sm shrink-0"></i>
-            <a href="{% url 'competicao:inscricao' pk=comp.pk %}"
-               class="text-base-content/50 hover:text-base-content transition-colors truncate">
-              Inscrições de Atletas
-            </a>
-          </li>
-
-        </ul>
-
-        <!-- Progresso visual baseado em status -->
-        <div class="mt-auto space-y-2">
-          <div>
-            <div class="flex items-center justify-between text-[10px] text-base-content/35 mb-1.5">
-              <span class="font-medium">Andamento</span>
-              <span class="font-semibold
-                {% if comp.status == 'finalizado' %}text-success
-                {% elif comp.status == 'andamento' %}text-warning
-                {% elif comp.status == 'cancelado' %}text-error
-                {% else %}text-info{% endif %}">
+            <!-- Nome + badge de status -->
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-1">
+                  {% if comp.status == 'andamento' %}<span class="live-dot shrink-0"></span>{% endif %}
+                  <h2 class="font-bold text-base text-gray-900 dark:text-white leading-snug truncate">{{ comp.nome }}</h2>
+                </div>
+                <div class="flex flex-wrap gap-1 mt-1">
+                  {% if comp.modalidade %}
+                  <span class="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-[11px] font-medium text-gray-500 dark:text-gray-400">{{ comp.get_modalidade_display }}</span>
+                  {% endif %}
+                  {% if comp.categoria %}
+                  <span class="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-[11px] font-medium text-gray-500 dark:text-gray-400">{{ comp.get_categoria_display }}</span>
+                  {% endif %}
+                  {% if comp.genero %}
+                  <span class="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-[11px] font-medium text-gray-500 dark:text-gray-400">{{ comp.get_genero_display }}</span>
+                  {% endif %}
+                </div>
+              </div>
+              <span class="badge shrink-0
+                {% if comp.status == 'andamento' %}badge-blue
+                {% elif comp.status == 'finalizado' %}badge-green
+                {% elif comp.status == 'cancelado' %}badge-red
+                {% else %}badge-purple{% endif %}">
                 {{ comp.get_status_display }}
               </span>
             </div>
-            <div class="h-1 bg-base-300/60 rounded-full overflow-hidden">
-              <div class="h-full rounded-full transition-all duration-700
-                {% if comp.status == 'finalizado' %}bg-success w-full
-                {% elif comp.status == 'andamento' %}bg-warning w-1/2
-                {% elif comp.status == 'cancelado' %}bg-error w-1/4
-                {% else %}bg-info w-1/12{% endif %}">
+
+            <!-- Datas -->
+            {% if comp.data_inicio %}
+            <div class="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
+              <i class="ti ti-calendar shrink-0"></i>
+              <span>{{ comp.data_inicio|date:"d/m/Y" }}</span>
+              {% if comp.data_fim %}
+              <span class="text-gray-300 dark:text-gray-600">—</span>
+              <span>{{ comp.data_fim|date:"d/m/Y" }}</span>
+              {% endif %}
+            </div>
+            {% endif %}
+
+            <div class="h-px bg-gray-100 dark:bg-gray-700"></div>
+
+            <!-- Contadores rápidos -->
+            <div class="grid grid-cols-2 gap-2">
+              {% if is_admin_op %}
+              <a href="{% url 'competicao:buscar_equipes_view' pk=comp.pk %}"
+                 class="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700/50 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+              {% else %}
+              <div class="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+              {% endif %}
+                <i class="ti ti-shield text-blue-400 text-base shrink-0"></i>
+                <div class="min-w-0">
+                  <p class="text-[10px] text-gray-400 dark:text-gray-500 leading-none mb-0.5">Equipes</p>
+                  <p class="text-sm font-bold text-gray-900 dark:text-white leading-none">
+                    {{ comp.equipes.count }}{% if comp.formato %}<span class="text-gray-400 font-normal">/{{ comp.formato.qtd_times }}</span>{% endif %}
+                  </p>
+                </div>
+              {% if is_admin_op %}</a>{% else %}</div>{% endif %}
+              {% if not comp.formato or comp.formato.mata_mata or comp.formato.fase_grupos %}
+              <a href="{% url 'competicao:etapas' pk=comp.pk %}"
+                 class="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700/50 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+                <i class="ti ti-layers-intersect text-blue-400 text-base shrink-0"></i>
+                <div class="min-w-0">
+                  <p class="text-[10px] text-gray-400 dark:text-gray-500 leading-none mb-0.5">Etapas</p>
+                  <p class="text-sm font-bold text-gray-900 dark:text-white leading-none">{{ comp.etapas.count }}</p>
+                </div>
+              </a>
+              {% endif %}
+            </div>
+
+            <!-- Checklist de configuração -->
+            <ul class="space-y-1.5">
+              <li class="flex items-center gap-2 text-sm">
+                {% if comp.formato %}
+                <i class="ti ti-circle-check text-green-500 text-base shrink-0"></i>
+                {% if is_admin_op %}
+                <a href="{% url 'criterios:formato_vincular' pk=comp.pk %}"
+                   class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors truncate">
+                  Formato <span class="text-gray-400 text-xs">({{ comp.formato.nome }})</span>
+                </a>
+                {% else %}
+                <span class="text-gray-600 dark:text-gray-400 truncate">
+                  Formato <span class="text-gray-400 text-xs">({{ comp.formato.nome }})</span>
+                </span>
+                {% endif %}
+                {% else %}
+                <i class="ti ti-circle-x text-red-400 text-base shrink-0"></i>
+                {% if is_admin_op %}
+                <a href="{% url 'criterios:formato_vincular' pk=comp.pk %}"
+                   class="text-red-500 dark:text-red-400 hover:text-red-600 transition-colors font-medium">Definir Formato</a>
+                {% else %}
+                <span class="text-gray-400 dark:text-gray-500">Formato não definido</span>
+                {% endif %}
+                {% endif %}
+              </li>
+              <li class="flex items-center gap-2 text-sm">
+                {% if comp.criterio_classificacao %}
+                <i class="ti ti-circle-check text-green-500 text-base shrink-0"></i>
+                {% if is_admin_op %}
+                <a href="{% url 'criterios:criterio_vincular' pk=comp.pk %}"
+                   class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors truncate">
+                  Critérios <span class="text-gray-400 text-xs">({{ comp.criterio_classificacao.nome }})</span>
+                </a>
+                {% else %}
+                <span class="text-gray-600 dark:text-gray-400 truncate">
+                  Critérios <span class="text-gray-400 text-xs">({{ comp.criterio_classificacao.nome }})</span>
+                </span>
+                {% endif %}
+                {% else %}
+                <i class="ti ti-circle-x text-red-400 text-base shrink-0"></i>
+                {% if is_admin_op %}
+                <a href="{% url 'criterios:criterio_vincular' pk=comp.pk %}"
+                   class="text-red-500 dark:text-red-400 hover:text-red-600 transition-colors font-medium">Definir Critérios</a>
+                {% else %}
+                <span class="text-gray-400 dark:text-gray-500">Critérios não definidos</span>
+                {% endif %}
+                {% endif %}
+              </li>
+              <li class="flex items-center gap-2 text-sm">
+                <i class="ti ti-id-badge-2 text-gray-400 dark:text-gray-500 text-base shrink-0"></i>
+                <a href="{% url 'competicao:inscricao' pk=comp.pk %}"
+                   class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors truncate">
+                  Inscrições de Atletas
+                </a>
+              </li>
+            </ul>
+
+            <!-- Barra de progresso + botões -->
+            <div class="mt-auto space-y-3">
+              <div>
+                <div class="flex items-center justify-between text-[10px] text-gray-400 dark:text-gray-500 mb-1.5">
+                  <span>Andamento</span>
+                  <span class="font-semibold
+                    {% if comp.status == 'finalizado' %}text-green-500
+                    {% elif comp.status == 'andamento' %}text-blue-500
+                    {% elif comp.status == 'cancelado' %}text-red-500
+                    {% else %}text-indigo-400{% endif %}">
+                    {{ comp.get_status_display }}
+                  </span>
+                </div>
+                <div class="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div class="h-full rounded-full transition-all duration-700
+                    {% if comp.status == 'finalizado' %}bg-green-500 w-full
+                    {% elif comp.status == 'andamento' %}bg-blue-500 w-1/2
+                    {% elif comp.status == 'cancelado' %}bg-red-500 w-1/4
+                    {% else %}bg-indigo-400 w-1/12{% endif %}">
+                  </div>
+                </div>
+              </div>
+
+              <div class="h-px bg-gray-100 dark:bg-gray-700"></div>
+
+              <div class="flex gap-2">
+                <a href="{% url 'competicao:classificacao' pk=comp.pk %}" class="btn btn-primary btn-sm flex-1">
+                  <i class="ti ti-table text-sm"></i> Classificação
+                </a>
+                <a href="{% url 'competicao:rodadas' pk=comp.pk %}" class="btn btn-secondary btn-sm flex-1">
+                  <i class="ti ti-calendar text-sm"></i> Rodadas
+                </a>
+                <div class="relative">
+                  <button type="button"
+                          data-dropdown-toggle="comp-menu-{{ comp.pk }}"
+                          data-dropdown-placement="bottom-end"
+                          class="btn btn-secondary btn-sm px-2.5">
+                    <i class="ti ti-dots-vertical text-sm"></i>
+                  </button>
+                  <div id="comp-menu-{{ comp.pk }}"
+                       class="z-50 hidden bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700
+                              rounded-xl shadow-lg w-44 py-1">
+                    <a href="{% url 'competicao:estatisticas' pk=comp.pk %}"
+                       class="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                      <i class="ti ti-chart-bar text-blue-400 text-sm"></i> Estatísticas
+                    </a>
+                    {% if not comp.formato or comp.formato.mata_mata or comp.formato.fase_grupos %}
+                    <a href="{% url 'competicao:etapas' pk=comp.pk %}"
+                       class="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                      <i class="ti ti-layers-intersect text-blue-400 text-sm"></i> Etapas
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'competicao:inscricao' pk=comp.pk %}"
+                       class="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                      <i class="ti ti-id-badge-2 text-blue-400 text-sm"></i> Inscrições
+                    </a>
+                    {% if is_admin_op %}
+                    <div class="my-1 border-t border-gray-100 dark:border-gray-700"></div>
+                    <a href="{% url 'competicao:buscar_equipes_view' pk=comp.pk %}"
+                       class="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                      <i class="ti ti-shield-plus text-blue-400 text-sm"></i> Participantes
+                    </a>
+                    {% endif %}
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="h-px bg-base-content/8"></div>
-          <div class="flex gap-2">
-            <a href="{% url 'competicao:classificacao' pk=comp.pk %}"
-               class="btn btn-warning btn-sm flex-1 font-semibold shadow-sm shadow-warning/10 gap-1">
-              <i class="bi bi-table text-sm"></i> Classificação
-            </a>
-            <a href="{% url 'competicao:rodadas' pk=comp.pk %}"
-               class="btn btn-ghost btn-sm flex-1 text-base-content/60 hover:text-base-content border border-base-content/10 gap-1">
-              <i class="bi bi-calendar3 text-sm"></i> Rodadas
-            </a>
-            <div class="dropdown dropdown-end">
-              <button tabindex="0" class="btn btn-ghost btn-sm btn-square border border-base-content/10
-                                          text-base-content/40 hover:text-base-content">
-                <i class="bi bi-three-dots-vertical text-sm"></i>
-              </button>
-              <ul tabindex="0" class="dropdown-content bg-base-200 border border-base-300 rounded-xl
-                                     shadow-2xl z-20 w-44 p-1.5 mt-1 flex flex-col gap-0.5">
-                <li>
-                  <a href="{% url 'competicao:estatisticas' pk=comp.pk %}"
-                     class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-base-content/70
-                            hover:text-base-content hover:bg-base-300 transition-all">
-                    <i class="bi bi-bar-chart-fill text-warning/60 text-xs"></i> Estatísticas
-                  </a>
-                </li>
-                <li>
-                  <a href="{% url 'competicao:fases' pk=comp.pk %}"
-                     class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-base-content/70
-                            hover:text-base-content hover:bg-base-300 transition-all">
-                    <i class="bi bi-layers text-warning/60 text-xs"></i> Fases
-                  </a>
-                </li>
-                <li>
-                  <a href="{% url 'competicao:inscricao' pk=comp.pk %}"
-                     class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-base-content/70
-                            hover:text-base-content hover:bg-base-300 transition-all">
-                    <i class="bi bi-person-badge text-warning/60 text-xs"></i> Inscrições
-                  </a>
-                </li>
-                <li><div class="h-px bg-base-300 my-0.5"></div></li>
-                <li>
-                  <a href="{% url 'competicao:buscar_equipes_view' pk=comp.pk %}"
-                     class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-base-content/70
-                            hover:text-base-content hover:bg-base-300 transition-all">
-                    <i class="bi bi-shield-plus text-warning/60 text-xs"></i> Participantes
-                  </a>
-                </li>
-              </ul>
-            </div>
+
           </div>
         </div>
+        {% endfor %}
 
       </div>
-    </div>
-    <!-- /card -->
 
-    {% endfor %}
+      {% else %}
+      <!-- Empty state -->
+      <div class="flex flex-col items-center justify-center py-24 gap-6 text-center">
+        <div class="relative">
+          <div class="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+            <i class="ti ti-trophy text-4xl text-gray-300 dark:text-gray-600"></i>
+          </div>
+          <div class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center shadow">
+            <i class="ti ti-plus text-white text-sm"></i>
+          </div>
+        </div>
+        <div>
+          <p class="section-heading text-xl text-gray-400 dark:text-gray-500">NENHUMA COMPETIÇÃO</p>
+          <p class="text-sm text-gray-400 dark:text-gray-600 mt-1">Crie sua primeira competição para começar.</p>
+        </div>
+        {% if is_admin_op %}
+        <a href="{% url 'competicao:competicao_add' %}" class="btn btn-outline">
+          <i class="ti ti-plus text-base"></i> Nova Competição
+        </a>
+        {% endif %}
+      </div>
+      {% endif %}
+
+    </div>
   </div>
-
-  {% else %}
-  <!-- Estado vazio -->
-  <div class="flex flex-col items-center justify-center py-32 gap-6 text-center">
-    <div class="relative">
-      <div class="w-24 h-24 rounded-full bg-base-200 border border-base-content/10
-                  flex items-center justify-center">
-        <i class="bi bi-trophy text-4xl text-base-content/15"></i>
-      </div>
-      <div class="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-warning/10 border border-warning/20
-                  flex items-center justify-center">
-        <i class="bi bi-plus text-warning text-sm font-bold"></i>
-      </div>
-    </div>
-    <div>
-      <p class="section-heading text-2xl text-base-content/40">NENHUMA COMPETIÇÃO</p>
-      <p class="text-sm text-base-content/30 mt-2">Crie sua primeira competição para começar.</p>
-    </div>
-    <a href="{% url 'competicao:competicao_add' %}"
-       class="btn btn-warning gap-2 shadow-lg shadow-warning/20 font-semibold">
-      <i class="bi bi-plus-lg"></i> Nova Competição
-    </a>
-  </div>
-  {% endif %}
 
 </div>
 {% endblock %}
@@ -323,12 +319,10 @@
 <script>
 (function () {
   'use strict';
-
   var tabs    = document.querySelectorAll('.comp-filter-tab');
   var cards   = document.querySelectorAll('.comp-card');
   var counter = document.getElementById('comp-counter');
 
-  // Conta cards por status
   var counts = { all: 0, andamento: 0, aberto: 0, finalizado: 0 };
   cards.forEach(function (c) {
     var s = c.dataset.status || '';
@@ -338,7 +332,6 @@
     if (s === 'finalizado') counts.finalizado++;
   });
 
-  // Atualiza badges
   ['all', 'andamento', 'aberto', 'finalizado'].forEach(function (key) {
     var el = document.getElementById('count-' + key);
     if (el) el.textContent = counts[key];
@@ -346,32 +339,24 @@
 
   function activateFilter(tab) {
     var filter = tab.dataset.filter;
-
-    // Estilo dos tabs
     tabs.forEach(function (t) {
       var active = t === tab;
-      t.classList.toggle('border-warning',       active);
-      t.classList.toggle('text-warning',         active);
-      t.classList.toggle('bg-warning/5',         active);
-      t.classList.toggle('border-transparent',   !active);
-      t.classList.toggle('text-base-content/40', !active);
+      t.classList.toggle('border-blue-600',    active);
+      t.classList.toggle('text-blue-600',      active);
+      t.classList.toggle('dark:text-blue-400', active);
+      t.classList.toggle('border-transparent', !active);
+      t.classList.toggle('text-gray-500',      !active);
     });
-
-    // Exibe/oculta cards
     var visible = 0;
     cards.forEach(function (c) {
       var show = filter === 'all' || c.dataset.status === filter;
       c.style.display = show ? '' : 'none';
       if (show) visible++;
     });
-
-    // Atualiza contador de texto
     if (counter) {
-      if (visible === 0) {
-        counter.textContent = 'Nenhuma competição neste filtro';
-      } else {
-        counter.textContent = visible + ' competiç' + (visible === 1 ? 'ão' : 'ões');
-      }
+      counter.textContent = visible === 0
+        ? 'Nenhuma competição neste filtro'
+        : visible + ' competiç' + (visible === 1 ? 'ão' : 'ões');
     }
   }
 
@@ -379,7 +364,6 @@
     tab.addEventListener('click', function () { activateFilter(this); });
   });
 
-  // Ativa "Todas" no carregamento
   if (tabs.length) activateFilter(tabs[0]);
 })();
 </script>

@@ -12,20 +12,20 @@
   <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
     <div>
       <div class="flex items-center gap-2 mb-1">
-        <i class="bi bi-bar-chart-fill text-warning text-base"></i>
-        <span class="text-xs font-bold uppercase tracking-widest text-base-content/40">Competição</span>
+        <i class="ti ti-chart-bar text-yellow-500 text-base"></i>
+        <span class="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">Competição</span>
       </div>
-      <h1 class="section-heading text-4xl text-base-content leading-none">ESTATÍSTICAS</h1>
-      <p class="text-sm text-base-content/40 mt-1 font-medium">{{ competicao.nome }}</p>
+      <h1 class="section-heading text-4xl text-gray-900 dark:text-white leading-none">ESTATÍSTICAS</h1>
+      <p class="text-sm text-gray-400 dark:text-gray-500 mt-1 font-medium">{{ competicao.nome }}</p>
     </div>
     <div class="flex gap-2 shrink-0">
       <a href="{% url 'competicao:classificacao' competicao.pk %}"
-         class="btn btn-ghost btn-sm gap-1 border border-base-content/10">
-        <i class="bi bi-trophy"></i> Classificação
+         class="btn btn-ghost btn-sm gap-1 border border-gray-200/60 dark:border-gray-700/60">
+        <i class="ti ti-trophy"></i> Classificação
       </a>
       <a href="{% url 'competicao:rodadas' competicao.pk %}"
-         class="btn btn-ghost btn-sm gap-1 border border-base-content/10">
-        <i class="bi bi-calendar3"></i> Rodadas
+         class="btn btn-ghost btn-sm gap-1 border border-gray-200/60 dark:border-gray-700/60">
+        <i class="ti ti-calendar"></i> Rodadas
       </a>
     </div>
   </div>
@@ -34,10 +34,10 @@
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
     <!-- Gols por Período — Bar Chart -->
-    <div class="card bg-base-200 border border-base-300 overflow-hidden">
-      <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
-        <i class="bi bi-clock-history text-warning text-sm"></i>
-        <span class="section-heading text-base text-base-content/70 tracking-widest">GOLS POR PERÍODO</span>
+    <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-200/30 dark:bg-gray-700/30">
+        <i class="ti ti-history text-yellow-500 text-sm"></i>
+        <span class="section-heading text-base text-gray-700 dark:text-gray-300 tracking-widest">GOLS POR PERÍODO</span>
       </div>
       <div class="p-4">
         {% if gols_por_periodo %}
@@ -45,8 +45,8 @@
           <canvas id="chartGolsPeriodo"></canvas>
         </div>
         {% else %}
-        <div class="flex flex-col items-center justify-center h-52 gap-2 text-base-content/25">
-          <i class="bi bi-clock text-3xl"></i>
+        <div class="flex flex-col items-center justify-center h-52 gap-2 text-gray-400 dark:text-gray-600">
+          <i class="ti ti-clock text-3xl"></i>
           <p class="text-sm">Nenhum gol registrado</p>
         </div>
         {% endif %}
@@ -54,13 +54,13 @@
     </div>
 
     <!-- Cartões por Equipe — Stacked/Grouped Bar Chart -->
-    <div class="card bg-base-200 border border-base-300 overflow-hidden">
-      <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
+    <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-200/30 dark:bg-gray-700/30">
         <div class="flex gap-0.5 shrink-0">
-          <div class="w-2.5 h-4 rounded-sm bg-warning"></div>
-          <div class="w-2.5 h-4 rounded-sm bg-error"></div>
+          <div class="w-2.5 h-4 rounded-sm bg-yellow-400"></div>
+          <div class="w-2.5 h-4 rounded-sm bg-red-500"></div>
         </div>
-        <span class="section-heading text-base text-base-content/70 tracking-widest">CARTÕES POR EQUIPE</span>
+        <span class="section-heading text-base text-gray-700 dark:text-gray-300 tracking-widest">CARTÕES POR EQUIPE</span>
       </div>
       <div class="p-4">
         {% if cartoes_equipe %}
@@ -68,8 +68,8 @@
           <canvas id="chartCartoes"></canvas>
         </div>
         {% else %}
-        <div class="flex flex-col items-center justify-center h-52 gap-2 text-base-content/25">
-          <i class="bi bi-square text-3xl"></i>
+        <div class="flex flex-col items-center justify-center h-52 gap-2 text-gray-400 dark:text-gray-600">
+          <i class="ti ti-square text-3xl"></i>
           <p class="text-sm">Nenhum cartão registrado</p>
         </div>
         {% endif %}
@@ -80,10 +80,10 @@
 
   <!-- ── Linha 2: Mandante vs Visitante (Chart) ─────────────────── -->
   {% if mandante_visitante %}
-  <div class="card bg-base-200 border border-base-300 overflow-hidden">
-    <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
-      <i class="bi bi-house-door text-warning text-sm"></i>
-      <span class="section-heading text-base text-base-content/70 tracking-widest">VITÓRIAS MANDANTE × VISITANTE</span>
+  <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-200/30 dark:bg-gray-700/30">
+      <i class="ti ti-home text-yellow-500 text-sm"></i>
+      <span class="section-heading text-base text-gray-700 dark:text-gray-300 tracking-widest">VITÓRIAS MANDANTE × VISITANTE</span>
     </div>
     <div class="p-4">
       <div class="relative h-48">
@@ -92,12 +92,12 @@
       <!-- legenda manual -->
       <div class="flex justify-center gap-5 mt-3">
         <div class="flex items-center gap-1.5">
-          <div class="w-3 h-3 rounded-sm bg-info/80"></div>
-          <span class="text-xs text-base-content/50">Mandante</span>
+          <div class="w-3 h-3 rounded-sm bg-blue-500/80"></div>
+          <span class="text-xs text-gray-500 dark:text-gray-400">Mandante</span>
         </div>
         <div class="flex items-center gap-1.5">
-          <div class="w-3 h-3 rounded-sm bg-error/70"></div>
-          <span class="text-xs text-base-content/50">Visitante</span>
+          <div class="w-3 h-3 rounded-sm bg-red-500/70"></div>
+          <span class="text-xs text-gray-500 dark:text-gray-400">Visitante</span>
         </div>
       </div>
     </div>
@@ -108,85 +108,85 @@
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
     <!-- Artilharia -->
-    <div class="card bg-base-200 border border-base-300 overflow-hidden">
-      <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
-        <i class="bi bi-bullseye text-warning text-sm"></i>
-        <span class="section-heading text-base text-base-content/70 tracking-widest">ARTILHARIA</span>
+    <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-200/30 dark:bg-gray-700/30">
+        <i class="ti ti-target text-yellow-500 text-sm"></i>
+        <span class="section-heading text-base text-gray-700 dark:text-gray-300 tracking-widest">ARTILHARIA</span>
       </div>
       {% if artilharia %}
       {% with max_gols=artilharia.0.total %}
 
       <!-- Pódio top 3 -->
       {% if artilharia|length >= 3 %}
-      <div class="px-4 pt-5 pb-4 border-b border-base-300">
+      <div class="px-4 pt-5 pb-4 border-b border-gray-200 dark:border-gray-700">
         <div class="flex items-end justify-center gap-3">
 
           <!-- 2º lugar -->
           <div class="flex flex-col items-center gap-2 flex-1">
-            <div class="w-12 h-12 rounded-full bg-base-300 border-2 border-base-content/20
-                        flex items-center justify-center text-xl font-black text-base-content/50">
+            <div class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-700
+                        flex items-center justify-center text-xl font-black text-gray-500 dark:text-gray-400">
               {{ artilharia.1.atleta__nome|default:"?"|first|upper }}
             </div>
             <div class="text-center">
-              <p class="text-xs font-bold text-base-content truncate max-w-[80px]"
+              <p class="text-xs font-bold text-gray-900 dark:text-white truncate max-w-[80px]"
                  title="{{ artilharia.1.atleta__nome|default:'?' }}">
                 {{ artilharia.1.atleta__nome|default:"?"|truncatechars:10 }}
               </p>
-              <p class="text-[10px] text-base-content/35 truncate max-w-[80px]">{{ artilharia.1.atleta__equipe__nome_equipe }}</p>
+              <p class="text-[10px] text-gray-400 dark:text-gray-500 truncate max-w-[80px]">{{ artilharia.1.atleta__equipe__nome_equipe }}</p>
             </div>
-            <div class="w-full flex flex-col items-center py-3 rounded-t-xl bg-base-300/60
-                        border-t-2 border-base-content/20">
-              <span class="stat-number text-2xl text-base-content/60">{{ artilharia.1.total }}</span>
-              <span class="text-[10px] text-base-content/30 font-medium">gols</span>
-              <span class="mt-1 text-base-content/40 text-xs font-bold">🥈 2º</span>
+            <div class="w-full flex flex-col items-center py-3 rounded-t-xl bg-gray-200/60 dark:bg-gray-700/60
+                        border-t-2 border-gray-200 dark:border-gray-700">
+              <span class="stat-number text-2xl text-gray-600 dark:text-gray-400">{{ artilharia.1.total }}</span>
+              <span class="text-[10px] text-gray-400 dark:text-gray-600 font-medium">gols</span>
+              <span class="mt-1 text-gray-400 dark:text-gray-500 text-xs font-bold">🥈 2º</span>
             </div>
           </div>
 
           <!-- 1º lugar (mais alto) -->
           <div class="flex flex-col items-center gap-2 flex-1 -mt-4">
             <div class="relative">
-              <div class="w-14 h-14 rounded-full bg-warning/15 border-2 border-warning/60
-                          flex items-center justify-center text-2xl font-black text-warning/80
-                          shadow-lg shadow-warning/20">
+              <div class="w-14 h-14 rounded-full bg-yellow-400/15 border-2 border-yellow-400/60
+                          flex items-center justify-center text-2xl font-black text-yellow-500/80
+                          shadow-lg shadow-yellow-400/20">
                 {{ artilharia.0.atleta__nome|default:"?"|first|upper }}
               </div>
-              <div class="absolute -top-2 -right-1 w-5 h-5 rounded-full bg-warning flex items-center justify-center">
-                <i class="bi bi-trophy-fill text-warning-content text-[9px]"></i>
+              <div class="absolute -top-2 -right-1 w-5 h-5 rounded-full bg-yellow-400 flex items-center justify-center">
+                <i class="ti ti-trophy text-yellow-500-content text-[9px]"></i>
               </div>
             </div>
             <div class="text-center">
-              <p class="text-xs font-bold text-warning truncate max-w-[90px]"
+              <p class="text-xs font-bold text-yellow-500 truncate max-w-[90px]"
                  title="{{ artilharia.0.atleta__nome|default:'?' }}">
                 {{ artilharia.0.atleta__nome|default:"?"|truncatechars:12 }}
               </p>
-              <p class="text-[10px] text-base-content/35 truncate max-w-[90px]">{{ artilharia.0.atleta__equipe__nome_equipe }}</p>
+              <p class="text-[10px] text-gray-400 dark:text-gray-500 truncate max-w-[90px]">{{ artilharia.0.atleta__equipe__nome_equipe }}</p>
             </div>
             <div class="w-full flex flex-col items-center py-4 rounded-t-xl
-                        bg-warning/10 border-t-2 border-warning/50">
-              <span class="stat-number text-3xl text-warning">{{ artilharia.0.total }}</span>
-              <span class="text-[10px] text-warning/50 font-medium">gols</span>
-              <span class="mt-1 text-warning text-xs font-bold">🏆 1º</span>
+                        bg-yellow-400/10 border-t-2 border-yellow-400/50">
+              <span class="stat-number text-3xl text-yellow-500">{{ artilharia.0.total }}</span>
+              <span class="text-[10px] text-yellow-500/50 font-medium">gols</span>
+              <span class="mt-1 text-yellow-500 text-xs font-bold">🏆 1º</span>
             </div>
           </div>
 
           <!-- 3º lugar -->
           <div class="flex flex-col items-center gap-2 flex-1">
-            <div class="w-11 h-11 rounded-full bg-base-300 border-2 border-base-content/15
-                        flex items-center justify-center text-lg font-black text-base-content/40">
+            <div class="w-11 h-11 rounded-full bg-gray-100 dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-700
+                        flex items-center justify-center text-lg font-black text-gray-400 dark:text-gray-500">
               {{ artilharia.2.atleta__nome|default:"?"|first|upper }}
             </div>
             <div class="text-center">
-              <p class="text-xs font-bold text-base-content/60 truncate max-w-[70px]"
+              <p class="text-xs font-bold text-gray-600 dark:text-gray-400 truncate max-w-[70px]"
                  title="{{ artilharia.2.atleta__nome|default:'?' }}">
                 {{ artilharia.2.atleta__nome|default:"?"|truncatechars:9 }}
               </p>
-              <p class="text-[10px] text-base-content/30 truncate max-w-[70px]">{{ artilharia.2.atleta__equipe__nome_equipe }}</p>
+              <p class="text-[10px] text-gray-400 dark:text-gray-600 truncate max-w-[70px]">{{ artilharia.2.atleta__equipe__nome_equipe }}</p>
             </div>
-            <div class="w-full flex flex-col items-center py-2 rounded-t-xl bg-base-300/40
-                        border-t-2 border-base-content/15">
-              <span class="stat-number text-xl text-base-content/50">{{ artilharia.2.total }}</span>
-              <span class="text-[10px] text-base-content/25 font-medium">gols</span>
-              <span class="mt-1 text-base-content/35 text-xs font-bold">🥉 3º</span>
+            <div class="w-full flex flex-col items-center py-2 rounded-t-xl bg-gray-200/40 dark:bg-gray-700/40
+                        border-t-2 border-gray-200 dark:border-gray-700">
+              <span class="stat-number text-xl text-gray-500 dark:text-gray-400">{{ artilharia.2.total }}</span>
+              <span class="text-[10px] text-gray-400 dark:text-gray-600 font-medium">gols</span>
+              <span class="mt-1 text-gray-400 dark:text-gray-500 text-xs font-bold">🥉 3º</span>
             </div>
           </div>
 
@@ -195,79 +195,79 @@
       {% endif %}
 
       <!-- Ranking 4º em diante (ou todos se < 3) -->
-      <div class="divide-y divide-base-300 max-h-60 overflow-y-auto">
+      <div class="divide-y divide-gray-100 dark:divide-gray-700 max-h-60 overflow-y-auto">
         {% for art in artilharia %}
         {% if forloop.counter > 3 or artilharia|length < 3 %}
-        <div class="flex items-center gap-3 px-4 py-2.5 hover:bg-base-300/40 transition-colors group">
+        <div class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-200/40 dark:bg-gray-700/40 transition-colors group">
           <div class="position-number w-5 text-center shrink-0
-            {% if forloop.counter == 1 %}text-warning
-            {% elif forloop.counter <= 3 %}text-base-content/40
-            {% else %}text-base-content/20{% endif %}">
+            {% if forloop.counter == 1 %}text-yellow-500
+            {% elif forloop.counter <= 3 %}text-gray-400 dark:text-gray-500
+            {% else %}text-gray-300 dark:text-gray-600{% endif %}">
             {{ forloop.counter }}
           </div>
           <div class="flex-1 min-w-0">
-            <p class="text-sm font-semibold text-base-content truncate group-hover:text-warning transition-colors">
+            <p class="text-sm font-semibold text-gray-900 dark:text-white truncate group-hover:text-yellow-500 transition-colors">
               {{ art.atleta__nome|default:"?" }}
             </p>
-            <p class="text-xs text-base-content/35 truncate">{{ art.atleta__equipe__nome_equipe }}</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 truncate">{{ art.atleta__equipe__nome_equipe }}</p>
           </div>
           <div class="hidden sm:flex items-center gap-2 w-20">
-            <div class="flex-1 h-1 bg-base-300 rounded-full overflow-hidden">
-              <div class="h-full bg-warning rounded-full"
+            <div class="flex-1 h-1 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div class="h-full bg-yellow-400 rounded-full"
                    style="width: {% widthratio art.total max_gols 100 %}%"></div>
             </div>
           </div>
-          <div class="stat-number text-lg text-warning shrink-0 w-6 text-right">{{ art.total }}</div>
+          <div class="stat-number text-lg text-yellow-500 shrink-0 w-6 text-right">{{ art.total }}</div>
         </div>
         {% endif %}
         {% endfor %}
       </div>
       {% endwith %}
       {% else %}
-      <div class="flex flex-col items-center justify-center py-10 gap-2 text-base-content/25">
-        <i class="bi bi-dribbble text-3xl"></i>
+      <div class="flex flex-col items-center justify-center py-10 gap-2 text-gray-400 dark:text-gray-600">
+        <i class="ti ti-ball-football text-3xl"></i>
         <p class="text-sm">Nenhum gol registrado</p>
       </div>
       {% endif %}
     </div>
 
     <!-- Assistências -->
-    <div class="card bg-base-200 border border-base-300 overflow-hidden">
-      <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
-        <i class="bi bi-hand-index-thumb text-info text-sm"></i>
-        <span class="section-heading text-base text-base-content/70 tracking-widest">ASSISTÊNCIAS</span>
+    <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-200/30 dark:bg-gray-700/30">
+        <i class="ti ti-pointer text-blue-500 text-sm"></i>
+        <span class="section-heading text-base text-gray-700 dark:text-gray-300 tracking-widest">ASSISTÊNCIAS</span>
       </div>
       {% if assistencias %}
       {% with max_ast=assistencias.0.total %}
-      <div class="divide-y divide-base-300 max-h-72 overflow-y-auto">
+      <div class="divide-y divide-gray-100 dark:divide-gray-700 max-h-72 overflow-y-auto">
         {% for ast in assistencias %}
-        <div class="flex items-center gap-3 px-4 py-2.5 hover:bg-base-300/40 transition-colors group">
+        <div class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-200/40 dark:bg-gray-700/40 transition-colors group">
           <div class="position-number w-5 text-center shrink-0
-            {% if forloop.counter == 1 %}text-info
-            {% else %}text-base-content/20{% endif %}">
-            {% if forloop.counter == 1 %}<i class="bi bi-star-fill text-xs text-info"></i>
+            {% if forloop.counter == 1 %}text-blue-500
+            {% else %}text-gray-300 dark:text-gray-600{% endif %}">
+            {% if forloop.counter == 1 %}<i class="ti ti-star text-xs text-blue-500"></i>
             {% else %}{{ forloop.counter }}{% endif %}
           </div>
           <div class="flex-1 min-w-0">
-            <p class="text-sm font-semibold text-base-content truncate group-hover:text-info transition-colors">
+            <p class="text-sm font-semibold text-gray-900 dark:text-white truncate group-hover:text-blue-500 transition-colors">
               {{ ast.assistencia__nome|default:"?" }}
             </p>
-            <p class="text-xs text-base-content/35 truncate">{{ ast.assistencia__equipe__nome_equipe }}</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 truncate">{{ ast.assistencia__equipe__nome_equipe }}</p>
           </div>
           <div class="hidden sm:flex items-center gap-2 w-20">
-            <div class="flex-1 h-1 bg-base-300 rounded-full overflow-hidden">
-              <div class="h-full bg-info rounded-full"
+            <div class="flex-1 h-1 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div class="h-full bg-blue-500 rounded-full"
                    style="width: {% widthratio ast.total max_ast 100 %}%"></div>
             </div>
           </div>
-          <div class="stat-number text-lg text-info shrink-0 w-6 text-right">{{ ast.total }}</div>
+          <div class="stat-number text-lg text-blue-500 shrink-0 w-6 text-right">{{ ast.total }}</div>
         </div>
         {% endfor %}
       </div>
       {% endwith %}
       {% else %}
-      <div class="flex flex-col items-center justify-center py-10 gap-2 text-base-content/25">
-        <i class="bi bi-hand-index-thumb text-3xl"></i>
+      <div class="flex flex-col items-center justify-center py-10 gap-2 text-gray-400 dark:text-gray-600">
+        <i class="ti ti-pointer text-3xl"></i>
         <p class="text-sm">Nenhuma assistência registrada</p>
       </div>
       {% endif %}
@@ -277,17 +277,17 @@
 
   <!-- ── Forma Recente ─────────────────────────────────────────────── -->
   {% if forma_recente %}
-  <div class="card bg-base-200 border border-base-300 overflow-hidden">
-    <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
-      <i class="bi bi-graph-up-arrow text-success text-sm"></i>
-      <span class="section-heading text-base text-base-content/70 tracking-widest">FORMA RECENTE</span>
-      <span class="text-xs text-base-content/30 ml-auto">últimos 5 jogos</span>
+  <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-200/30 dark:bg-gray-700/30">
+      <i class="ti ti-trending-up text-green-500 text-sm"></i>
+      <span class="section-heading text-base text-gray-700 dark:text-gray-300 tracking-widest">FORMA RECENTE</span>
+      <span class="text-xs text-gray-400 dark:text-gray-600 ml-auto">últimos 5 jogos</span>
     </div>
-    <div class="divide-y divide-base-300">
+    <div class="divide-y divide-gray-100 dark:divide-gray-700">
       {% for item in forma_recente %}
       {% with forma=item.forma eq=item.equipe %}
-      <div class="flex items-center gap-4 px-4 py-3 hover:bg-base-300/30 transition-colors">
-        <span class="text-sm font-semibold text-base-content flex-1 min-w-0 truncate">
+      <div class="flex items-center gap-4 px-4 py-3 hover:bg-gray-200/30 dark:bg-gray-700/30 transition-colors">
+        <span class="text-sm font-semibold text-gray-900 dark:text-white flex-1 min-w-0 truncate">
           {{ eq.nome_equipe }}
         </span>
         <div class="flex gap-1.5 shrink-0">
@@ -303,7 +303,7 @@
                         bg-loss text-white text-xs font-black shadow-sm">D</span>
           {% endif %}
           {% empty %}
-          <span class="text-xs text-base-content/30 italic">sem jogos</span>
+          <span class="text-xs text-gray-400 dark:text-gray-600 italic">sem jogos</span>
           {% endfor %}
         </div>
       </div>
@@ -315,26 +315,26 @@
 
   <!-- ── Goleiros ──────────────────────────────────────────────────── -->
   {% if goleiros %}
-  <div class="card bg-base-200 border border-base-300 overflow-hidden">
-    <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
-      <i class="bi bi-shield-check text-info text-sm"></i>
-      <span class="section-heading text-base text-base-content/70 tracking-widest">GOLEIROS</span>
-      <span class="text-xs text-base-content/30 ml-auto">por jogos como titular</span>
+  <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-200/30 dark:bg-gray-700/30">
+      <i class="ti ti-shield-check text-blue-500 text-sm"></i>
+      <span class="section-heading text-base text-gray-700 dark:text-gray-300 tracking-widest">GOLEIROS</span>
+      <span class="text-xs text-gray-400 dark:text-gray-600 ml-auto">por jogos como titular</span>
     </div>
-    <div class="divide-y divide-base-300">
+    <div class="divide-y divide-gray-100 dark:divide-gray-700">
       {% for g in goleiros %}
-      <div class="flex items-center gap-3 px-4 py-2.5 hover:bg-base-300/40 transition-colors">
+      <div class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-200/40 dark:bg-gray-700/40 transition-colors">
         <div class="position-number w-5 text-center shrink-0
-          {% if forloop.counter == 1 %}text-info{% else %}text-base-content/25{% endif %}">
-          {% if forloop.counter == 1 %}<i class="bi bi-shield-fill text-xs text-info"></i>
+          {% if forloop.counter == 1 %}text-blue-500{% else %}text-gray-400 dark:text-gray-600{% endif %}">
+          {% if forloop.counter == 1 %}<i class="ti ti-shield text-xs text-blue-500"></i>
           {% else %}{{ forloop.counter }}{% endif %}
         </div>
         <div class="flex-1 min-w-0">
-          <p class="text-sm font-semibold text-base-content truncate">{{ g.atleta__nome }}</p>
-          <p class="text-xs text-base-content/35 truncate">{{ g.atleta__equipe__nome_equipe }}</p>
+          <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ g.atleta__nome }}</p>
+          <p class="text-xs text-gray-400 dark:text-gray-500 truncate">{{ g.atleta__equipe__nome_equipe }}</p>
         </div>
-        <div class="stat-number text-lg text-info shrink-0">{{ g.jogos }}</div>
-        <span class="text-xs text-base-content/30 shrink-0">jogo{{ g.jogos|pluralize:"s" }}</span>
+        <div class="stat-number text-lg text-blue-500 shrink-0">{{ g.jogos }}</div>
+        <span class="text-xs text-gray-400 dark:text-gray-600 shrink-0">jogo{{ g.jogos|pluralize:"s" }}</span>
       </div>
       {% endfor %}
     </div>
@@ -342,20 +342,18 @@
   {% endif %}
 
   <!-- ── Head-to-Head ──────────────────────────────────────────────── -->
-  <div class="card bg-base-200 border border-base-300 overflow-hidden">
-    <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
-      <i class="bi bi-arrows-collapse text-warning text-sm"></i>
-      <span class="section-heading text-base text-base-content/70 tracking-widest">CONFRONTO DIRETO</span>
+  <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-200/30 dark:bg-gray-700/30">
+      <i class="ti ti-arrows-minimize text-yellow-500 text-sm"></i>
+      <span class="section-heading text-base text-gray-700 dark:text-gray-300 tracking-widest">CONFRONTO DIRETO</span>
     </div>
     <div class="p-4 space-y-5">
 
       <!-- Seleção de equipes -->
-      <form method="get" class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+      <form method="get" class="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
         <div>
-          <label class="label py-0 mb-1.5">
-            <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Equipe 1</span>
-          </label>
-          <select name="equipe1" class="select select-bordered select-sm w-full">
+          <p class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Equipe 1</p>
+          <select name="equipe1" class="form-select w-full">
             <option value="">— Selecione —</option>
             {% for eq in equipes %}
             <option value="{{ eq.pk }}"
@@ -365,14 +363,12 @@
             {% endfor %}
           </select>
         </div>
-        <div class="flex items-end justify-center pb-1">
-          <span class="section-heading text-xl text-base-content/20">VS</span>
+        <div class="flex items-center justify-center pb-0.5">
+          <span class="section-heading text-xl text-gray-300 dark:text-gray-600">VS</span>
         </div>
         <div>
-          <label class="label py-0 mb-1.5">
-            <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Equipe 2</span>
-          </label>
-          <select name="equipe2" class="select select-bordered select-sm w-full">
+          <p class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Equipe 2</p>
+          <select name="equipe2" class="form-select w-full">
             <option value="">— Selecione —</option>
             {% for eq in equipes %}
             <option value="{{ eq.pk }}"
@@ -382,9 +378,9 @@
             {% endfor %}
           </select>
         </div>
-        <div class="flex items-end">
-          <button type="submit" class="btn btn-warning btn-sm w-full gap-1 font-semibold">
-            <i class="bi bi-search"></i> Comparar
+        <div>
+          <button type="submit" class="btn btn-primary w-full gap-1">
+            <i class="ti ti-search"></i> Comparar
           </button>
         </div>
       </form>
@@ -392,23 +388,23 @@
       {% if h2h %}
       <!-- Resultado H2H -->
       <div class="flex justify-center items-center gap-6 md:gap-12 py-4
-                  bg-base-300/30 rounded-2xl px-6">
+                  bg-gray-200/30 dark:bg-gray-700/30 rounded-2xl px-6">
         <!-- Equipe 1 -->
         <div class="text-center flex-1">
           <div class="stat-number text-5xl text-win leading-none">{{ h2h.v1 }}</div>
-          <div class="text-sm font-bold text-base-content mt-1 truncate">{{ h2h.equipe1.nome_equipe }}</div>
-          <div class="text-xs text-base-content/35 mt-0.5">{{ h2h.gols1 }} gols</div>
+          <div class="text-sm font-bold text-gray-900 dark:text-white mt-1 truncate">{{ h2h.equipe1.nome_equipe }}</div>
+          <div class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ h2h.gols1 }} gols</div>
         </div>
         <!-- Empates -->
         <div class="text-center shrink-0">
-          <div class="stat-number text-3xl text-base-content/20 leading-none">{{ h2h.empates }}</div>
-          <div class="text-xs text-base-content/30 mt-1 uppercase tracking-widest font-semibold">Empates</div>
+          <div class="stat-number text-3xl text-gray-300 dark:text-gray-600 leading-none">{{ h2h.empates }}</div>
+          <div class="text-xs text-gray-400 dark:text-gray-600 mt-1 uppercase tracking-widest font-semibold">Empates</div>
         </div>
         <!-- Equipe 2 -->
         <div class="text-center flex-1">
           <div class="stat-number text-5xl text-loss leading-none">{{ h2h.v2 }}</div>
-          <div class="text-sm font-bold text-base-content mt-1 truncate">{{ h2h.equipe2.nome_equipe }}</div>
-          <div class="text-xs text-base-content/35 mt-0.5">{{ h2h.gols2 }} gols</div>
+          <div class="text-sm font-bold text-gray-900 dark:text-white mt-1 truncate">{{ h2h.equipe2.nome_equipe }}</div>
+          <div class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ h2h.gols2 }} gols</div>
         </div>
       </div>
 
@@ -417,7 +413,7 @@
       <div class="overflow-x-auto">
         <table class="table table-sm">
           <thead>
-            <tr class="bg-base-300/50 text-[10px] text-base-content/40 uppercase tracking-wider">
+            <tr class="bg-gray-200/50 dark:bg-gray-700/50 text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider">
               <th>Data</th>
               <th>Mandante</th>
               <th class="text-center">Placar</th>
@@ -426,27 +422,27 @@
           </thead>
           <tbody>
             {% for j in h2h.jogos %}
-            <tr class="hover:bg-base-300/30 transition-colors">
-              <td class="text-xs text-base-content/40">{{ j.data_hora|date:"d/m/Y"|default:"—" }}</td>
-              <td class="text-sm {% if j.gols_casa > j.gols_fora %}font-bold text-base-content{% else %}text-base-content/50{% endif %}">
+            <tr class="hover:bg-gray-200/30 dark:bg-gray-700/30 transition-colors">
+              <td class="text-xs text-gray-400 dark:text-gray-500">{{ j.data_hora|date:"d/m/Y"|default:"—" }}</td>
+              <td class="text-sm {% if j.gols_casa > j.gols_fora %}font-bold text-gray-900 dark:text-white{% else %}text-gray-500 dark:text-gray-400{% endif %}">
                 {{ j.equipe_casa.nome_equipe }}
               </td>
               <td class="text-center">
                 <a href="{% url 'competicao:jogo_detalhe' j.pk %}"
-                   class="flex items-center justify-center gap-1 px-2 py-0.5 bg-base-300
-                          rounded-md hover:bg-warning/20 transition-colors mx-auto w-fit">
+                   class="flex items-center justify-center gap-1 px-2 py-0.5 bg-gray-100 dark:bg-gray-700
+                          rounded-md hover:bg-yellow-400/20 transition-colors mx-auto w-fit">
                   <span class="stat-number text-sm
                     {% if j.gols_casa > j.gols_fora %}text-win
                     {% elif j.gols_casa == j.gols_fora %}text-draw
-                    {% else %}text-base-content/40{% endif %}">{{ j.gols_casa }}</span>
-                  <span class="text-base-content/20 text-[10px]">—</span>
+                    {% else %}text-gray-400 dark:text-gray-500{% endif %}">{{ j.gols_casa }}</span>
+                  <span class="text-gray-300 dark:text-gray-600 text-[10px]">—</span>
                   <span class="stat-number text-sm
                     {% if j.gols_fora > j.gols_casa %}text-win
                     {% elif j.gols_casa == j.gols_fora %}text-draw
-                    {% else %}text-base-content/40{% endif %}">{{ j.gols_fora }}</span>
+                    {% else %}text-gray-400 dark:text-gray-500{% endif %}">{{ j.gols_fora }}</span>
                 </a>
               </td>
-              <td class="text-sm {% if j.gols_fora > j.gols_casa %}font-bold text-base-content{% else %}text-base-content/50{% endif %}">
+              <td class="text-sm {% if j.gols_fora > j.gols_casa %}font-bold text-gray-900 dark:text-white{% else %}text-gray-500 dark:text-gray-400{% endif %}">
                 {{ j.equipe_fora.nome_equipe }}
               </td>
             </tr>
@@ -458,7 +454,7 @@
 
       {% elif equipe1_id and equipe2_id %}
       <div class="alert alert-info text-sm py-2.5">
-        <i class="bi bi-info-circle shrink-0"></i>
+        <i class="ti ti-info-circle shrink-0"></i>
         Nenhum confronto direto encontrado entre essas equipes.
       </div>
       {% endif %}

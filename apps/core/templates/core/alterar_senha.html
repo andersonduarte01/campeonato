@@ -1,43 +1,71 @@
 {% extends 'base/indice.html' %}
 {% block titulo %}Alterar Senha{% endblock %}
 
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
+    <ul>
+      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-gray-700 dark:text-gray-300">Dashboard</a></li>
+      <li><span class="text-gray-600 dark:text-gray-400">Alterar Senha</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
 {% block conteudo %}
-<div class="p-4 md:p-6 max-w-md mx-auto">
-  <div class="card bg-base-200 border border-base-300">
-    <div class="px-5 py-3 border-b border-base-300 flex items-center gap-2">
-      <i class="bi bi-lock-fill text-warning text-sm"></i>
-      <h1 class="font-bold text-sm">Alterar Senha</h1>
-    </div>
-    <div class="card-body p-5">
-      <form method="post" class="space-y-4">
-        {% csrf_token %}
+<div class="p-4 md:p-6 space-y-5">
+
+  <!-- Cabeçalho -->
+  <div class="flex items-center gap-3">
+    <a href="{% url 'competicao:dashboard' %}"
+       class="btn btn-ghost btn-sm btn-square border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
+      <i class="ti ti-arrow-left text-sm"></i>
+    </a>
+    <h1 class="section-heading text-4xl text-gray-900 dark:text-white leading-none">ALTERAR SENHA</h1>
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="card overflow-hidden">
+
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30">
+        <i class="ti ti-lock text-blue-500 text-sm"></i>
+        <span class="section-heading text-sm text-gray-700 dark:text-gray-300 tracking-widest">NOVA SENHA</span>
+      </div>
+
+      <div class="p-5 space-y-4">
+
+        {% if form.non_field_errors %}
+        <div class="flex items-center gap-2 px-4 py-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-sm text-red-600 dark:text-red-400">
+          <i class="ti ti-alert-circle shrink-0"></i>
+          {{ form.non_field_errors }}
+        </div>
+        {% endif %}
 
         {% for field in form %}
         <div>
-          <label class="label py-0 mb-1" for="{{ field.id_for_label }}">
-            <span class="label-text font-semibold text-sm">{{ field.label }}</span>
-          </label>
+          <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1"
+                 for="{{ field.id_for_label }}">{{ field.label }}</label>
           {{ field }}
           {% if field.errors %}
-            {% for e in field.errors %}
-              <p class="text-error text-xs mt-1">{{ e }}</p>
-            {% endfor %}
+          {% for e in field.errors %}
+          <p class="text-red-500 text-xs mt-1">{{ e }}</p>
+          {% endfor %}
           {% endif %}
         </div>
         {% endfor %}
 
-        {% if form.non_field_errors %}
-          <div class="alert alert-error text-sm py-2">{{ form.non_field_errors }}</div>
-        {% endif %}
+      </div>
 
-        <div class="flex gap-2 pt-2">
-          <button type="submit" class="btn btn-warning flex-1">
-            <i class="bi bi-floppy"></i> Salvar nova senha
-          </button>
-          <a href="{% url 'core:index' %}" class="btn btn-ghost">Cancelar</a>
-        </div>
-      </form>
+      <div class="flex justify-end gap-3 px-5 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/20">
+        <a href="{% url 'core:index' %}" class="btn btn-ghost">Cancelar</a>
+        <button type="submit" class="btn btn-primary">
+          <i class="ti ti-device-floppy"></i> Salvar nova senha
+        </button>
+      </div>
+
     </div>
-  </div>
+  </form>
+
 </div>
 {% endblock %}

@@ -1,40 +1,230 @@
 {% extends 'base/indice.html' %}
 {% block titulo %}{{ titulo }}{% endblock %}
 
-{% block conteudo %}
-<div class="p-4 md:p-6 max-w-lg mx-auto">
-  <div class="card bg-base-200 border border-base-300">
-    <div class="px-5 py-3 border-b border-base-300 flex items-center gap-2">
-      <i class="bi bi-shield text-warning text-sm"></i>
-      <h1 class="font-bold text-sm">{{ titulo }}</h1>
-    </div>
-    <div class="card-body p-5">
-      <form method="post" enctype="multipart/form-data" class="space-y-4">
-        {% csrf_token %}
-        {% for field in form %}
-        <div>
-          <label class="label py-0 mb-1" for="{{ field.id_for_label }}">
-            <span class="label-text font-semibold text-sm">{{ field.label }}{% if field.field.required %}<span class="text-error ml-1">*</span>{% endif %}</span>
-          </label>
-          {{ field }}
-          {% if field.help_text %}
-            <p class="text-xs text-base-content/50 mt-1">{{ field.help_text }}</p>
-          {% endif %}
-          {% if field.errors %}
-            {% for error in field.errors %}
-              <p class="text-error text-xs mt-1">{{ error }}</p>
-            {% endfor %}
-          {% endif %}
-        </div>
-        {% endfor %}
-        <div class="flex gap-2 pt-2">
-          <button type="submit" class="btn btn-warning flex-1">
-            <i class="bi bi-floppy"></i> Salvar
-          </button>
-          <a href="{% url 'equipe:lista' %}" class="btn btn-ghost">Cancelar</a>
-        </div>
-      </form>
-    </div>
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
+    <ul>
+      <li><a href="{% url 'equipe:lista' %}" class="hover:text-gray-700 dark:text-gray-300">Equipes</a></li>
+      <li><span class="text-gray-600 dark:text-gray-400">{{ titulo }}</span></li>
+    </ul>
   </div>
 </div>
+{% endblock %}
+
+{% block conteudo %}
+<div class="p-4 md:p-6 space-y-5">
+
+  <!-- Cabeçalho -->
+  <div class="flex items-center gap-3">
+    <a href="{% url 'equipe:lista' %}"
+       class="btn btn-ghost btn-sm btn-square border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
+      <i class="ti ti-arrow-left text-sm"></i>
+    </a>
+    <h1 class="section-heading text-4xl text-gray-900 dark:text-white leading-none">{{ titulo|upper }}</h1>
+  </div>
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="card overflow-hidden space-y-0">
+
+      <!-- Seção: Identidade -->
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30">
+        <i class="ti ti-shield text-blue-500 text-sm"></i>
+        <span class="section-heading text-sm text-gray-700 dark:text-gray-300 tracking-widest">IDENTIDADE</span>
+      </div>
+
+      <div class="p-5 space-y-5">
+
+        <!-- Escudo -->
+        <div>
+          <label class="form-label">Escudo / Logo</label>
+          <div class="flex items-center gap-5">
+            <div id="escudo-preview-wrap" class="shrink-0 w-20 h-20 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-600
+                         bg-gray-50 dark:bg-gray-700 flex items-center justify-center overflow-hidden transition-colors">
+              {% if form.instance.pk and form.instance.escudo %}
+                <img id="escudo-preview" src="{{ form.instance.escudo.url }}" class="w-full h-full object-cover">
+                <i id="escudo-placeholder" class="ti ti-shield text-3xl text-gray-300 dark:text-gray-600 hidden"></i>
+              {% else %}
+                <img id="escudo-preview" src="" class="w-full h-full object-cover hidden">
+                <i id="escudo-placeholder" class="ti ti-shield text-3xl text-gray-300 dark:text-gray-600"></i>
+              {% endif %}
+            </div>
+            <div class="flex-1">
+              <label for="{{ form.escudo.id_for_label }}"
+                     class="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded-xl cursor-pointer
+                            border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700
+                            hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-colors">
+                <div class="flex flex-col items-center gap-1 text-center px-4">
+                  <i class="ti ti-cloud-upload text-2xl text-gray-400 dark:text-gray-500"></i>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">
+                    <span class="font-semibold text-blue-600 dark:text-blue-400">Clique para enviar</span> ou arraste
+                  </p>
+                  <p id="escudo-filename" class="text-[10px] text-gray-400 dark:text-gray-500">PNG, JPG ou GIF</p>
+                </div>
+              </label>
+              <div class="hidden">{{ form.escudo }}</div>
+            </div>
+          </div>
+          {% if form.escudo.errors %}<p class="text-xs text-red-500 mt-1">{{ form.escudo.errors|join:' ' }}</p>{% endif %}
+        </div>
+
+        <!-- Nome + Sigla -->
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+          <div class="sm:col-span-3">
+            <label class="form-label" for="{{ form.nome_equipe.id_for_label }}">
+              Nome da equipe <span class="text-red-500">*</span>
+            </label>
+            {{ form.nome_equipe }}
+            {% if form.nome_equipe.errors %}<p class="text-xs text-red-500 mt-1">{{ form.nome_equipe.errors|join:' ' }}</p>{% endif %}
+          </div>
+          <div>
+            <label class="form-label" for="{{ form.sigla.id_for_label }}">Sigla</label>
+            {{ form.sigla }}
+            {% if form.sigla.errors %}<p class="text-xs text-red-500 mt-1">{{ form.sigla.errors|join:' ' }}</p>{% endif %}
+          </div>
+        </div>
+
+        <!-- Cidade + Estado -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="sm:col-span-2">
+            <label class="form-label" for="{{ form.cidade.id_for_label }}">Cidade</label>
+            {{ form.cidade }}
+            {% if form.cidade.errors %}<p class="text-xs text-red-500 mt-1">{{ form.cidade.errors|join:' ' }}</p>{% endif %}
+          </div>
+          <div>
+            <label class="form-label" for="{{ form.estado.id_for_label }}">Estado</label>
+            {{ form.estado }}
+            {% if form.estado.errors %}<p class="text-xs text-red-500 mt-1">{{ form.estado.errors|join:' ' }}</p>{% endif %}
+          </div>
+        </div>
+
+        <!-- Fundação + Campo/Estádio -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="form-label" for="{{ form.fundacao.id_for_label }}">Fundação</label>
+            {{ form.fundacao }}
+            {% if form.fundacao.errors %}<p class="text-xs text-red-500 mt-1">{{ form.fundacao.errors|join:' ' }}</p>{% endif %}
+          </div>
+          <div>
+            <label class="form-label" for="{{ form.estadio.id_for_label }}">Campo / Estádio</label>
+            {{ form.estadio }}
+            {% if form.estadio.errors %}<p class="text-xs text-red-500 mt-1">{{ form.estadio.errors|join:' ' }}</p>{% endif %}
+          </div>
+        </div>
+
+        <!-- Técnico -->
+        <div>
+          <label class="form-label" for="{{ form.tecnico.id_for_label }}">Técnico</label>
+          {{ form.tecnico }}
+          {% if form.tecnico.errors %}<p class="text-xs text-red-500 mt-1">{{ form.tecnico.errors|join:' ' }}</p>{% endif %}
+        </div>
+
+        <!-- Uniformes -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="form-label" for="{{ form.cor_uniforme_principal.id_for_label }}">Uniforme principal</label>
+            {{ form.cor_uniforme_principal }}
+            {% if form.cor_uniforme_principal.errors %}<p class="text-xs text-red-500 mt-1">{{ form.cor_uniforme_principal.errors|join:' ' }}</p>{% endif %}
+          </div>
+          <div>
+            <label class="form-label" for="{{ form.cor_uniforme_alternativo.id_for_label }}">Uniforme alternativo</label>
+            {{ form.cor_uniforme_alternativo }}
+            {% if form.cor_uniforme_alternativo.errors %}<p class="text-xs text-red-500 mt-1">{{ form.cor_uniforme_alternativo.errors|join:' ' }}</p>{% endif %}
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Seção: Filiação -->
+      <div class="flex items-center gap-2 px-4 py-3 border-t border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30">
+        <i class="ti ti-certificate text-blue-500 text-sm"></i>
+        <span class="section-heading text-sm text-gray-700 dark:text-gray-300 tracking-widest">FILIAÇÃO</span>
+      </div>
+
+      <div class="p-5 space-y-5">
+
+        <!-- Data de filiação + Situação -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="form-label" for="{{ form.data_filiacao.id_for_label }}">Data de Filiação</label>
+            {{ form.data_filiacao }}
+            {% if form.data_filiacao.errors %}<p class="text-xs text-red-500 mt-1">{{ form.data_filiacao.errors|join:' ' }}</p>{% endif %}
+          </div>
+          <div>
+            <label class="form-label" for="{{ form.situacao.id_for_label }}">Situação</label>
+            {{ form.situacao }}
+            {% if form.situacao.errors %}<p class="text-xs text-red-500 mt-1">{{ form.situacao.errors|join:' ' }}</p>{% endif %}
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Seção: Contato -->
+      <div class="flex items-center gap-2 px-4 py-3 border-t border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30">
+        <i class="ti ti-phone text-blue-500 text-sm"></i>
+        <span class="section-heading text-sm text-gray-700 dark:text-gray-300 tracking-widest">CONTATO</span>
+      </div>
+
+      <div class="p-5 space-y-5">
+
+        <!-- Telefone -->
+        <div>
+          <label class="form-label" for="{{ form.telefone.id_for_label }}">Telefone</label>
+          {{ form.telefone }}
+          {% if form.telefone.errors %}<p class="text-xs text-red-500 mt-1">{{ form.telefone.errors|join:' ' }}</p>{% endif %}
+        </div>
+
+        <!-- Instagram + Facebook -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="form-label" for="{{ form.instagram.id_for_label }}">Instagram</label>
+            {{ form.instagram }}
+            {% if form.instagram.errors %}<p class="text-xs text-red-500 mt-1">{{ form.instagram.errors|join:' ' }}</p>{% endif %}
+          </div>
+          <div>
+            <label class="form-label" for="{{ form.facebook.id_for_label }}">Facebook</label>
+            {{ form.facebook }}
+            {% if form.facebook.errors %}<p class="text-xs text-red-500 mt-1">{{ form.facebook.errors|join:' ' }}</p>{% endif %}
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Botões -->
+      <div class="flex gap-3 px-5 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/20 justify-end">
+        <a href="{% url 'equipe:lista' %}" class="btn btn-ghost">Cancelar</a>
+        <button type="submit" class="btn btn-primary gap-1.5">
+          <i class="ti ti-device-floppy"></i> Salvar
+        </button>
+      </div>
+
+    </div>
+  </form>
+
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+(function () {
+  var input = document.getElementById('{{ form.escudo.id_for_label }}');
+  var preview = document.getElementById('escudo-preview');
+  var placeholder = document.getElementById('escudo-placeholder');
+  var filename = document.getElementById('escudo-filename');
+  if (!input) return;
+  input.addEventListener('change', function () {
+    var file = this.files[0];
+    if (!file) return;
+    filename.textContent = file.name;
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      preview.src = e.target.result;
+      preview.classList.remove('hidden');
+      placeholder.classList.add('hidden');
+    };
+    reader.readAsDataURL(file);
+  });
+})();
+</script>
 {% endblock %}

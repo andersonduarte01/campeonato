@@ -1,0 +1,163 @@
+{% extends 'base/indice.html' %}
+{% block titulo %}{{ reg.numero_federativo }} — {{ reg.atleta.nome }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
+    <ul>
+      <li><a href="{% url 'registro:dashboard' %}" class="hover:text-gray-700 dark:hover:text-gray-200">Federação</a></li>
+      <li><a href="{% url 'registro:registro_lista' %}" class="hover:text-gray-700 dark:hover:text-gray-200">Registros</a></li>
+      <li><span class="text-gray-600 dark:text-gray-400">{{ reg.numero_federativo }}</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block conteudo %}
+<div class="p-4 md:p-6 space-y-5">
+
+  <!-- Cabeçalho -->
+  <div class="flex items-center gap-3">
+    <a href="{% url 'registro:registro_lista' %}"
+       class="btn btn-ghost btn-sm btn-square border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
+      <i class="ti ti-arrow-left text-sm"></i>
+    </a>
+    <h1 class="section-heading text-4xl text-gray-900 dark:text-white leading-none">REGISTRO FEDERATIVO</h1>
+    <a href="{% url 'registro:registro_editar' reg.pk %}" class="btn btn-outline btn-sm gap-1.5 ml-auto">
+      <i class="ti ti-pencil text-xs"></i> Editar
+    </a>
+  </div>
+
+  <!-- Card principal -->
+  <div class="card overflow-hidden">
+    <div class="h-1.5 bg-gradient-to-r from-blue-600 via-blue-400/50 to-transparent"></div>
+    <div class="p-5 md:p-6">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+
+        <!-- Foto -->
+        <div class="shrink-0">
+          {% if reg.atleta.foto %}
+          <img src="{{ reg.atleta.foto.thumbnail.url }}"
+               class="w-20 h-20 rounded-2xl object-cover border-2 border-gray-200 dark:border-gray-700 shadow-lg">
+          {% else %}
+          <div class="w-20 h-20 rounded-2xl bg-blue-50 dark:bg-blue-900/20
+                      border-2 border-gray-200 dark:border-gray-700 shadow-lg
+                      flex items-center justify-center">
+            <span class="section-heading text-4xl text-blue-400">{{ reg.atleta.nome|first|upper }}</span>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Dados -->
+        <div class="flex-1 min-w-0 space-y-1">
+          <p class="section-heading text-3xl text-gray-900 dark:text-white leading-none">
+            {{ reg.atleta.nome|upper }}
+          </p>
+          <p class="text-sm text-gray-500 dark:text-gray-400 font-medium flex items-center gap-1">
+            <i class="ti ti-shield text-blue-400 text-xs"></i>
+            {{ reg.atleta.equipe.nome_equipe }}
+          </p>
+          <div class="flex flex-wrap gap-2 mt-2">
+            <span class="font-mono text-sm font-bold text-blue-600 dark:text-blue-400
+                         px-2.5 py-1 bg-blue-50 dark:bg-blue-900/20
+                         border border-blue-200 dark:border-blue-800 rounded-lg">
+              {{ reg.numero_federativo }}
+            </span>
+            <span class="px-2.5 py-1 rounded-full text-xs font-bold border
+              {% if reg.status == 'ativo' %}bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20
+              {% elif reg.status == 'suspenso' %}bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20
+              {% elif reg.status == 'transferido' %}bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20
+              {% else %}bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700{% endif %}">
+              {{ reg.get_status_display }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Filiação -->
+        <div class="text-right shrink-0">
+          <p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Filiado em</p>
+          <p class="stat-number text-xl text-gray-700 dark:text-gray-300 mt-0.5">{{ reg.data_filiacao|date:"d/m/Y" }}</p>
+        </div>
+
+      </div>
+      {% if reg.observacoes %}
+      <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <p class="text-xs text-gray-400 dark:text-gray-500 italic">{{ reg.observacoes }}</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="space-y-4">
+
+    <!-- Histórico + Transferências -->
+
+      <div class="card overflow-hidden">
+        <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30">
+          <i class="ti ti-building text-blue-500 text-sm"></i>
+          <span class="section-heading text-sm text-gray-700 dark:text-gray-300 tracking-widest">HISTÓRICO DE CLUBES</span>
+          <span class="badge badge-gray badge-sm ml-auto">{{ historico|length }}</span>
+        </div>
+        {% if historico %}
+        <div class="divide-y divide-gray-100 dark:divide-gray-700">
+          {% for h in historico %}
+          <div class="flex items-center gap-3 px-4 py-3">
+            <div class="w-2 h-2 rounded-full shrink-0
+              {% if h.em_atividade %}bg-green-500 animate-pulse{% else %}bg-gray-300 dark:bg-gray-600{% endif %}">
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ h.equipe.nome_equipe }}</p>
+              <p class="text-xs text-gray-400 dark:text-gray-500">
+                {{ h.data_entrada|date:"d/m/Y" }}
+                {% if h.data_saida %} — {{ h.data_saida|date:"d/m/Y" }}
+                {% else %} — <span class="text-green-500 font-semibold">atual</span>{% endif %}
+              </p>
+            </div>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full
+              {% if h.tipo == 'emprestado' %}bg-blue-500/10 text-blue-500 border border-blue-500/20
+              {% else %}bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400{% endif %}">
+              {{ h.get_tipo_display }}
+            </span>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="py-8 text-center text-gray-400 dark:text-gray-600 text-sm">Sem histórico de clubes.</div>
+        {% endif %}
+      </div>
+
+      {% if transfs %}
+      <div class="card overflow-hidden">
+        <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30">
+          <i class="ti ti-arrows-exchange text-blue-500 text-sm"></i>
+          <span class="section-heading text-sm text-gray-700 dark:text-gray-300 tracking-widest">TRANSFERÊNCIAS</span>
+        </div>
+        <div class="divide-y divide-gray-100 dark:divide-gray-700">
+          {% for t in transfs %}
+          <a href="{% url 'registro:transferencia_detalhe' t.pk %}"
+             class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+            <div class="flex-1 min-w-0">
+              <p class="text-xs text-gray-700 dark:text-gray-300 truncate font-medium">
+                {{ t.clube_origem.nome_equipe }} → {{ t.clube_destino.nome_equipe }}
+              </p>
+              <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">{{ t.data_solicitacao|date:"d/m/Y" }} · {{ t.get_tipo_display }}</p>
+            </div>
+            <span class="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold border
+              {% if t.status == 'aprovada' %}bg-green-500/10 text-green-500 border-green-500/20
+              {% elif t.status == 'rejeitada' or t.status == 'cancelada' %}bg-red-500/10 text-red-500 border-red-500/20
+              {% elif t.status == 'em_analise' %}bg-blue-500/10 text-blue-500 border-blue-500/20
+              {% else %}bg-amber-400/10 text-amber-500 border-amber-400/20{% endif %}">
+              {{ t.get_status_display }}
+            </span>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

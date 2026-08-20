@@ -2,68 +2,63 @@ from django.conf import settings
 from django.db import models
 
 
-class AuditLog(models.Model):
-    ACAO_CHOICES = [
-        ('criar',      'Criação'),
-        ('editar',     'Edição'),
-        ('excluir',    'Exclusão'),
-        ('login',      'Login'),
-        ('logout',     'Logout'),
-        ('exportar',   'Exportação de Dados'),
-        ('finalizar',  'Finalização'),
-        ('assinar',    'Assinatura Digital'),
-        ('publicar',   'Publicação'),
-        ('julgar',     'Julgamento'),
-        ('transferir', 'Transferência'),
-        ('aprovar',    'Aprovação'),
-        ('rejeitar',   'Rejeição'),
-    ]
+class AuditoriaEvento(models.Model):
+    """Registro imutável de eventos relevantes do domínio.
 
-    usuario       = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True, blank=True,
-        related_name='audit_logs',
-        verbose_name='Usuário',
+    Diferente do ConsentimentoLGPD (que rastreia opt-in), esta tabela é
+    uma trilha de auditoria de ações administrativas e transições de
+    estado importantes (Competicao.transicionar, Sumula homologada,
+    Transferencia aprovada, etc.).
+    """
+    # Categorias de eventos previstas — outras podem ser adicionadas
+    # livremente via string; não é FK, é enum informal.
+    TIPO_COMPETICAO_TRANSICAO = 'competicao_transicao'
+    TIPO_JOGO_STATUS          = 'jogo_status'
+    TIPO_SUMULA_HOMOLOGADA    = 'sumula_homologada'
+    TIPO_SUMULA_ENCERRADA     = 'sumula_encerrada'
+    TIPO_SUMULA_REABERTA      = 'sumula_reaberta'
+    TIPO_TRANSFERENCIA_APROVADA  = 'transferencia_aprovada'
+    TIPO_TRANSFERENCIA_REJEITADA = 'transferencia_rejeitada'
+    TIPO_TRANSFERENCIA_CANCELADA = 'transferencia_cancelada'
+    TIPO_VINCULO_ALTERADO     = 'vinculo_alterado'
+    TIPO_EQUIPE_DESATIVADA    = 'equipe_desativada'
+    TIPO_FEDERACAO_ARQUIVADA  = 'federacao_arquivada'
+    TIPO_ANONIMIZACAO_LGPD    = 'anonimizacao_lgpd'
+
+    federacao = models.ForeignKey(
+        'core.Federacao', on_delete=models.CASCADE,
+        related_name='eventos_auditoria', null=True, blank=True,
+        help_text='Federação onde o evento ocorreu (null para eventos globais).',
     )
-    usuario_email = models.CharField(max_length=254, blank=True, verbose_name='E-mail do usuário')
-    acao          = models.CharField(max_length=20, choices=ACAO_CHOICES, verbose_name='Ação')
-    modelo        = models.CharField(max_length=100, blank=True, verbose_name='Modelo')
-    objeto_id     = models.CharField(max_length=50, blank=True, verbose_name='ID do objeto')
-    objeto_repr   = models.CharField(max_length=300, blank=True, verbose_name='Objeto')
-    descricao     = models.TextField(blank=True, verbose_name='Descrição')
-    dados_anteriores = models.JSONField(null=True, blank=True, verbose_name='Dados anteriores')
-    dados_novos      = models.JSONField(null=True, blank=True, verbose_name='Dados novos')
-    ip_address    = models.GenericIPAddressField(null=True, blank=True, verbose_name='IP')
-    user_agent    = models.CharField(max_length=500, blank=True, verbose_name='User-Agent')
-    criado_em     = models.DateTimeField(auto_now_add=True, verbose_name='Data/hora')
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='eventos_auditoria',
+        help_text='Quem executou a ação (null se automatizada).',
+    )
+    tipo = models.CharField(max_length=40, db_index=True)
+    objeto_tipo = models.CharField(
+        max_length=60, blank=True,
+        help_text='Nome do modelo do objeto afetado (ex.: "competicao.Competicao").',
+    )
+    objeto_id = models.PositiveIntegerField(null=True, blank=True)
+    dados = models.JSONField(default=dict, blank=True)
+    ip = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.CharField(max_length=500, blank=True)
+    registrado_em = models.DateTimeField(auto_now_add=True, db_index=True)
 
     class Meta:
-        ordering = ['-criado_em']
-        verbose_name = 'Log de Auditoria'
-        verbose_name_plural = 'Logs de Auditoria'
+        ordering = ['-registrado_em']
+        verbose_name = 'Evento de Auditoria'
+        verbose_name_plural = 'Eventos de Auditoria'
+        indexes = [
+            models.Index(fields=['federacao', '-registrado_em']),
+            models.Index(fields=['tipo', '-registrado_em']),
+            models.Index(fields=['objeto_tipo', 'objeto_id']),
+        ]
 
     def __str__(self):
-        return f"{self.get_acao_display()} — {self.objeto_repr or self.modelo} ({self.criado_em:%d/%m/%Y %H:%M})"
-
-    @property
-    def acao_badge_class(self):
-        mapa = {
-            'criar':      'badge-success',
-            'editar':     'badge-info',
-            'excluir':    'badge-error',
-            'login':      'badge-warning',
-            'logout':     'badge-ghost',
-            'exportar':   'badge-warning',
-            'finalizar':  'badge-success',
-            'assinar':    'badge-info',
-            'publicar':   'badge-success',
-            'julgar':     'badge-neutral',
-            'transferir': 'badge-warning',
-            'aprovar':    'badge-success',
-            'rejeitar':   'badge-error',
-        }
-        return mapa.get(self.acao, 'badge-ghost')
+        quem = self.usuario.email if self.usuario_id else 'sistema'
+        return f'[{self.registrado_em:%Y-%m-%d %H:%M}] {quem} · {self.tipo}'
 
 
 class ConsentimentoLGPD(models.Model):

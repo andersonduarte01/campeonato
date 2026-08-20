@@ -1,0 +1,176 @@
+{% extends 'base/indice.html' %}
+{% block titulo %}Registros Federativos{% endblock %}
+
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
+    <ul>
+      <li><a href="{% url 'registro:dashboard' %}" class="hover:text-gray-700 dark:text-gray-300">Federação</a></li>
+      <li><span class="text-gray-500 dark:text-gray-400">Registros</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block conteudo %}
+<div class="p-4 md:p-6 space-y-5">
+
+  <!-- Cabeçalho -->
+  <div class="flex items-end justify-between gap-4">
+    <div>
+      <h1 class="section-heading text-4xl text-gray-900 dark:text-white leading-none">REGISTROS</h1>
+      <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Carteirinha e cadastro único de atletas</p>
+    </div>
+    <a href="{% url 'registro:registro_criar' %}" class="btn btn-outline shrink-0">
+      <i class="ti ti-user-plus"></i>
+      <span class="hidden sm:inline">Novo Registro</span>
+    </a>
+  </div>
+
+  <!-- Aviso: atletas sem registro -->
+  {% if atletas_sem_reg and not q and not status_atual %}
+  <div class="card overflow-hidden border-amber-400/30">
+    <div class="flex items-center gap-2 px-4 py-2.5 border-b border-amber-400/20 bg-amber-500/5">
+      <i class="ti ti-alert-triangle text-amber-500 text-sm"></i>
+      <span class="text-sm font-semibold text-amber-600 dark:text-amber-400">
+        {{ atletas_sem_reg|length }} atleta{{ atletas_sem_reg|length|pluralize }} sem registro federativo
+      </span>
+    </div>
+    <div class="p-3 flex flex-wrap gap-2">
+      {% for atleta in atletas_sem_reg|slice:":8" %}
+      <a href="{% url 'registro:registro_criar' %}?atleta={{ atleta.pk }}"
+         class="flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                bg-gray-100 dark:bg-gray-700/60 border border-gray-200 dark:border-gray-700
+                text-xs font-medium text-gray-600 dark:text-gray-400
+                hover:text-blue-500 hover:border-blue-400/30 transition-all">
+        <div class="w-4 h-4 rounded-full bg-blue-500/10 text-blue-500 text-[9px] font-black flex items-center justify-center shrink-0">
+          {{ atleta.nome|first|upper }}
+        </div>
+        {{ atleta.nome }}
+        <span class="text-gray-400 dark:text-gray-500">· {{ atleta.equipe.nome_equipe }}</span>
+      </a>
+      {% endfor %}
+      {% if atletas_sem_reg|length > 8 %}
+      <span class="text-xs text-gray-400 dark:text-gray-500 self-center">+ {{ atletas_sem_reg|length|add:"-8" }} mais</span>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Card principal -->
+  <div class="card overflow-hidden">
+
+    <!-- Filtros -->
+    <div class="p-4 md:p-6 border-b border-gray-200 dark:border-gray-700">
+      <form method="get" class="flex gap-3 items-center">
+        <div class="relative flex-1">
+          <i class="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm pointer-events-none"></i>
+          <input type="text" name="q" value="{{ q }}"
+                 class="form-input pl-9 text-sm"
+                 placeholder="Buscar por nome do atleta...">
+        </div>
+        <select name="status" class="form-select text-sm w-44 shrink-0" onchange="this.form.submit()">
+          <option value="">Todos os status</option>
+          {% for val, label in status_choices %}
+          <option value="{{ val }}" {% if val == status_atual %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-outline">Filtrar</button>
+        {% if q or status_atual %}
+        <a href="{% url 'registro:registro_lista' %}" class="btn btn-ghost text-red-500">
+          <i class="ti ti-x"></i> Limpar
+        </a>
+        {% endif %}
+      </form>
+    </div>
+
+    <!-- Tabela -->
+    {% if registros %}
+    <div class="overflow-x-auto">
+      <table class="table table-sm">
+        <thead>
+          <tr class="bg-gray-50 dark:bg-gray-700/50 text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+            <th>Nº Federativo</th>
+            <th>Atleta</th>
+            <th>Clube Atual</th>
+            <th>Filiação</th>
+            <th>Status</th>
+            <th class="text-right">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for reg in registros %}
+          <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+            <td>
+              <span class="font-mono text-xs font-bold text-blue-600 dark:text-blue-400">{{ reg.numero_federativo }}</span>
+            </td>
+            <td class="py-2.5">
+              <div class="flex items-center gap-2.5">
+                {% if reg.atleta.foto %}
+                <img src="{{ reg.atleta.foto.thumbnail.url }}"
+                     class="w-7 h-7 rounded-full object-cover border border-gray-200 dark:border-gray-700 shrink-0">
+                {% else %}
+                <div class="w-7 h-7 rounded-full bg-blue-500/10 border border-blue-500/20
+                            flex items-center justify-center text-[11px] font-black text-blue-500 shrink-0">
+                  {{ reg.atleta.nome|first|upper }}
+                </div>
+                {% endif %}
+                <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ reg.atleta.nome }}</span>
+              </div>
+            </td>
+            <td class="text-sm text-gray-500 dark:text-gray-400">{{ reg.atleta.equipe.nome_equipe }}</td>
+            <td class="text-xs text-gray-500 dark:text-gray-400">{{ reg.data_filiacao|date:"d/m/Y" }}</td>
+            <td>
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border
+                {% if reg.status == 'ativo' %}bg-green-500/15 text-green-500 border-green-500/20
+                {% elif reg.status == 'suspenso' %}bg-red-500/15 text-red-500 border-red-500/20
+                {% elif reg.status == 'transferido' %}bg-blue-500/15 text-blue-500 border-blue-500/20
+                {% else %}bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 border-gray-200 dark:border-gray-700{% endif %}">
+                {{ reg.get_status_display }}
+              </span>
+            </td>
+            <td class="text-right">
+              <a href="{% url 'registro:registro_detalhe' reg.pk %}"
+                 class="btn btn-ghost btn-xs text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                 title="Ver detalhes">
+                <i class="ti ti-eye text-xs"></i>
+              </a>
+              <a href="{% url 'registro:registro_editar' reg.pk %}"
+                 class="btn btn-ghost btn-xs text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                 title="Editar">
+                <i class="ti ti-pencil text-xs"></i>
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% else %}
+    <!-- Empty state -->
+    <div class="flex flex-col items-center justify-center py-24 gap-4 text-center">
+      <div class="relative">
+        <div class="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+          <i class="ti ti-id-badge-2 text-4xl text-gray-300 dark:text-gray-600"></i>
+        </div>
+        <div class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full
+                    bg-blue-600 dark:bg-transparent dark:border-2 dark:border-blue-500
+                    flex items-center justify-center shadow">
+          <i class="ti ti-plus text-white dark:text-blue-400 text-sm"></i>
+        </div>
+      </div>
+      <div>
+        <p class="section-heading text-xl text-gray-400 dark:text-gray-500">SEM REGISTROS</p>
+        <p class="text-sm text-gray-400 dark:text-gray-600 mt-1">Nenhum registro federativo encontrado.</p>
+      </div>
+      <a href="{% url 'registro:registro_criar' %}" class="btn btn-outline">
+        <i class="ti ti-plus"></i> Criar primeiro registro
+      </a>
+    </div>
+    {% endif %}
+
+  </div>
+
+</div>
+{% endblock %}

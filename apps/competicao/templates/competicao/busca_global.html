@@ -1,145 +1,175 @@
 {% extends 'base/indice.html' %}
-{% block titulo %}Busca — {{ q }}{% endblock %}
+{% block titulo %}Busca{% if q %} — {{ q }}{% endif %}{% endblock %}
 
 {% block breadcrumbs %}
 <div class="px-4 md:px-6 pt-3 pb-0">
-  <div class="breadcrumbs text-xs text-base-content/40">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
     <ul>
-      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-base-content/70">Dashboard</a></li>
-      <li><span class="text-base-content/60">Busca{% if q %}: "{{ q }}"{% endif %}</span></li>
+      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-gray-700 dark:text-gray-300">Dashboard</a></li>
+      <li><span class="text-gray-600 dark:text-gray-400">Busca Global</span></li>
     </ul>
   </div>
 </div>
 {% endblock %}
 
 {% block conteudo %}
-<div class="p-4 md:p-6 space-y-6">
+<div class="p-4 md:p-6 space-y-5">
 
   <!-- Cabeçalho -->
-  <div class="flex items-center gap-3">
-    <div class="w-9 h-9 rounded-xl bg-warning/10 border border-warning/20
-                flex items-center justify-center shrink-0">
-      <i class="bi bi-search text-warning text-base"></i>
-    </div>
-    <div>
-      <h1 class="section-heading text-2xl text-base-content leading-none">
-        Resultados{% if q %} para "<span class="text-warning">{{ q }}</span>"{% endif %}
-      </h1>
-    </div>
+  <div>
+    <h1 class="section-heading text-4xl text-gray-900 dark:text-white leading-none">BUSCA GLOBAL</h1>
+    <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Pesquise equipes, atletas e competições</p>
   </div>
 
-  {% if q|length < 2 %}
-  <div class="alert border border-warning/30 bg-warning/5 text-sm flex items-center gap-2">
-    <i class="bi bi-exclamation-triangle text-warning"></i>
-    <span>Digite ao menos 2 caracteres para pesquisar.</span>
-  </div>
+  <!-- Card principal -->
+  <div class="card overflow-hidden">
 
-  {% else %}
-
-    <!-- Equipes -->
-    {% if equipes %}
-    <div>
-      <h2 class="font-bold text-xs text-base-content/50 uppercase tracking-wider mb-3 flex items-center gap-2">
-        <i class="bi bi-shield-fill text-warning"></i> Equipes
-        <span class="badge badge-ghost badge-sm">{{ equipes|length }}</span>
-      </h2>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {% for eq in equipes %}
-        <a href="{% url 'equipe:detalhe' eq.pk %}"
-           class="flex items-center gap-3 p-3 bg-base-200 border border-base-300 rounded-xl
-                  hover:border-warning/40 hover:shadow-md transition-all card-sport">
-          {% if eq.escudo %}
-            <img src="{{ eq.escudo.thumbnail.url }}" alt="{{ eq.nome_equipe }}"
-                 class="w-9 h-9 rounded-full object-cover border border-base-300 shrink-0">
-          {% else %}
-            <div class="w-9 h-9 rounded-full bg-neutral-content/10 border border-base-300
-                        flex items-center justify-center text-sm font-black text-base-content/50 shrink-0">
-              {{ eq.nome_equipe|first|upper }}
-            </div>
-          {% endif %}
-          <span class="font-semibold text-sm">{{ eq.nome_equipe }}</span>
-        </a>
-        {% endfor %}
-      </div>
+    <!-- Campo de busca -->
+    <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+      <form method="get" class="flex gap-2">
+        <div class="relative flex-1">
+          <i class="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"></i>
+          <input type="text" name="q" value="{{ q }}" placeholder="Buscar equipes, atletas, competições…"
+                 class="form-input pl-9 border-gray-200 dark:border-gray-600" autofocus>
+        </div>
+        <button type="submit" class="btn btn-outline">
+          <i class="ti ti-search"></i> Buscar
+        </button>
+      </form>
     </div>
-    {% endif %}
 
-    <!-- Atletas -->
-    {% if atletas %}
-    <div>
-      <h2 class="font-bold text-xs text-base-content/50 uppercase tracking-wider mb-3 flex items-center gap-2">
-        <i class="bi bi-person-fill text-success"></i> Atletas
-        <span class="badge badge-ghost badge-sm">{{ atletas|length }}</span>
-      </h2>
-      <div class="card bg-base-200 border border-base-300 overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="table table-sm">
-            <thead>
-              <tr class="bg-base-300/50 text-xs text-base-content/60 uppercase tracking-wider">
-                <th>Nome</th>
-                <th>Posição</th>
-                <th>Equipe</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for a in atletas %}
-              <tr class="hover:bg-base-300/30 transition-colors">
-                <td class="font-semibold text-sm">{{ a.nome }}</td>
-                <td><span class="badge badge-ghost badge-sm">{{ a.get_posicao_display }}</span></td>
-                <td class="text-sm">
-                  {% if a.equipe %}
-                    <a href="{% url 'equipe:detalhe' a.equipe.pk %}"
-                       class="hover:text-warning transition-colors">{{ a.equipe.nome_equipe }}</a>
-                  {% else %}—{% endif %}
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+    <!-- Resultados -->
+    <div class="p-4 md:p-6 space-y-6">
+
+      {% if not q %}
+      <div class="flex flex-col items-center justify-center py-16 gap-4 text-center">
+        <div class="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/20
+                    flex items-center justify-center">
+          <i class="ti ti-search text-2xl text-blue-400"></i>
+        </div>
+        <div>
+          <p class="section-heading text-xl text-gray-400 dark:text-gray-500">PESQUISE ALGO</p>
+          <p class="text-sm text-gray-400 dark:text-gray-600 mt-1">Digite no campo acima para buscar.</p>
         </div>
       </div>
-    </div>
-    {% endif %}
 
-    <!-- Competições -->
-    {% if comps %}
-    <div>
-      <h2 class="font-bold text-xs text-base-content/50 uppercase tracking-wider mb-3 flex items-center gap-2">
-        <i class="bi bi-trophy-fill text-warning"></i> Competições
-        <span class="badge badge-ghost badge-sm">{{ comps|length }}</span>
-      </h2>
-      <div class="space-y-2">
-        {% for c in comps %}
-        <a href="{% url 'competicao:classificacao' c.pk %}"
-           class="flex items-center justify-between p-3 bg-base-200 border border-base-300 rounded-xl
-                  hover:border-warning/40 hover:shadow-md transition-all card-sport">
-          <span class="font-semibold text-sm">{{ c.nome }}</span>
-          <span class="badge badge-warning badge-sm">{{ c.get_modalidade_display }}</span>
-        </a>
-        {% endfor %}
+      {% elif q|length < 2 %}
+      <div class="alert alert-warning text-sm">
+        <i class="ti ti-alert-triangle shrink-0"></i>
+        <span>Digite ao menos 2 caracteres para pesquisar.</span>
       </div>
-    </div>
-    {% endif %}
 
-    <!-- Sem resultados -->
-    {% if not equipes and not atletas and not comps %}
-    <div class="flex flex-col items-center justify-center py-20 gap-5 text-center">
-      <div class="w-20 h-20 rounded-full bg-base-200 border border-base-content/10
-                  flex items-center justify-center">
-        <i class="bi bi-search text-3xl text-base-content/15"></i>
-      </div>
-      <div>
-        <p class="section-heading text-xl text-base-content/40">
-          Nenhum resultado para "{{ q }}"
-        </p>
-        <p class="text-sm text-base-content/30 mt-1">
-          Tente um termo diferente ou verifique a ortografia.
-        </p>
-      </div>
-    </div>
-    {% endif %}
+      {% else %}
 
-  {% endif %}
+        {% if equipes %}
+        <!-- Equipes -->
+        <div>
+          <h2 class="font-bold text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+            <i class="ti ti-shield text-blue-500"></i> Equipes
+            <span class="badge badge-blue badge-sm">{{ equipes|length }}</span>
+          </h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {% for eq in equipes %}
+            <a href="{% url 'equipe:detalhe' eq.pk %}"
+               class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl
+                      hover:border-blue-400/40 hover:shadow-md transition-all card-sport">
+              {% if eq.escudo %}
+                <img src="{{ eq.escudo.thumbnail.url }}" alt="{{ eq.nome_equipe }}"
+                     class="w-9 h-9 rounded-full object-cover border border-gray-200 dark:border-gray-700 shrink-0">
+              {% else %}
+                <div class="w-9 h-9 rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-200/60 dark:border-blue-800/60
+                            flex items-center justify-center text-sm font-black text-blue-500 shrink-0">
+                  {{ eq.nome_equipe|first|upper }}
+                </div>
+              {% endif %}
+              <span class="font-semibold text-sm text-gray-900 dark:text-white">{{ eq.nome_equipe }}</span>
+              <i class="ti ti-chevron-right text-xs text-gray-300 dark:text-gray-600 ml-auto"></i>
+            </a>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        {% if atletas %}
+        <!-- Atletas -->
+        <div>
+          <h2 class="font-bold text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+            <i class="ti ti-user text-emerald-500"></i> Atletas
+            <span class="badge badge-green badge-sm">{{ atletas|length }}</span>
+          </h2>
+          <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th>Nome</th>
+                    <th>Posição</th>
+                    <th>Equipe</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for a in atletas %}
+                  <tr>
+                    <td class="font-semibold text-sm text-gray-900 dark:text-white">{{ a.nome }}</td>
+                    <td><span class="badge badge-gray badge-sm">{{ a.get_posicao_display }}</span></td>
+                    <td class="text-sm">
+                      {% if a.equipe %}
+                        <a href="{% url 'equipe:detalhe' a.equipe.pk %}"
+                           class="text-blue-600 dark:text-blue-400 hover:underline">{{ a.equipe.nome_equipe }}</a>
+                      {% else %}—{% endif %}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        {% if comps %}
+        <!-- Competições -->
+        <div>
+          <h2 class="font-bold text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+            <i class="ti ti-trophy text-blue-500"></i> Competições
+            <span class="badge badge-blue badge-sm">{{ comps|length }}</span>
+          </h2>
+          <div class="space-y-2">
+            {% for c in comps %}
+            <a href="{% url 'competicao:classificacao' c.pk %}"
+               class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl
+                      hover:border-blue-400/40 hover:shadow-md transition-all card-sport">
+              <span class="font-semibold text-sm text-gray-900 dark:text-white">{{ c.nome }}</span>
+              <div class="flex items-center gap-2">
+                <span class="badge badge-blue badge-sm">{{ c.get_modalidade_display }}</span>
+                <i class="ti ti-chevron-right text-xs text-gray-300 dark:text-gray-600"></i>
+              </div>
+            </a>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        {% if not equipes and not atletas and not comps %}
+        <!-- Sem resultados -->
+        <div class="flex flex-col items-center justify-center py-16 gap-4 text-center">
+          <div class="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700
+                      flex items-center justify-center">
+            <i class="ti ti-search text-2xl text-gray-300 dark:text-gray-600"></i>
+          </div>
+          <div>
+            <p class="section-heading text-xl text-gray-400 dark:text-gray-500">NENHUM RESULTADO</p>
+            <p class="text-sm text-gray-400 dark:text-gray-600 mt-1">
+              Nenhum resultado para "<strong class="text-gray-500 dark:text-gray-400">{{ q }}</strong>". Tente um termo diferente.
+            </p>
+          </div>
+        </div>
+        {% endif %}
+
+      {% endif %}
+
+    </div>
+  </div>
 
 </div>
 {% endblock %}

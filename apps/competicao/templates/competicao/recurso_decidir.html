@@ -1,13 +1,13 @@
-{% extends 'base/indice.html' %}
+﻿{% extends 'base/indice.html' %}
 {% block titulo %}Decidir Recurso{% endblock %}
 
 {% block breadcrumbs %}
 <div class="px-4 md:px-6 pt-3 pb-0">
-  <div class="breadcrumbs text-xs text-base-content/40">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
     <ul>
-      <li><a href="{% url 'competicao:tribunal_dashboard' %}" class="hover:text-base-content/70">Tribunal</a></li>
-      <li><a href="{% url 'competicao:processo_detalhe' recurso.processo.pk %}" class="hover:text-base-content/70">{{ recurso.processo.numero }}</a></li>
-      <li><span class="text-base-content/60">Decidir Recurso</span></li>
+      <li><a href="{% url 'competicao:tribunal_dashboard' %}" class="hover:text-gray-700 dark:text-gray-300">Tribunal</a></li>
+      <li><a href="{% url 'competicao:processo_detalhe' recurso.processo.pk %}" class="hover:text-gray-700 dark:text-gray-300">{{ recurso.processo.numero }}</a></li>
+      <li><span class="text-gray-600 dark:text-gray-400">Decidir Recurso</span></li>
     </ul>
   </div>
 </div>
@@ -19,28 +19,28 @@
   <div class="flex items-end justify-between gap-4">
     <div>
       <div class="flex items-center gap-2 mb-1">
-        <i class="bi bi-gavel text-warning text-sm"></i>
-        <span class="text-xs font-bold uppercase tracking-widest text-base-content/40">Tribunal Desportivo</span>
+        <i class="ti ti-gavel text-yellow-500 text-sm"></i>
+        <span class="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">Tribunal Desportivo</span>
       </div>
-      <h1 class="section-heading text-4xl text-base-content leading-none">DECIDIR RECURSO</h1>
-      <p class="text-sm text-base-content/40 mt-1">{{ recurso.processo.numero }}</p>
+      <h1 class="section-heading text-4xl text-gray-900 dark:text-white leading-none">DECIDIR RECURSO</h1>
+      <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">{{ recurso.processo.numero }}</p>
     </div>
     <a href="{% url 'competicao:processo_detalhe' recurso.processo.pk %}"
-       class="btn btn-ghost btn-sm border border-base-content/10">
-      <i class="bi bi-arrow-left text-sm"></i> Voltar
+       class="btn btn-ghost btn-sm border border-gray-200/60 dark:border-gray-700/60">
+      <i class="ti ti-arrow-left text-sm"></i> Voltar
     </a>
   </div>
 
   <!-- Resumo do recurso -->
-  <div class="card bg-base-200 border border-base-300 p-4">
+  <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4">
     <div class="flex items-start gap-3">
-      <div class="w-9 h-9 rounded-full bg-error/15 flex items-center justify-center shrink-0">
-        <i class="bi bi-arrow-counterclockwise text-error text-sm"></i>
+      <div class="w-9 h-9 rounded-full bg-red-500/15 flex items-center justify-center shrink-0">
+        <i class="ti ti-refresh text-red-500 text-sm"></i>
       </div>
       <div>
-        <p class="font-bold text-sm text-base-content">Recurso de {{ recurso.recorrente }}</p>
-        <p class="text-xs text-base-content/40 mb-2">Interposto em {{ recurso.criado_em|date:"d/m/Y" }}</p>
-        <p class="text-sm text-base-content/70 whitespace-pre-line">{{ recurso.motivo }}</p>
+        <p class="font-bold text-sm text-gray-900 dark:text-white">Recurso de {{ recurso.recorrente }}</p>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mb-2">Interposto em {{ recurso.criado_em|date:"d/m/Y" }}</p>
+        <p class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">{{ recurso.motivo }}</p>
       </div>
     </div>
   </div>
@@ -48,21 +48,21 @@
   <form method="post" action="{% url 'competicao:recurso_decidir' recurso.pk %}" class="space-y-4">
     {% csrf_token %}
 
-    <div class="card bg-base-200 border border-base-300 overflow-hidden">
-      <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
-        <i class="bi bi-gavel text-warning text-sm"></i>
-        <span class="section-heading text-sm text-base-content/70 tracking-widest">DECISÃO DO RECURSO</span>
+    <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-200/30 dark:bg-gray-700/30">
+        <i class="ti ti-gavel text-yellow-500 text-sm"></i>
+        <span class="section-heading text-sm text-gray-700 dark:text-gray-300 tracking-widest">DECISÃO DO RECURSO</span>
       </div>
       <div class="p-4 space-y-4">
         <div>
           <label class="label py-0 mb-1">
-            <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Resultado *</span>
+            <span class="label-text text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Resultado *</span>
           </label>
           {{ form.status }}
         </div>
         <div>
           <label class="label py-0 mb-1">
-            <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Fundamentação *</span>
+            <span class="label-text text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Fundamentação *</span>
           </label>
           {{ form.decisao }}
         </div>
@@ -71,9 +71,9 @@
 
     <div class="flex justify-end gap-2">
       <a href="{% url 'competicao:processo_detalhe' recurso.processo.pk %}"
-         class="btn btn-ghost btn-sm border border-base-content/10">Cancelar</a>
-      <button type="submit" class="btn btn-warning gap-1.5 font-semibold shadow shadow-warning/20">
-        <i class="bi bi-gavel"></i> Registrar Decisão
+         class="btn btn-ghost btn-sm border border-gray-200/60 dark:border-gray-700/60">Cancelar</a>
+      <button type="submit" class="btn btn-primary gap-1.5">
+        <i class="ti ti-gavel"></i> Registrar Decisão
       </button>
     </div>
   </form>

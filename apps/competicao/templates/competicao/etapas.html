@@ -1,0 +1,196 @@
+{% extends 'base/indice.html' %}
+{% block titulo %}Etapas Knockout — {{ competicao.nome }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
+    <ul>
+      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-gray-700 dark:text-gray-300">Dashboard</a></li>
+      <li><a href="{% url 'competicao:competicao_lista' %}" class="hover:text-gray-700 dark:text-gray-300">Competições</a></li>
+      <li><a href="{% url 'competicao:classificacao' competicao.pk %}" class="hover:text-gray-700 dark:text-gray-300">{{ competicao.nome }}</a></li>
+      <li><span class="text-gray-600 dark:text-gray-400">Etapas</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block conteudo %}
+<div class="p-4 md:p-6 space-y-5">
+
+  <!-- Cabeçalho -->
+  <div class="flex items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <a href="{% url 'competicao:classificacao' competicao.pk %}"
+         class="btn btn-ghost btn-sm btn-square border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
+        <i class="ti ti-arrow-left text-sm"></i>
+      </a>
+      <div>
+        <h1 class="section-heading text-4xl text-gray-900 dark:text-white leading-none">ETAPAS</h1>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ competicao.nome }}</p>
+      </div>
+    </div>
+    <a href="{% url 'competicao:grupos' pk=competicao.pk %}"
+       class="btn btn-ghost btn-sm gap-1 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 shrink-0">
+      <i class="ti ti-grid-dots text-xs"></i>
+      <span class="hidden sm:inline">Grupos</span>
+    </a>
+  </div>
+
+  <!-- Grid: formulário + lista -->
+  <div class="grid grid-cols-1 {% if is_admin_op %}lg:grid-cols-3{% endif %} gap-5">
+
+    {% if is_admin_op %}
+    <!-- Formulário nova etapa -->
+    <div class="lg:col-span-1">
+      <div class="card overflow-hidden sticky top-20">
+        <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30">
+          <i class="ti ti-circle-plus text-yellow-500 text-sm"></i>
+          <span class="section-heading text-sm text-gray-700 dark:text-gray-300 tracking-widest">NOVA ETAPA</span>
+        </div>
+        <div class="p-4">
+          {% if tipos_disponiveis %}
+          <form method="post" action="{% url 'competicao:etapa_criar' competicao_pk=competicao.pk %}" class="space-y-3">
+            {% csrf_token %}
+            {% for field in form %}
+            {% if field.field.widget.input_type == 'checkbox' %}
+            <label class="flex items-center gap-3 cursor-pointer px-3 py-2 rounded-lg
+                          border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
+              {{ field }}
+              <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ field.label }}</span>
+            </label>
+            {% else %}
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1"
+                     for="{{ field.id_for_label }}">
+                {{ field.label }}{% if field.field.required %} <span class="text-yellow-500">*</span>{% endif %}
+              </label>
+              {{ field }}
+              {% for error in field.errors %}
+              <p class="text-red-500 text-xs mt-1 flex items-center gap-1">
+                <i class="ti ti-alert-circle text-xs"></i> {{ error }}
+              </p>
+              {% endfor %}
+            </div>
+            {% endif %}
+            {% endfor %}
+            <button type="submit" class="btn btn-primary w-full gap-1 mt-1">
+              <i class="ti ti-check"></i> Criar Etapa
+            </button>
+          </form>
+          {% else %}
+          <div class="text-center py-6 text-gray-400 dark:text-gray-600">
+            <i class="ti ti-circle-check text-2xl text-green-500/50 block mb-2"></i>
+            <p class="text-sm">Todas as etapas disponíveis já foram criadas.</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Lista de etapas -->
+    <div class="{% if is_admin_op %}lg:col-span-2{% endif %} space-y-3">
+
+      {% for etapa in etapas %}
+      <div class="card overflow-hidden">
+
+        <div class="flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30">
+          <div class="w-8 h-8 rounded-lg bg-yellow-400/10 border border-yellow-400/20
+                      flex items-center justify-center shrink-0">
+            <i class="ti ti-tournament text-yellow-500 text-sm"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="font-bold text-sm text-gray-900 dark:text-white truncate">{{ etapa.get_tipo_display }}</p>
+            <p class="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider mt-0.5">
+              Ordem {{ etapa.ordem }}
+              {% if etapa.ida_e_volta %} · Ida e Volta{% endif %}
+            </p>
+          </div>
+          {% if etapa.concluida %}
+            <span class="badge badge-green badge-sm shrink-0">Concluída</span>
+          {% else %}
+            <span class="badge badge-yellow badge-sm shrink-0">Em andamento</span>
+          {% endif %}
+        </div>
+
+        <div class="p-4">
+          <div class="flex flex-wrap gap-2">
+            <a href="{% url 'competicao:chaveamento' pk=etapa.pk %}"
+               class="btn btn-ghost btn-xs gap-1 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400">
+              <i class="ti ti-tournament text-xs"></i> Chaveamento
+            </a>
+            <a href="{% url 'competicao:bracket' pk=etapa.pk %}"
+               class="btn btn-ghost btn-xs gap-1 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400">
+              <i class="ti ti-schema text-xs"></i> Bracket
+            </a>
+            {% if is_admin_op %}
+            <button type="button"
+                    onclick="abrirModalExcluir('{% url 'competicao:etapa_excluir' pk=etapa.pk %}', '{{ etapa.get_tipo_display|escapejs }}')"
+                    class="btn btn-ghost btn-xs gap-1 border border-gray-200 dark:border-gray-700 text-red-400/70 hover:text-red-500 hover:bg-red-500/10 hover:border-red-200 ml-auto">
+              <i class="ti ti-trash text-xs"></i> Excluir
+            </button>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      {% empty %}
+      <div class="card">
+        {% if is_admin_op %}
+          {% include 'components/empty_state.html' with icon="tournament" title="Nenhuma etapa criada ainda." subtitle="Crie a primeira etapa usando o formulário ao lado." %}
+        {% else %}
+          {% include 'components/empty_state.html' with icon="tournament" title="Nenhuma etapa criada ainda." %}
+        {% endif %}
+      </div>
+      {% endfor %}
+
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal: excluir etapa -->
+<div id="modal-excluir-etapa"
+     class="fixed inset-0 z-50 hidden items-center justify-center"
+     style="background:rgba(0,0,0,0.5);">
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm mx-4 p-6 space-y-4">
+    <div class="flex items-center gap-3">
+      <i class="ti ti-alert-triangle text-red-500 text-xl"></i>
+      <h2 class="font-semibold text-gray-900 dark:text-white">Excluir etapa</h2>
+    </div>
+    <p class="text-sm text-gray-600 dark:text-gray-400">
+      Deseja excluir <strong id="modal-etapa-nome" class="text-gray-900 dark:text-white"></strong>? Rodadas e confrontos serão excluídos também.
+    </p>
+    <div class="flex justify-end gap-2 pt-2">
+      <button type="button" onclick="fecharModalExcluir()" class="btn btn-ghost btn-sm">Cancelar</button>
+      <form id="form-excluir-etapa" method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger-outline btn-sm">
+          <i class="ti ti-trash"></i> Excluir
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+<script>
+function abrirModalExcluir(url, nome) {
+  document.getElementById('modal-etapa-nome').textContent = nome;
+  document.getElementById('form-excluir-etapa').action = url;
+  var m = document.getElementById('modal-excluir-etapa');
+  m.classList.remove('hidden');
+  m.classList.add('flex');
+}
+function fecharModalExcluir() {
+  var m = document.getElementById('modal-excluir-etapa');
+  m.classList.add('hidden');
+  m.classList.remove('flex');
+}
+document.getElementById('modal-excluir-etapa').addEventListener('click', function (e) {
+  if (e.target === this) fecharModalExcluir();
+});
+</script>
+{% endblock %}

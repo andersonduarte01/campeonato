@@ -1,0 +1,91 @@
+{% extends 'base/indice.html' %}
+{% block titulo %}Histórico de Posições — {{ competicao.nome }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
+    <ul>
+      <li><a href="{% url 'competicao:dashboard' %}">Dashboard</a></li>
+      <li><a href="{% url 'competicao:classificacao' competicao.pk %}">{{ competicao.nome }}</a></li>
+      <li>Histórico de Posições</li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block conteudo %}
+<div class="p-4 md:p-6 max-w-[1100px] mx-auto space-y-5">
+
+  <div>
+    <div class="flex items-center gap-2 mb-1">
+      <i class="ti ti-trending-up text-yellow-500 text-sm"></i>
+      <span class="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">Estatísticas</span>
+    </div>
+    <h1 class="text-2xl font-black text-gray-900 dark:text-white">Evolução de Posições — {{ competicao.nome }}</h1>
+  </div>
+
+  {% if dados_chart_json != '[]' %}
+  <div class="card bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
+      <span class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Posição por Rodada (1 = líder)</span>
+    </div>
+    <div class="p-5">
+      <canvas id="chartPosicoes" style="max-height:400px"></canvas>
+    </div>
+  </div>
+  {% else %}
+  <div class="flex flex-col items-center py-16 text-gray-400 gap-3">
+    <i class="ti ti-trending-up text-5xl"></i>
+    <p class="text-sm">Dados insuficientes. Finalize rodadas para gerar o histórico.</p>
+  </div>
+  {% endif %}
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+(function () {
+  const dados = {{ dados_chart_json|safe }};
+  const labels = {{ labels_json|safe }};
+  if (!dados.length) return;
+
+  const cores = [
+    '#f59e0b','#3b82f6','#10b981','#ef4444','#8b5cf6',
+    '#f97316','#06b6d4','#84cc16','#ec4899','#6b7280'
+  ];
+
+  const datasets = dados.map((d, i) => ({
+    label: d.equipe,
+    data: d.posicoes,
+    borderColor: cores[i % cores.length],
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    tension: 0.3,
+    spanGaps: true,
+    pointRadius: 4,
+  }));
+
+  const ctx = document.getElementById('chartPosicoes');
+  if (!ctx) return;
+  new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          reverse: true,
+          ticks: { stepSize: 1, color: '#9ca3af' },
+          grid: { color: 'rgba(156,163,175,0.1)' },
+          title: { display: true, text: 'Posição', color: '#9ca3af' },
+        },
+        x: { ticks: { color: '#9ca3af' }, grid: { color: 'rgba(156,163,175,0.1)' } },
+      },
+      plugins: {
+        legend: { labels: { color: '#d1d5db', boxWidth: 12, font: { size: 11 } } },
+      },
+    },
+  });
+})();
+</script>
+{% endblock %}

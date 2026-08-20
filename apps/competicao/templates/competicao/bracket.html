@@ -1,14 +1,16 @@
 {% extends 'base/indice.html' %}
-{% block titulo %}Bracket — {{ fase.nome }}{% endblock %}
+{% block titulo %}Bracket — {{ etapa.nome }}{% endblock %}
 
 {% block breadcrumbs %}
 <div class="px-4 md:px-6 pt-3 pb-0">
-  <div class="breadcrumbs text-xs text-base-content/40">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
     <ul>
-      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-base-content/70">Dashboard</a></li>
-      <li><a href="{% url 'competicao:competicao_lista' %}" class="hover:text-base-content/70">Competições</a></li>
-      <li><a href="{% url 'competicao:fases' fase.competicao.pk %}" class="hover:text-base-content/70">{{ fase.competicao.nome }}</a></li>
-      <li><span class="text-base-content/60">Bracket</span></li>
+      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-gray-700 dark:text-gray-300">Dashboard</a></li>
+      <li><a href="{% url 'competicao:competicao_lista' %}" class="hover:text-gray-700 dark:text-gray-300">Competições</a></li>
+      <li><a href="{% url 'competicao:classificacao' etapa.competicao.pk %}" class="hover:text-gray-700 dark:text-gray-300">{{ etapa.competicao.nome }}</a></li>
+      <li><a href="{% url 'competicao:etapas' pk=etapa.competicao.pk %}" class="hover:text-gray-700 dark:text-gray-300">Etapas</a></li>
+      <li><a href="{% url 'competicao:chaveamento' etapa.pk %}" class="hover:text-gray-700 dark:text-gray-300">Chaveamento</a></li>
+      <li><span class="text-gray-600 dark:text-gray-400">Bracket</span></li>
     </ul>
   </div>
 </div>
@@ -39,8 +41,11 @@
   letter-spacing: 0.12em;
   text-align: center;
   padding: 0.5rem 0 1rem;
-  color: rgba(255,255,255,0.25);
+  color: rgba(107,114,128,0.6);
   text-transform: uppercase;
+}
+.dark .bracket-round-header {
+  color: rgba(255,255,255,0.25);
 }
 .bracket-matches {
   flex: 1;
@@ -60,6 +65,9 @@
 }
 .bracket-match:hover {
   transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+.dark .bracket-match:hover {
   box-shadow: 0 8px 24px rgba(0,0,0,0.4);
 }
 .bracket-connector {
@@ -77,6 +85,9 @@
   top: 50%;
   width: 100%;
   height: 1px;
+  background: rgba(107,114,128,0.25);
+}
+.dark .bracket-connector::before {
   background: rgba(255,255,255,0.08);
 }
 .bracket-final-col {
@@ -97,59 +108,60 @@
 <div class="p-4 md:p-6 space-y-5">
 
   <!-- Cabeçalho -->
-  <div class="flex items-center justify-between flex-wrap gap-3">
+  <div class="flex items-center justify-between gap-4 flex-wrap">
     <div class="flex items-center gap-3">
-      <div class="w-9 h-9 rounded-xl bg-warning/10 border border-warning/20
-                  flex items-center justify-center shrink-0">
-        <i class="bi bi-diagram-3-fill text-warning text-base"></i>
-      </div>
+      <a href="{% url 'competicao:chaveamento' etapa.pk %}"
+         class="btn btn-ghost btn-sm btn-square border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
+        <i class="ti ti-arrow-left text-sm"></i>
+      </a>
       <div>
-        <h1 class="section-heading text-2xl text-base-content leading-none">BRACKET</h1>
-        <p class="text-sm text-base-content/40 mt-0.5">{{ fase.nome }}</p>
+        <h1 class="section-heading text-4xl text-gray-900 dark:text-white leading-none">BRACKET</h1>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ etapa.nome }} · {{ etapa.competicao.nome }}</p>
       </div>
     </div>
-    <div class="flex gap-2 shrink-0">
-      {% if fase.ida_e_volta %}
-      <span class="badge badge-ghost gap-1">
-        <i class="bi bi-arrow-left-right"></i> Ida e Volta
+    <div class="flex items-center gap-2 flex-wrap shrink-0">
+      {% if etapa.ida_e_volta %}
+      <span class="badge badge-gray gap-1">
+        <i class="ti ti-arrow-left-right"></i> Ida e Volta
       </span>
       {% endif %}
-      <a href="{% url 'competicao:chaveamento' fase.pk %}"
-         class="btn btn-ghost btn-sm gap-1.5 border border-base-content/10">
-        <i class="bi bi-list-ul"></i> Ver Lista
-      </a>
-      <a href="{% url 'competicao:fases' fase.competicao.pk %}"
-         class="btn btn-ghost btn-sm gap-1.5 border border-base-content/10">
-        <i class="bi bi-arrow-left"></i> Fases
+      <a href="{% url 'competicao:chaveamento' etapa.pk %}"
+         class="btn btn-ghost btn-sm gap-1 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
+        <i class="ti ti-list text-xs"></i>
+        <span class="hidden sm:inline">Ver Lista</span>
       </a>
     </div>
   </div>
 
   {% if confrontos %}
 
-  <!-- Linha dourada separadora -->
-  <div class="h-px bg-gradient-to-r from-transparent via-warning/20 to-transparent"></div>
-
   <!-- Bracket visual -->
-  <div class="bracket-wrapper">
-    <div id="bracket-rounds" class="bracket-rounds">
-      <!-- Preenchido pelo JavaScript -->
+  <div class="card overflow-hidden">
+    <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30">
+      <i class="ti ti-tournament text-yellow-500 text-sm"></i>
+      <span class="section-heading text-sm text-gray-700 dark:text-gray-300 tracking-widest">BRACKET VISUAL</span>
     </div>
-  </div>
 
-  <!-- Legenda -->
-  <div class="flex gap-6 flex-wrap px-1">
-    <div class="flex items-center gap-2">
-      <div class="w-3 h-3 rounded bg-success/30 border border-success/50"></div>
-      <span class="text-xs text-base-content/40">Vencedor classificado</span>
+    <div class="bracket-wrapper">
+      <div id="bracket-rounds" class="bracket-rounds">
+        <!-- Preenchido pelo JavaScript -->
+      </div>
     </div>
-    <div class="flex items-center gap-2">
-      <i class="bi bi-trophy-fill text-warning text-xs"></i>
-      <span class="text-xs text-base-content/40">Campeão</span>
-    </div>
-    <div class="flex items-center gap-2">
-      <span class="text-xs text-base-content/40 font-mono">(N)</span>
-      <span class="text-xs text-base-content/40">Pênaltis</span>
+
+    <!-- Legenda -->
+    <div class="flex gap-6 flex-wrap px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30">
+      <div class="flex items-center gap-2">
+        <div class="w-3 h-3 rounded bg-green-500/30 border border-green-500/50"></div>
+        <span class="text-xs text-gray-400 dark:text-gray-500">Vencedor classificado</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <i class="ti ti-trophy text-yellow-500 text-xs"></i>
+        <span class="text-xs text-gray-400 dark:text-gray-500">Campeão</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-xs text-gray-400 dark:text-gray-500 font-mono">(N)</span>
+        <span class="text-xs text-gray-400 dark:text-gray-500">Pênaltis</span>
+      </div>
     </div>
   </div>
 
@@ -172,20 +184,9 @@
   </script>
 
   {% else %}
-  <!-- Empty state -->
-  <div class="flex flex-col items-center justify-center py-20 gap-5 text-center">
-    <div class="w-20 h-20 rounded-full bg-base-200 border border-base-content/10
-                flex items-center justify-center">
-      <i class="bi bi-diagram-3 text-3xl text-base-content/15"></i>
-    </div>
-    <div>
-      <p class="section-heading text-xl text-base-content/40">Nenhum confronto gerado</p>
-      <p class="text-sm text-base-content/30 mt-1">
-        <a href="{% url 'competicao:chaveamento' fase.pk %}" class="link link-warning">
-          Gerar chaveamento
-        </a>
-      </p>
-    </div>
+  <div class="card">
+    {% url 'competicao:chaveamento' etapa.pk as chaveamento_url %}
+    {% include 'components/empty_state.html' with icon="tournament" title="Nenhum confronto gerado ainda." subtitle="Gere o chaveamento para visualizar o bracket." cta_url=chaveamento_url cta_label="Gerar chaveamento" %}
   </div>
   {% endif %}
 
@@ -206,19 +207,8 @@
   // Estratégia: dividir ao meio em cada round
   function getRounds(n) {
     var rounds = [];
-    var remaining = n;
-    while (remaining > 0) {
-      var half = Math.ceil(remaining / 2);
-      rounds.push(remaining - half); // guardamos o que sobra para frente
-      remaining = half;
-    }
-    rounds.reverse();
-    // Agora rounds[last] = 1 (final), rounds[0] = maior round
-    // Mas isso não é correto, vamos recalcular:
-    rounds = [];
     var r = 1;
     while (r <= n) { rounds.unshift(r); r = r * 2; }
-    // Garante que somamos até n
     var soma = rounds.reduce(function(a,b){return a+b;},0);
     if (soma !== n) {
       // Fallback: distribui os restantes no primeiro round
@@ -268,7 +258,7 @@
 
       var match = document.createElement('div');
       match.className = 'bracket-match border ' +
-        (c.status === 'done' ? 'border-success/40 bg-base-200' : 'border-base-300 bg-base-200');
+        (c.status === 'done' ? 'border-green-500/40 bg-gray-50 dark:bg-gray-800' : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800');
 
       match.innerHTML = buildMatchHTML(c, isLast);
 
@@ -301,17 +291,17 @@
     var visitanteWon = c.vencedor && c.vencedor === c.visitante;
 
     function teamRow(name, gols, pen, won, lost) {
-      var bg   = won  ? 'bg-success/15' : '';
+      var bg   = won  ? 'bg-green-500/15' : '';
       var op   = lost ? 'opacity-40'    : '';
       var bold = won  ? 'font-bold'     : '';
       var score = gols !== null
-        ? '<span class="font-bold text-sm shrink-0 ' + (won ? 'text-success' : '') + '">' +
+        ? '<span class="font-bold text-sm shrink-0 ' + (won ? 'text-green-500' : '') + '">' +
           gols + (pen !== null ? '<span class="text-[10px] opacity-50 ml-0.5">(' + pen + ')</span>' : '') +
           '</span>'
-        : '<span class="text-base-content/25 text-sm shrink-0">—</span>';
-      var trophy = won ? '<i class="bi bi-trophy-fill text-warning text-[10px] ml-1"></i>' : '';
-      return '<div class="flex items-center gap-2 px-3 py-2.5 border-b border-base-300/40 ' + bg + ' ' + op + '">' +
-        '<div class="w-5 h-5 rounded-full bg-base-300 flex items-center justify-center text-[10px] font-black shrink-0">' +
+        : '<span class="text-gray-400 dark:text-gray-600 text-sm shrink-0">—</span>';
+      var trophy = won ? '<i class="ti ti-trophy text-yellow-500 text-[10px] ml-1"></i>' : '';
+      return '<div class="flex items-center gap-2 px-3 py-2.5 border-b border-gray-200 dark:border-gray-700/40 ' + bg + ' ' + op + '">' +
+        '<div class="w-5 h-5 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-[10px] font-black shrink-0">' +
         name.charAt(0).toUpperCase() + '</div>' +
         '<span class="flex-1 text-sm truncate ' + bold + '" style="max-width:110px">' + name + trophy + '</span>' +
         score + '</div>';
@@ -319,16 +309,16 @@
 
     var footer = '';
     if (c.status === 'done') {
-      footer = '<div class="px-3 py-1.5 bg-success/10 text-center text-[10px] text-success font-semibold">' +
-        '<i class="bi bi-check-circle-fill mr-1"></i>' + c.vencedor + '</div>';
+      footer = '<div class="px-3 py-1.5 bg-green-500/10 text-center text-[10px] text-green-500 font-semibold">' +
+        '<i class="ti ti-circle-check mr-1"></i>' + c.vencedor + '</div>';
     } else if (c.status === 'penalties') {
-      footer = '<div class="px-3 py-1.5 bg-warning/10 text-center text-[10px] text-warning">' +
+      footer = '<div class="px-3 py-1.5 bg-yellow-400/10 text-center text-[10px] text-yellow-500">' +
         'Aguardando pênaltis</div>';
     } else if (c.status === 'playing') {
-      footer = '<div class="px-3 py-1.5 text-center text-[10px] text-base-content/30">' +
-        '<i class="bi bi-pencil-square mr-1"></i>Em andamento</div>';
+      footer = '<div class="px-3 py-1.5 text-center text-[10px] text-gray-400 dark:text-gray-600">' +
+        '<i class="ti ti-pencil mr-1"></i>Em andamento</div>';
     } else {
-      footer = '<div class="px-3 py-1.5 text-center text-[10px] text-base-content/20">A iniciar</div>';
+      footer = '<div class="px-3 py-1.5 text-center text-[10px] text-gray-300 dark:text-gray-600">A iniciar</div>';
     }
 
     return '<div style="' + width + '">' +

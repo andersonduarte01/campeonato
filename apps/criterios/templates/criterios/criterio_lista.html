@@ -1,0 +1,71 @@
+{% extends 'base/indice.html' %}
+{% block titulo %}Critérios de Classificação{% endblock %}
+
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
+    <ul>
+      <li><a href="{% url 'competicao:dashboard' %}">Dashboard</a></li>
+      <li>Critérios</li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block conteudo %}
+<div class="p-4 md:p-6 space-y-5">
+
+  <div class="flex items-end justify-between gap-4">
+    <div>
+      <h1 class="section-heading text-4xl text-gray-900 dark:text-white leading-none">CRITÉRIOS</h1>
+      <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">{{ criterios|length }} critério{{ criterios|length|pluralize }} cadastrado{{ criterios|length|pluralize }}</p>
+    </div>
+    <a href="{% url 'criterios:criterio_add' %}" class="btn btn-outline shrink-0">
+      <i class="ti ti-plus"></i>
+      <span class="hidden sm:inline">Novo Critério</span>
+    </a>
+  </div>
+
+  <div class="card bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+      <span class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Critérios Cadastrados</span>
+    </div>
+    <div class="divide-y divide-gray-100 dark:divide-gray-800">
+      {% for c in criterios %}
+      <div class="flex items-center justify-between px-5 py-3 gap-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
+            <i class="ti ti-list-check text-blue-500 text-sm"></i>
+          </div>
+          <div class="min-w-0">
+            <p class="font-bold text-sm text-gray-900 dark:text-white">{{ c.nome }}</p>
+            <div class="flex flex-wrap items-center gap-1.5 mt-1">
+              {% if c.confronto_direto %}<span class="badge badge-xs badge-blue">Confronto Direto</span>{% endif %}
+              {% if c.vitorias %}<span class="badge badge-xs badge-gray">Vitórias</span>{% endif %}
+              {% if c.saldo_gols %}<span class="badge badge-xs badge-gray">Saldo de Gols</span>{% endif %}
+              {% if c.gols_pro %}<span class="badge badge-xs badge-gray">Gols Marcados</span>{% endif %}
+              {% if c.gol_fora %}<span class="badge badge-xs badge-gray">Gol Fora</span>{% endif %}
+              {% if c.menor_vermelho %}<span class="badge badge-xs badge-red">- Vermelhos</span>{% endif %}
+              {% if c.menor_amarelo %}<span class="badge badge-xs badge-yellow">- Amarelos</span>{% endif %}
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <span class="text-xs text-gray-400">{{ c.competicoes.count }} comp.</span>
+          <a href="{% url 'criterios:criterio_edit' c.pk %}"
+             class="btn btn-ghost btn-xs gap-1 border border-gray-200 dark:border-gray-700">
+            <i class="ti ti-pencil text-xs"></i> Editar
+          </a>
+        </div>
+      </div>
+      {% empty %}
+      <div class="flex flex-col items-center py-10 text-gray-400 gap-2">
+        <i class="ti ti-list-check text-3xl"></i>
+        <p class="text-sm">Nenhum critério cadastrado</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

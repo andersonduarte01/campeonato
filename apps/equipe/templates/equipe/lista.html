@@ -4,127 +4,204 @@
 
 {% block breadcrumbs %}
 <div class="px-4 md:px-6 pt-3 pb-0">
-  <div class="breadcrumbs text-xs text-base-content/40">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
     <ul>
-      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-base-content/70">Dashboard</a></li>
-      <li><span class="text-base-content/60">Equipes</span></li>
+      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-gray-700 dark:text-gray-300">Dashboard</a></li>
+      <li><span class="text-gray-600 dark:text-gray-400">Equipes</span></li>
     </ul>
   </div>
 </div>
 {% endblock %}
 
 {% block conteudo %}
-{% url 'equipe:criar' as url_criar_equipe %}
 <div class="p-4 md:p-6 space-y-5">
 
   <!-- Cabeçalho -->
-  <div class="flex items-center justify-between gap-4">
-    <div class="flex items-center gap-3">
-      <div class="w-9 h-9 rounded-xl bg-warning/10 border border-warning/20
-                  flex items-center justify-center shrink-0">
-        <i class="bi bi-shield-fill text-warning text-base"></i>
-      </div>
-      <div>
-        <h1 class="section-heading text-2xl text-base-content leading-none">Equipes</h1>
-        <p class="text-xs text-base-content/40 mt-0.5">
-          {{ equipes.count }} equipe{{ equipes.count|pluralize }} cadastrada{{ equipes.count|pluralize }}
-        </p>
-      </div>
+  <div class="flex items-end justify-between gap-4">
+    <div>
+      <h1 class="section-heading text-4xl text-gray-900 dark:text-white leading-none">EQUIPES</h1>
+      <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">
+        {{ equipes.count }} equipe{{ equipes.count|pluralize }} cadastrada{{ equipes.count|pluralize }}
+      </p>
     </div>
-    <a href="{% url 'equipe:criar' %}"
-       class="btn btn-warning btn-sm gap-1.5 shadow-lg shadow-warning/20 shrink-0">
-      <i class="bi bi-plus-lg"></i>
+    <a href="{% url 'equipe:criar' %}" class="btn btn-outline shrink-0">
+      <i class="ti ti-plus"></i>
       <span class="hidden sm:inline">Nova Equipe</span>
     </a>
   </div>
 
-  <!-- Grid de equipes -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-    {% for equipe in equipes %}
+  <!-- Card principal -->
+  <div class="card overflow-hidden">
+    <div class="p-4 md:p-6">
 
-    <div class="card bg-base-200 border border-base-300 card-sport overflow-hidden group">
+      {% if equipes %}
+      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+        {% for equipe in equipes %}
 
-      <!-- Banner colorido no topo -->
-      <div class="h-2 bg-gradient-to-r from-warning/60 via-warning/30 to-transparent"></div>
+        <div class="card card-sport overflow-hidden group">
 
-      <div class="card-body p-5">
-        <div class="flex items-start gap-4">
+          <!-- Banner azul no topo -->
+          <div class="h-1.5 bg-gradient-to-r from-blue-600 via-blue-400/50 to-transparent"></div>
 
-          <!-- Logo 72px -->
-          {% if equipe.escudo %}
-            <img src="{{ equipe.escudo.thumbnail.url }}" alt="{{ equipe.nome_equipe }}"
-                 class="w-[4.5rem] h-[4.5rem] rounded-full object-cover border-2 border-base-300
-                        group-hover:border-warning/40 transition-colors shrink-0 shadow-md">
-          {% else %}
-            <div class="w-[4.5rem] h-[4.5rem] rounded-full bg-neutral-content/10 border-2 border-base-300
-                        group-hover:border-warning/40 transition-colors shrink-0 shadow-md
-                        flex items-center justify-center">
-              <span class="text-2xl font-black text-base-content/40">{{ equipe.nome_equipe|first|upper }}</span>
-            </div>
-          {% endif %}
+          <div class="card-body p-5">
+            <div class="flex items-start gap-4">
 
-          <!-- Info -->
-          <div class="min-w-0 flex-1">
-            <h2 class="font-bold text-base truncate leading-snug">{{ equipe.nome_equipe }}</h2>
-            {% if equipe.cidade %}
-            <p class="text-xs text-base-content/40 mt-0.5 flex items-center gap-1">
-              <i class="bi bi-geo-alt-fill text-[10px]"></i>
-              {{ equipe.cidade }}{% if equipe.estado %}/{{ equipe.estado }}{% endif %}
-            </p>
-            {% endif %}
-
-            <!-- Stats rápidas -->
-            <div class="flex items-center gap-3 mt-3">
-              <span class="flex items-center gap-1 text-xs text-base-content/50">
-                <i class="bi bi-people-fill text-warning/60 text-[10px]"></i>
-                <span class="stat-number text-sm text-base-content/70">{{ equipe.equipe_jogador.count }}</span>
-                atleta{{ equipe.equipe_jogador.count|pluralize }}
-              </span>
-              {% if equipe.tecnico %}
-              <span class="flex items-center gap-1 text-xs text-base-content/40 truncate">
-                <i class="bi bi-person-fill text-[10px]"></i>
-                {{ equipe.tecnico|truncatechars:15 }}
-              </span>
+              <!-- Logo -->
+              {% if equipe.escudo %}
+                <img src="{{ equipe.escudo.thumbnail.url }}" alt="{{ equipe.nome_equipe }}"
+                     class="w-[4.5rem] h-[4.5rem] rounded-full object-cover shrink-0 shadow-md
+                            border-2 border-gray-200 dark:border-gray-700
+                            group-hover:border-blue-400/50 transition-colors">
+              {% else %}
+                <div class="w-[4.5rem] h-[4.5rem] rounded-full shrink-0 shadow-md
+                            bg-blue-50 dark:bg-blue-900/20
+                            border-2 border-gray-200 dark:border-gray-700
+                            group-hover:border-blue-400/50 transition-colors
+                            flex items-center justify-center">
+                  <span class="text-2xl font-black text-blue-400">{{ equipe.nome_equipe|first|upper }}</span>
+                </div>
               {% endif %}
+
+              <!-- Info -->
+              <div class="min-w-0 flex-1">
+                <div class="flex items-start justify-between gap-2">
+                  <h2 class="font-bold text-base truncate leading-snug text-gray-900 dark:text-white">{{ equipe.nome_equipe }}</h2>
+                  <span class="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded border
+                    {% if equipe.situacao == 'filiado' %}bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20
+                    {% elif equipe.situacao == 'suspenso' %}bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20
+                    {% elif equipe.situacao == 'desfiliado' %}bg-gray-500/10 text-gray-500 border-gray-400/20
+                    {% else %}bg-amber-400/10 text-amber-500 border-amber-400/20{% endif %}">
+                    {{ equipe.get_situacao_display }}
+                  </span>
+                </div>
+                {% if equipe.cidade %}
+                <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5 flex items-center gap-1">
+                  <i class="ti ti-map-pin text-[10px]"></i>
+                  {{ equipe.cidade }}{% if equipe.estado %}/{{ equipe.estado }}{% endif %}
+                </p>
+                {% endif %}
+
+                <div class="flex items-center gap-3 mt-3">
+                  <span class="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                    <i class="ti ti-users text-blue-400 text-[10px]"></i>
+                    <span class="stat-number text-sm text-gray-700 dark:text-gray-300">{{ equipe.equipe_jogador.count }}</span>
+                    atleta{{ equipe.equipe_jogador.count|pluralize }}
+                  </span>
+                  {% if equipe.tecnico %}
+                  <span class="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 truncate">
+                    <i class="ti ti-user text-[10px]"></i>
+                    {{ equipe.tecnico|truncatechars:15 }}
+                  </span>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Rodapé com ações -->
+          <div class="border-t border-gray-200 dark:border-gray-700 px-4 py-2 flex items-center justify-between gap-2
+                      bg-gray-50 dark:bg-gray-700/20">
+            <a href="{% url 'equipe:detalhe' equipe.pk %}"
+               class="btn btn-ghost btn-xs gap-1.5 font-medium leading-none flex-1">
+              <i class="ti ti-users text-xs"></i> Ver Elenco
+            </a>
+            <div class="flex gap-1">
+              <a href="{% url 'equipe:editar' equipe.pk %}"
+                 class="btn btn-ghost btn-xs text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                 title="Editar equipe">
+                <i class="ti ti-pencil text-xs"></i>
+              </a>
+              <button type="button"
+                      data-modal-target="modal-desativar-{{ equipe.pk }}"
+                      data-modal-toggle="modal-desativar-{{ equipe.pk }}"
+                      class="btn btn-ghost btn-xs text-red-400/60 hover:text-red-500 hover:bg-red-500/10"
+                      title="Desativar equipe">
+                <i class="ti ti-trash text-xs"></i>
+              </button>
             </div>
           </div>
         </div>
+
+        {% endfor %}
       </div>
 
-      <!-- Rodapé com ações -->
-      <div class="border-t border-base-300 px-4 py-2.5 flex gap-2 items-center justify-between
-                  bg-base-300/20">
-        <a href="{% url 'equipe:detalhe' equipe.pk %}"
-           class="btn btn-sm btn-ghost gap-1.5 text-xs font-medium text-base-content/60
-                  hover:text-base-content flex-1">
-          <i class="bi bi-people text-sm"></i> Ver Elenco
-        </a>
-        <div class="flex gap-1">
-          <a href="{% url 'equipe:editar' equipe.pk %}"
-             class="btn btn-ghost btn-xs text-base-content/40 hover:text-base-content"
-             title="Editar equipe">
-            <i class="bi bi-pencil text-xs"></i>
-          </a>
-          <a href="{% url 'equipe:excluir' equipe.pk %}"
-             class="btn btn-ghost btn-xs text-error/50 hover:text-error hover:bg-error/10"
-             title="Excluir equipe">
-            <i class="bi bi-trash text-xs"></i>
-          </a>
+      {% else %}
+      <!-- Empty state -->
+      <div class="flex flex-col items-center justify-center py-24 gap-4 text-center">
+        <div class="relative">
+          <div class="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+            <i class="ti ti-shield text-4xl text-gray-300 dark:text-gray-600"></i>
+          </div>
+          <div class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full
+                      bg-blue-600 dark:bg-transparent dark:border-2 dark:border-blue-500
+                      flex items-center justify-center shadow">
+            <i class="ti ti-plus text-white dark:text-blue-400 text-sm"></i>
+          </div>
         </div>
+        <div>
+          <p class="section-heading text-xl text-gray-400 dark:text-gray-500">NENHUMA EQUIPE</p>
+          <p class="text-sm text-gray-400 dark:text-gray-600 mt-1">Crie a primeira equipe para começar a organizar o campeonato.</p>
+        </div>
+        <a href="{% url 'equipe:criar' %}" class="btn btn-outline">
+          <i class="ti ti-plus"></i> Nova Equipe
+        </a>
       </div>
-    </div>
+      {% endif %}
 
-    {% empty %}
-    <div class="col-span-full">
-      {% include 'components/empty_state.html' with
-         icon="shield-x"
-         title="Nenhuma equipe cadastrada ainda."
-         subtitle="Crie a primeira equipe para começar a organizar o campeonato."
-         cta_url=url_criar_equipe
-         cta_label="Nova Equipe" %}
     </div>
-    {% endfor %}
   </div>
 
 </div>
+
+<!-- ── Modais de confirmação (fora do grid para evitar problemas de stacking) ── -->
+{% for equipe in equipes %}
+<div id="modal-desativar-{{ equipe.pk }}" tabindex="-1" aria-hidden="true"
+     class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50
+            justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+  <div class="relative p-4 w-full max-w-md max-h-full">
+    <div class="relative bg-white rounded-2xl shadow-xl dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+
+      <!-- Header -->
+      <div class="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center shrink-0">
+            <i class="ti ti-alert-triangle text-red-500 text-base"></i>
+          </div>
+          <h3 class="text-base font-bold text-gray-900 dark:text-white">Desativar equipe</h3>
+        </div>
+        <button type="button"
+                data-modal-hide="modal-desativar-{{ equipe.pk }}"
+                class="btn-icon text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+          <i class="ti ti-x text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="p-5">
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+          A equipe <strong class="text-gray-900 dark:text-white">{{ equipe.nome_equipe }}</strong>
+          será desativada e não aparecerá mais nas listagens. Esta ação pode ser revertida.
+        </p>
+      </div>
+
+      <!-- Footer -->
+      <div class="flex items-center justify-end gap-2 p-5 border-t border-gray-200 dark:border-gray-700">
+        <button type="button"
+                data-modal-hide="modal-desativar-{{ equipe.pk }}"
+                class="btn btn-ghost">
+          Cancelar
+        </button>
+        <form method="post" action="{% url 'equipe:desativar' equipe.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger-outline">
+            <i class="ti ti-power"></i> Desativar
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endfor %}
+
 {% endblock %}

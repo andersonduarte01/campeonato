@@ -11,7 +11,7 @@
     /* Typography */
     .text-center { text-align: center; }
     .text-muted { color: #6c757d; }
-    .text-success { color: #198754; }
+    .text-green-500 { color: #198754; }
     .fw-bold { font-weight: 700; }
     .fw-semibold { font-weight: 600; }
     .mb-0 { margin-bottom: 0; }
@@ -24,15 +24,15 @@
     /* Buttons */
     .btn { display: inline-block; padding: 3px 10px; border-radius: 4px; border: 1px solid transparent; cursor: pointer; font-size: 0.8rem; }
     .btn-sm { padding: 2px 8px; font-size: 0.75rem; }
-    .btn-dark { background: #212529; color: #fff; border-color: #212529; }
-    .btn-outline-secondary { background: transparent; color: #6c757d; border-color: #6c757d; }
+    .btn-primary { background: #212529; color: #fff; border-color: #212529; }
+    .btn-ghost { background: transparent; color: #6c757d; border-color: #6c757d; }
 
     /* Tables */
     .table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
     .table th, .table td { padding: 5px 7px; vertical-align: top; }
-    .table-bordered th, .table-bordered td { border: 1px solid #dee2e6; }
+    . th, . td { border: 1px solid #dee2e6; }
     .table-sm th, .table-sm td { padding: 3px 5px; }
-    .table-dark thead tr th { background: #212529; color: #fff; border-color: #373b3e; }
+    . thead tr th { background: #212529; color: #fff; border-color: #373b3e; }
 
     @media print {
       .no-print { display: none !important; }
@@ -43,10 +43,10 @@
 <body>
 
   <div class="no-print mb-3">
-    <button onclick="window.print()" class="btn btn-dark btn-sm">
-      <i class="bi bi-printer"></i> Imprimir / Salvar PDF
+    <button onclick="window.print()" class="btn btn-primary btn-sm">
+      <i class="ti ti-printer"></i> Imprimir / Salvar PDF
     </button>
-    <button onclick="window.history.back()" class="btn btn-outline-secondary btn-sm ms-2">Voltar</button>
+    <button onclick="window.history.back()" class="btn btn-ghost btn-sm ms-2">Voltar</button>
   </div>
 
   <div class="text-center mb-3">
@@ -56,8 +56,8 @@
   <hr>
 
   {% if artilharia %}
-  <table class="table table-sm table-bordered">
-    <thead class="table-dark">
+  <table class="table table-sm ">
+    <thead class="">
       <tr>
         <th style="width:40px">#</th>
         <th>Atleta</th>
@@ -71,7 +71,7 @@
         <td class="text-center text-muted">{{ forloop.counter }}</td>
         <td class="fw-semibold">{{ a.atleta__nome }}</td>
         <td class="text-muted">{{ a.atleta__equipe__nome_equipe }}</td>
-        <td class="text-center fw-bold text-success">{{ a.total }}</td>
+        <td class="text-center fw-bold text-green-500">{{ a.total }}</td>
       </tr>
       {% endfor %}
     </tbody>

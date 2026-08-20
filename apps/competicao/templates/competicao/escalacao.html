@@ -1,15 +1,15 @@
-{% extends 'base/indice.html' %}
+﻿{% extends 'base/indice.html' %}
 {% block titulo %}Escalação — {{ jogo.equipe_casa }} x {{ jogo.equipe_fora }}{% endblock %}
 
 {% block breadcrumbs %}
 <div class="px-4 md:px-6 pt-3 pb-0">
-  <div class="breadcrumbs text-xs text-base-content/40">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
     <ul>
-      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-base-content/70">Dashboard</a></li>
-      <li><a href="{% url 'competicao:jogo_detalhe' jogo.pk %}" class="hover:text-base-content/70">
+      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-gray-700 dark:text-gray-300">Dashboard</a></li>
+      <li><a href="{% url 'competicao:jogo_detalhe' jogo.pk %}" class="hover:text-gray-700 dark:text-gray-300">
         {{ jogo.equipe_casa.nome_equipe }} × {{ jogo.equipe_fora.nome_equipe }}
       </a></li>
-      <li><span class="text-base-content/60">Escalação</span></li>
+      <li><span class="text-gray-600 dark:text-gray-400">Escalação</span></li>
     </ul>
   </div>
 </div>
@@ -19,8 +19,8 @@
 <div class="p-4 md:p-6 space-y-5">
 
   {% if suspensos %}
-  <div class="alert alert-error text-sm mb-4">
-    <i class="bi bi-exclamation-triangle-fill text-lg"></i>
+  <div class="alert alert-danger text-sm mb-4">
+    <i class="ti ti-alert-triangle text-lg"></i>
     <div>
       <strong>Jogadores suspensos — não devem ser escalados:</strong>
       <ul class="mt-1 space-y-0.5 list-none">
@@ -39,31 +39,31 @@
   <!-- Cabeçalho -->
   <div class="flex items-center justify-between flex-wrap gap-3">
     <div class="flex items-center gap-3">
-      <div class="w-9 h-9 rounded-xl bg-warning/10 border border-warning/20
+      <div class="w-9 h-9 rounded-xl bg-yellow-400/10 border border-yellow-400/20
                   flex items-center justify-center shrink-0">
-        <i class="bi bi-people-fill text-warning text-base"></i>
+        <i class="ti ti-users text-yellow-500 text-base"></i>
       </div>
       <div>
-        <h1 class="section-heading text-2xl text-base-content leading-none">ESCALAÇÃO</h1>
-        <p class="text-xs text-base-content/40 mt-0.5">
-          <span class="text-warning">{{ jogo.equipe_casa.nome_equipe }}</span>
-          <span class="text-base-content/20 mx-1">×</span>
-          <span class="text-warning">{{ jogo.equipe_fora.nome_equipe }}</span>
+        <h1 class="section-heading text-2xl text-gray-900 dark:text-white leading-none">ESCALAÇÃO</h1>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+          <span class="text-yellow-500">{{ jogo.equipe_casa.nome_equipe }}</span>
+          <span class="text-gray-300 dark:text-gray-600 mx-1">×</span>
+          <span class="text-yellow-500">{{ jogo.equipe_fora.nome_equipe }}</span>
         </p>
       </div>
     </div>
     <a href="{% url 'competicao:jogo_detalhe' jogo.pk %}"
-       class="btn btn-ghost btn-sm gap-1.5 border border-base-content/10">
-      <i class="bi bi-arrow-left text-sm"></i> Voltar ao Jogo
+       class="btn btn-ghost btn-sm gap-1.5 border border-gray-200/60 dark:border-gray-700/60">
+      <i class="ti ti-arrow-left text-sm"></i> Voltar ao Jogo
     </a>
   </div>
 
   <!-- ══ Campo Visual de Futebol ════════════════════════════════════ -->
-  <div class="card bg-base-200 border border-base-300 overflow-hidden">
-    <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/20">
-      <i class="bi bi-grid-3x3-gap text-warning/50 text-sm"></i>
-      <span class="section-heading text-sm text-base-content/60 tracking-widest">CAMPO</span>
-      <span class="text-xs text-base-content/30 ml-auto">Titulares por posição</span>
+  <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-200/20 dark:bg-gray-700/20">
+      <i class="ti ti-grid-dots text-yellow-500/50 text-sm"></i>
+      <span class="section-heading text-sm text-gray-600 dark:text-gray-400 tracking-widest">CAMPO</span>
+      <span class="text-xs text-gray-400 dark:text-gray-600 ml-auto">Titulares por posição</span>
     </div>
     <div class="relative overflow-hidden" style="background: #1a4a28;">
       <!-- Linhas do campo -->
@@ -98,9 +98,9 @@
             <div class="flex flex-wrap gap-1.5 justify-start">
               {% for esc in escalacao_casa %}{% if esc.titular %}
               {% if esc.atleta.posicao == 'GR' %}
-              <div class="px-2 py-0.5 rounded-full bg-info/20 border border-info/40 text-[10px] font-semibold text-info truncate max-w-[90px]"
+              <div class="px-2 py-0.5 rounded-full bg-blue-500/20 border border-blue-500/40 text-[10px] font-semibold text-blue-500 truncate max-w-[90px]"
                    title="{{ esc.atleta.nome }}">
-                {% if esc.numero_camisa %}<span class="font-black text-info/60 mr-0.5">{{ esc.numero_camisa }}</span>{% endif %}
+                {% if esc.numero_camisa %}<span class="font-black text-blue-500/60 mr-0.5">{{ esc.numero_camisa }}</span>{% endif %}
                 {{ esc.atleta.nome|truncatechars:12 }}
               </div>
               {% endif %}{% endif %}{% endfor %}
@@ -109,9 +109,9 @@
             <div class="flex flex-wrap gap-1.5 justify-start">
               {% for esc in escalacao_casa %}{% if esc.titular %}
               {% if esc.atleta.posicao == 'ZAG' or esc.atleta.posicao == 'LAT' %}
-              <div class="px-2 py-0.5 rounded-full bg-success/20 border border-success/40 text-[10px] font-semibold text-success truncate max-w-[90px]"
+              <div class="px-2 py-0.5 rounded-full bg-green-500/20 border border-green-500/40 text-[10px] font-semibold text-green-500 truncate max-w-[90px]"
                    title="{{ esc.atleta.nome }}">
-                {% if esc.numero_camisa %}<span class="font-black text-success/60 mr-0.5">{{ esc.numero_camisa }}</span>{% endif %}
+                {% if esc.numero_camisa %}<span class="font-black text-green-500/60 mr-0.5">{{ esc.numero_camisa }}</span>{% endif %}
                 {{ esc.atleta.nome|truncatechars:12 }}
               </div>
               {% endif %}{% endif %}{% endfor %}
@@ -120,9 +120,9 @@
             <div class="flex flex-wrap gap-1.5 justify-start">
               {% for esc in escalacao_casa %}{% if esc.titular %}
               {% if esc.atleta.posicao == 'MEI' or esc.atleta.posicao == 'MO' or esc.atleta.posicao == 'VOL' %}
-              <div class="px-2 py-0.5 rounded-full bg-warning/20 border border-warning/40 text-[10px] font-semibold text-warning truncate max-w-[90px]"
+              <div class="px-2 py-0.5 rounded-full bg-yellow-400/20 border border-yellow-400/40 text-[10px] font-semibold text-yellow-500 truncate max-w-[90px]"
                    title="{{ esc.atleta.nome }}">
-                {% if esc.numero_camisa %}<span class="font-black text-warning/60 mr-0.5">{{ esc.numero_camisa }}</span>{% endif %}
+                {% if esc.numero_camisa %}<span class="font-black text-yellow-500/60 mr-0.5">{{ esc.numero_camisa }}</span>{% endif %}
                 {{ esc.atleta.nome|truncatechars:12 }}
               </div>
               {% endif %}{% endif %}{% endfor %}
@@ -131,9 +131,9 @@
             <div class="flex flex-wrap gap-1.5 justify-start">
               {% for esc in escalacao_casa %}{% if esc.titular %}
               {% if esc.atleta.posicao == 'ATA' or esc.atleta.posicao == 'PO' %}
-              <div class="px-2 py-0.5 rounded-full bg-error/20 border border-error/40 text-[10px] font-semibold text-error truncate max-w-[90px]"
+              <div class="px-2 py-0.5 rounded-full bg-red-500/20 border border-red-500/40 text-[10px] font-semibold text-red-500 truncate max-w-[90px]"
                    title="{{ esc.atleta.nome }}">
-                {% if esc.numero_camisa %}<span class="font-black text-error/60 mr-0.5">{{ esc.numero_camisa }}</span>{% endif %}
+                {% if esc.numero_camisa %}<span class="font-black text-red-500/60 mr-0.5">{{ esc.numero_camisa }}</span>{% endif %}
                 {{ esc.atleta.nome|truncatechars:12 }}
               </div>
               {% endif %}{% endif %}{% endfor %}
@@ -158,9 +158,9 @@
             <div class="flex flex-wrap gap-1.5 justify-end">
               {% for esc in escalacao_fora %}{% if esc.titular %}
               {% if esc.atleta.posicao == 'ATA' or esc.atleta.posicao == 'PO' %}
-              <div class="px-2 py-0.5 rounded-full bg-error/20 border border-error/40 text-[10px] font-semibold text-error truncate max-w-[90px]"
+              <div class="px-2 py-0.5 rounded-full bg-red-500/20 border border-red-500/40 text-[10px] font-semibold text-red-500 truncate max-w-[90px]"
                    title="{{ esc.atleta.nome }}">
-                {{ esc.atleta.nome|truncatechars:12 }}{% if esc.numero_camisa %}<span class="font-black text-error/60 ml-0.5">{{ esc.numero_camisa }}</span>{% endif %}
+                {{ esc.atleta.nome|truncatechars:12 }}{% if esc.numero_camisa %}<span class="font-black text-red-500/60 ml-0.5">{{ esc.numero_camisa }}</span>{% endif %}
               </div>
               {% endif %}{% endif %}{% endfor %}
             </div>
@@ -168,9 +168,9 @@
             <div class="flex flex-wrap gap-1.5 justify-end">
               {% for esc in escalacao_fora %}{% if esc.titular %}
               {% if esc.atleta.posicao == 'MEI' or esc.atleta.posicao == 'MO' or esc.atleta.posicao == 'VOL' %}
-              <div class="px-2 py-0.5 rounded-full bg-warning/20 border border-warning/40 text-[10px] font-semibold text-warning truncate max-w-[90px]"
+              <div class="px-2 py-0.5 rounded-full bg-yellow-400/20 border border-yellow-400/40 text-[10px] font-semibold text-yellow-500 truncate max-w-[90px]"
                    title="{{ esc.atleta.nome }}">
-                {{ esc.atleta.nome|truncatechars:12 }}{% if esc.numero_camisa %}<span class="font-black text-warning/60 ml-0.5">{{ esc.numero_camisa }}</span>{% endif %}
+                {{ esc.atleta.nome|truncatechars:12 }}{% if esc.numero_camisa %}<span class="font-black text-yellow-500/60 ml-0.5">{{ esc.numero_camisa }}</span>{% endif %}
               </div>
               {% endif %}{% endif %}{% endfor %}
             </div>
@@ -178,9 +178,9 @@
             <div class="flex flex-wrap gap-1.5 justify-end">
               {% for esc in escalacao_fora %}{% if esc.titular %}
               {% if esc.atleta.posicao == 'ZAG' or esc.atleta.posicao == 'LAT' %}
-              <div class="px-2 py-0.5 rounded-full bg-success/20 border border-success/40 text-[10px] font-semibold text-success truncate max-w-[90px]"
+              <div class="px-2 py-0.5 rounded-full bg-green-500/20 border border-green-500/40 text-[10px] font-semibold text-green-500 truncate max-w-[90px]"
                    title="{{ esc.atleta.nome }}">
-                {{ esc.atleta.nome|truncatechars:12 }}{% if esc.numero_camisa %}<span class="font-black text-success/60 ml-0.5">{{ esc.numero_camisa }}</span>{% endif %}
+                {{ esc.atleta.nome|truncatechars:12 }}{% if esc.numero_camisa %}<span class="font-black text-green-500/60 ml-0.5">{{ esc.numero_camisa }}</span>{% endif %}
               </div>
               {% endif %}{% endif %}{% endfor %}
             </div>
@@ -188,9 +188,9 @@
             <div class="flex flex-wrap gap-1.5 justify-end">
               {% for esc in escalacao_fora %}{% if esc.titular %}
               {% if esc.atleta.posicao == 'GR' %}
-              <div class="px-2 py-0.5 rounded-full bg-info/20 border border-info/40 text-[10px] font-semibold text-info truncate max-w-[90px]"
+              <div class="px-2 py-0.5 rounded-full bg-blue-500/20 border border-blue-500/40 text-[10px] font-semibold text-blue-500 truncate max-w-[90px]"
                    title="{{ esc.atleta.nome }}">
-                {{ esc.atleta.nome|truncatechars:12 }}{% if esc.numero_camisa %}<span class="font-black text-info/60 ml-0.5">{{ esc.numero_camisa }}</span>{% endif %}
+                {{ esc.atleta.nome|truncatechars:12 }}{% if esc.numero_camisa %}<span class="font-black text-blue-500/60 ml-0.5">{{ esc.numero_camisa }}</span>{% endif %}
               </div>
               {% endif %}{% endif %}{% endfor %}
             </div>
@@ -206,19 +206,19 @@
       <!-- Legenda de cores -->
       <div class="flex gap-4 flex-wrap justify-center py-2 border-t border-white/10">
         <div class="flex items-center gap-1">
-          <div class="w-2.5 h-2.5 rounded-full bg-info/60"></div>
+          <div class="w-2.5 h-2.5 rounded-full bg-blue-500/60"></div>
           <span class="text-[9px] text-white/40 font-semibold uppercase">GR</span>
         </div>
         <div class="flex items-center gap-1">
-          <div class="w-2.5 h-2.5 rounded-full bg-success/60"></div>
+          <div class="w-2.5 h-2.5 rounded-full bg-green-500/60"></div>
           <span class="text-[9px] text-white/40 font-semibold uppercase">DEF</span>
         </div>
         <div class="flex items-center gap-1">
-          <div class="w-2.5 h-2.5 rounded-full bg-warning/60"></div>
+          <div class="w-2.5 h-2.5 rounded-full bg-yellow-400/60"></div>
           <span class="text-[9px] text-white/40 font-semibold uppercase">MEI</span>
         </div>
         <div class="flex items-center gap-1">
-          <div class="w-2.5 h-2.5 rounded-full bg-error/60"></div>
+          <div class="w-2.5 h-2.5 rounded-full bg-red-500/60"></div>
           <span class="text-[9px] text-white/40 font-semibold uppercase">ATA</span>
         </div>
       </div>
@@ -229,8 +229,8 @@
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
     {% for label, escalacao, form_esc, equipe, cor in equipes_template %}
-    <div class="card bg-base-200 border border-base-300">
-      <div class="px-4 py-3 border-b border-base-300 flex items-center gap-2">
+    <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+      <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
         {% if equipe.escudo %}
           <img src="{{ equipe.escudo.thumbnail.url }}" class="w-6 h-6 rounded-full object-cover">
         {% endif %}
@@ -238,56 +238,56 @@
       </div>
       <div class="p-0">
         <!-- Titulares -->
-        <div class="px-4 py-2 text-xs font-bold text-base-content/40 uppercase tracking-wider bg-base-300/30">Titulares</div>
+        <div class="px-4 py-2 text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider bg-gray-200/30 dark:bg-gray-700/30">Titulares</div>
         {% for esc in escalacao %}{% if esc.titular %}
-        <div class="flex items-center gap-2 px-4 py-2 border-b border-base-300/50 hover:bg-base-300/20">
-          <span class="badge badge-neutral badge-sm w-7 justify-center shrink-0">
+        <div class="flex items-center gap-2 px-4 py-2 border-b border-gray-200/50 dark:border-gray-700/50 hover:bg-gray-200/20 dark:bg-gray-700/20">
+          <span class="badge badge-gray badge-sm w-7 justify-center shrink-0">
             {% if esc.numero_camisa %}{{ esc.numero_camisa }}{% else %}—{% endif %}
           </span>
           <span class="text-sm flex-1 font-medium">
             {{ esc.atleta.nome }}
-            {% if esc.capitao %}<i class="bi bi-star-fill text-warning text-xs ml-1" title="Capitão"></i>{% endif %}
+            {% if esc.capitao %}<i class="ti ti-star text-yellow-500 text-xs ml-1" title="Capitão"></i>{% endif %}
           </span>
           <form method="post" action="{% url 'competicao:escalacao_excluir' esc.pk %}" class="inline">
             {% csrf_token %}
-            <button type="submit" class="btn btn-ghost btn-xs text-error"><i class="bi bi-x"></i></button>
+            <button type="submit" class="btn btn-ghost btn-xs text-red-500"><i class="ti ti-x"></i></button>
           </form>
         </div>
         {% endif %}{% empty %}
-        <p class="px-4 py-2 text-xs text-base-content/40">Nenhum titular.</p>
+        <p class="px-4 py-2 text-xs text-gray-400 dark:text-gray-500">Nenhum titular.</p>
         {% endfor %}
 
         <!-- Reservas -->
-        <div class="px-4 py-2 text-xs font-bold text-base-content/40 uppercase tracking-wider bg-base-300/20">Reservas</div>
+        <div class="px-4 py-2 text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider bg-gray-200/20 dark:bg-gray-700/20">Reservas</div>
         {% for esc in escalacao %}{% if not esc.titular %}
-        <div class="flex items-center gap-2 px-4 py-2 border-b border-base-300/50 hover:bg-base-300/20 opacity-70">
-          <span class="badge badge-ghost badge-sm w-7 justify-center shrink-0">
+        <div class="flex items-center gap-2 px-4 py-2 border-b border-gray-200/50 dark:border-gray-700/50 hover:bg-gray-200/20 dark:bg-gray-700/20 opacity-70">
+          <span class="badge badge-gray badge-sm w-7 justify-center shrink-0">
             {% if esc.numero_camisa %}{{ esc.numero_camisa }}{% else %}—{% endif %}
           </span>
           <span class="text-sm flex-1">{{ esc.atleta.nome }}</span>
           <form method="post" action="{% url 'competicao:escalacao_excluir' esc.pk %}" class="inline">
             {% csrf_token %}
-            <button type="submit" class="btn btn-ghost btn-xs text-error"><i class="bi bi-x"></i></button>
+            <button type="submit" class="btn btn-ghost btn-xs text-red-500"><i class="ti ti-x"></i></button>
           </form>
         </div>
         {% endif %}{% endfor %}
       </div>
 
       <!-- Form adicionar -->
-      <div class="p-3 border-t border-base-300 bg-base-300/20">
+      <div class="p-3 border-t border-gray-200 dark:border-gray-700 bg-gray-200/20 dark:bg-gray-700/20">
         <form method="post" action="{% url 'competicao:escalacao_criar' jogo.pk equipe.pk %}">
           {% csrf_token %}
           <div class="flex gap-2 items-end flex-wrap">
             <div class="flex-1 min-w-32">{{ form_esc.atleta }}</div>
-            <input type="number" name="numero_camisa" class="input input-bordered input-sm w-14" placeholder="#" min="1" max="99">
+            <input type="number" name="numero_camisa" class="input  input-sm w-14" placeholder="#" min="1" max="99">
             <label class="flex items-center gap-1 text-xs cursor-pointer">
               <input type="checkbox" name="titular" class="checkbox checkbox-xs" checked> Titular
             </label>
             <label class="flex items-center gap-1 text-xs cursor-pointer">
               <input type="checkbox" name="capitao" class="checkbox checkbox-xs">
-              <i class="bi bi-star text-warning text-xs"></i>
+              <i class="ti ti-star text-yellow-500 text-xs"></i>
             </label>
-            <button type="submit" class="btn btn-warning btn-xs"><i class="bi bi-plus"></i></button>
+            <button type="submit" class="btn btn-primary btn-xs"><i class="ti ti-plus"></i></button>
           </div>
         </form>
       </div>
@@ -298,80 +298,80 @@
 
     {% if not equipes_template %}
     <!-- Casa -->
-    <div class="card bg-base-200 border border-base-300">
-      <div class="px-4 py-3 border-b border-base-300 flex items-center gap-2">
+    <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+      <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
         {% if jogo.equipe_casa.escudo %}
           <img src="{{ jogo.equipe_casa.escudo.thumbnail.url }}" class="w-6 h-6 rounded-full object-cover">
         {% endif %}
         <span class="font-semibold text-sm">{{ jogo.equipe_casa.nome_equipe }} — Mandante</span>
       </div>
       <div class="p-0">
-        <div class="px-4 py-2 text-xs font-bold text-base-content/40 uppercase tracking-wider bg-base-300/30">Titulares</div>
+        <div class="px-4 py-2 text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider bg-gray-200/30 dark:bg-gray-700/30">Titulares</div>
         {% for esc in escalacao_casa %}{% if esc.titular %}
-        <div class="flex items-center gap-2 px-4 py-2 border-b border-base-300/50">
-          <span class="badge badge-neutral badge-sm w-7 justify-center">{% if esc.numero_camisa %}{{ esc.numero_camisa }}{% else %}—{% endif %}</span>
-          <span class="text-sm flex-1">{{ esc.atleta.nome }}{% if esc.capitao %}<i class="bi bi-star-fill text-warning text-xs ml-1"></i>{% endif %}</span>
-          <form method="post" action="{% url 'competicao:escalacao_excluir' esc.pk %}" class="inline">{% csrf_token %}<button class="btn btn-ghost btn-xs text-error"><i class="bi bi-x"></i></button></form>
+        <div class="flex items-center gap-2 px-4 py-2 border-b border-gray-200/50 dark:border-gray-700/50">
+          <span class="badge badge-gray badge-sm w-7 justify-center">{% if esc.numero_camisa %}{{ esc.numero_camisa }}{% else %}—{% endif %}</span>
+          <span class="text-sm flex-1">{{ esc.atleta.nome }}{% if esc.capitao %}<i class="ti ti-star text-yellow-500 text-xs ml-1"></i>{% endif %}</span>
+          <form method="post" action="{% url 'competicao:escalacao_excluir' esc.pk %}" class="inline">{% csrf_token %}<button class="btn btn-ghost btn-xs text-red-500"><i class="ti ti-x"></i></button></form>
         </div>
-        {% endif %}{% empty %}<p class="px-4 py-2 text-xs text-base-content/40">Nenhum titular.</p>{% endfor %}
-        <div class="px-4 py-2 text-xs font-bold text-base-content/40 uppercase tracking-wider bg-base-300/20">Reservas</div>
+        {% endif %}{% empty %}<p class="px-4 py-2 text-xs text-gray-400 dark:text-gray-500">Nenhum titular.</p>{% endfor %}
+        <div class="px-4 py-2 text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider bg-gray-200/20 dark:bg-gray-700/20">Reservas</div>
         {% for esc in escalacao_casa %}{% if not esc.titular %}
-        <div class="flex items-center gap-2 px-4 py-2 border-b border-base-300/50 opacity-70">
-          <span class="badge badge-ghost badge-sm w-7 justify-center">{% if esc.numero_camisa %}{{ esc.numero_camisa }}{% else %}—{% endif %}</span>
+        <div class="flex items-center gap-2 px-4 py-2 border-b border-gray-200/50 dark:border-gray-700/50 opacity-70">
+          <span class="badge badge-gray badge-sm w-7 justify-center">{% if esc.numero_camisa %}{{ esc.numero_camisa }}{% else %}—{% endif %}</span>
           <span class="text-sm flex-1">{{ esc.atleta.nome }}</span>
-          <form method="post" action="{% url 'competicao:escalacao_excluir' esc.pk %}" class="inline">{% csrf_token %}<button class="btn btn-ghost btn-xs text-error"><i class="bi bi-x"></i></button></form>
+          <form method="post" action="{% url 'competicao:escalacao_excluir' esc.pk %}" class="inline">{% csrf_token %}<button class="btn btn-ghost btn-xs text-red-500"><i class="ti ti-x"></i></button></form>
         </div>
         {% endif %}{% endfor %}
       </div>
-      <div class="p-3 border-t border-base-300 bg-base-300/20">
+      <div class="p-3 border-t border-gray-200 dark:border-gray-700 bg-gray-200/20 dark:bg-gray-700/20">
         <form method="post" action="{% url 'competicao:escalacao_criar' jogo.pk jogo.equipe_casa.pk %}">
           {% csrf_token %}
           <div class="flex gap-2 items-end flex-wrap">
             <div class="flex-1 min-w-32">{{ form_escalacao_casa.atleta }}</div>
-            <input type="number" name="numero_camisa" class="input input-bordered input-sm w-14" placeholder="#" min="1" max="99">
+            <input type="number" name="numero_camisa" class="input  input-sm w-14" placeholder="#" min="1" max="99">
             <label class="flex items-center gap-1 text-xs cursor-pointer"><input type="checkbox" name="titular" class="checkbox checkbox-xs" checked> Titular</label>
-            <label class="flex items-center gap-1 text-xs cursor-pointer"><input type="checkbox" name="capitao" class="checkbox checkbox-xs"><i class="bi bi-star text-warning text-xs"></i></label>
-            <button type="submit" class="btn btn-warning btn-xs"><i class="bi bi-plus"></i></button>
+            <label class="flex items-center gap-1 text-xs cursor-pointer"><input type="checkbox" name="capitao" class="checkbox checkbox-xs"><i class="ti ti-star text-yellow-500 text-xs"></i></label>
+            <button type="submit" class="btn btn-primary btn-xs"><i class="ti ti-plus"></i></button>
           </div>
         </form>
       </div>
     </div>
 
     <!-- Fora -->
-    <div class="card bg-base-200 border border-base-300">
-      <div class="px-4 py-3 border-b border-base-300 flex items-center gap-2">
+    <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+      <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
         {% if jogo.equipe_fora.escudo %}
           <img src="{{ jogo.equipe_fora.escudo.thumbnail.url }}" class="w-6 h-6 rounded-full object-cover">
         {% endif %}
         <span class="font-semibold text-sm">{{ jogo.equipe_fora.nome_equipe }} — Visitante</span>
       </div>
       <div class="p-0">
-        <div class="px-4 py-2 text-xs font-bold text-base-content/40 uppercase tracking-wider bg-base-300/30">Titulares</div>
+        <div class="px-4 py-2 text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider bg-gray-200/30 dark:bg-gray-700/30">Titulares</div>
         {% for esc in escalacao_fora %}{% if esc.titular %}
-        <div class="flex items-center gap-2 px-4 py-2 border-b border-base-300/50">
-          <span class="badge badge-neutral badge-sm w-7 justify-center">{% if esc.numero_camisa %}{{ esc.numero_camisa }}{% else %}—{% endif %}</span>
-          <span class="text-sm flex-1">{{ esc.atleta.nome }}{% if esc.capitao %}<i class="bi bi-star-fill text-warning text-xs ml-1"></i>{% endif %}</span>
-          <form method="post" action="{% url 'competicao:escalacao_excluir' esc.pk %}" class="inline">{% csrf_token %}<button class="btn btn-ghost btn-xs text-error"><i class="bi bi-x"></i></button></form>
+        <div class="flex items-center gap-2 px-4 py-2 border-b border-gray-200/50 dark:border-gray-700/50">
+          <span class="badge badge-gray badge-sm w-7 justify-center">{% if esc.numero_camisa %}{{ esc.numero_camisa }}{% else %}—{% endif %}</span>
+          <span class="text-sm flex-1">{{ esc.atleta.nome }}{% if esc.capitao %}<i class="ti ti-star text-yellow-500 text-xs ml-1"></i>{% endif %}</span>
+          <form method="post" action="{% url 'competicao:escalacao_excluir' esc.pk %}" class="inline">{% csrf_token %}<button class="btn btn-ghost btn-xs text-red-500"><i class="ti ti-x"></i></button></form>
         </div>
-        {% endif %}{% empty %}<p class="px-4 py-2 text-xs text-base-content/40">Nenhum titular.</p>{% endfor %}
-        <div class="px-4 py-2 text-xs font-bold text-base-content/40 uppercase tracking-wider bg-base-300/20">Reservas</div>
+        {% endif %}{% empty %}<p class="px-4 py-2 text-xs text-gray-400 dark:text-gray-500">Nenhum titular.</p>{% endfor %}
+        <div class="px-4 py-2 text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider bg-gray-200/20 dark:bg-gray-700/20">Reservas</div>
         {% for esc in escalacao_fora %}{% if not esc.titular %}
-        <div class="flex items-center gap-2 px-4 py-2 border-b border-base-300/50 opacity-70">
-          <span class="badge badge-ghost badge-sm w-7 justify-center">{% if esc.numero_camisa %}{{ esc.numero_camisa }}{% else %}—{% endif %}</span>
+        <div class="flex items-center gap-2 px-4 py-2 border-b border-gray-200/50 dark:border-gray-700/50 opacity-70">
+          <span class="badge badge-gray badge-sm w-7 justify-center">{% if esc.numero_camisa %}{{ esc.numero_camisa }}{% else %}—{% endif %}</span>
           <span class="text-sm flex-1">{{ esc.atleta.nome }}</span>
-          <form method="post" action="{% url 'competicao:escalacao_excluir' esc.pk %}" class="inline">{% csrf_token %}<button class="btn btn-ghost btn-xs text-error"><i class="bi bi-x"></i></button></form>
+          <form method="post" action="{% url 'competicao:escalacao_excluir' esc.pk %}" class="inline">{% csrf_token %}<button class="btn btn-ghost btn-xs text-red-500"><i class="ti ti-x"></i></button></form>
         </div>
         {% endif %}{% endfor %}
       </div>
-      <div class="p-3 border-t border-base-300 bg-base-300/20">
+      <div class="p-3 border-t border-gray-200 dark:border-gray-700 bg-gray-200/20 dark:bg-gray-700/20">
         <form method="post" action="{% url 'competicao:escalacao_criar' jogo.pk jogo.equipe_fora.pk %}">
           {% csrf_token %}
           <div class="flex gap-2 items-end flex-wrap">
             <div class="flex-1 min-w-32">{{ form_escalacao_fora.atleta }}</div>
-            <input type="number" name="numero_camisa" class="input input-bordered input-sm w-14" placeholder="#" min="1" max="99">
+            <input type="number" name="numero_camisa" class="input  input-sm w-14" placeholder="#" min="1" max="99">
             <label class="flex items-center gap-1 text-xs cursor-pointer"><input type="checkbox" name="titular" class="checkbox checkbox-xs" checked> Titular</label>
-            <label class="flex items-center gap-1 text-xs cursor-pointer"><input type="checkbox" name="capitao" class="checkbox checkbox-xs"><i class="bi bi-star text-warning text-xs"></i></label>
-            <button type="submit" class="btn btn-warning btn-xs"><i class="bi bi-plus"></i></button>
+            <label class="flex items-center gap-1 text-xs cursor-pointer"><input type="checkbox" name="capitao" class="checkbox checkbox-xs"><i class="ti ti-star text-yellow-500 text-xs"></i></label>
+            <button type="submit" class="btn btn-primary btn-xs"><i class="ti ti-plus"></i></button>
           </div>
         </form>
       </div>
@@ -381,9 +381,9 @@
   </div>
 
   <!-- Substituições -->
-  <div class="card bg-base-200 border border-base-300 mb-4">
-    <div class="px-4 py-3 border-b border-base-300 flex items-center gap-2">
-      <i class="bi bi-arrow-left-right text-warning text-sm"></i>
+  <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 mb-4">
+    <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
+      <i class="ti ti-arrow-left-right text-yellow-500 text-sm"></i>
       <span class="font-semibold text-sm">Substituições</span>
     </div>
     <div class="p-4">
@@ -391,21 +391,21 @@
       <div class="space-y-2 mb-4">
         {% for sub in substituicoes %}
         <div class="flex items-center gap-2 text-sm">
-          <span class="badge badge-neutral badge-sm w-10 justify-center shrink-0">{{ sub.minuto }}'</span>
-          <i class="bi bi-arrow-up-circle-fill text-success shrink-0"></i>
+          <span class="badge badge-gray badge-sm w-10 justify-center shrink-0">{{ sub.minuto }}'</span>
+          <i class="ti ti-circle-arrow-up text-green-500 shrink-0"></i>
           <span class="font-semibold">{{ sub.atleta_entra.nome }}</span>
-          <i class="bi bi-arrow-down-circle-fill text-error shrink-0"></i>
-          <span class="text-base-content/60">{{ sub.atleta_sai.nome }}</span>
-          <span class="badge badge-ghost badge-sm ml-auto shrink-0">{{ sub.equipe.nome_equipe }}</span>
+          <i class="ti ti-circle-arrow-down text-red-500 shrink-0"></i>
+          <span class="text-gray-600 dark:text-gray-400">{{ sub.atleta_sai.nome }}</span>
+          <span class="badge badge-gray badge-sm ml-auto shrink-0">{{ sub.equipe.nome_equipe }}</span>
           <form method="post" action="{% url 'competicao:substituicao_excluir' sub.pk %}" class="inline shrink-0">
             {% csrf_token %}
-            <button class="btn btn-ghost btn-xs text-error"><i class="bi bi-x"></i></button>
+            <button class="btn btn-ghost btn-xs text-red-500"><i class="ti ti-x"></i></button>
           </form>
         </div>
         {% endfor %}
       </div>
       {% else %}
-      <p class="text-sm text-base-content/40 mb-4">Nenhuma substituição registrada.</p>
+      <p class="text-sm text-gray-400 dark:text-gray-500 mb-4">Nenhuma substituição registrada.</p>
       {% endif %}
 
       <form method="post" action="{% url 'competicao:substituicao_criar' jogo.pk %}" id="form-sub">
@@ -416,11 +416,11 @@
             {{ form_sub.equipe }}
           </div>
           <div>
-            <label class="label py-0 mb-1"><span class="label-text text-xs font-semibold">Entra <i class="bi bi-arrow-up-circle text-success"></i></span></label>
+            <label class="label py-0 mb-1"><span class="label-text text-xs font-semibold">Entra <i class="ti ti-arrow-up-circle text-green-500"></i></span></label>
             {{ form_sub.atleta_entra }}
           </div>
           <div>
-            <label class="label py-0 mb-1"><span class="label-text text-xs font-semibold">Sai <i class="bi bi-arrow-down-circle text-error"></i></span></label>
+            <label class="label py-0 mb-1"><span class="label-text text-xs font-semibold">Sai <i class="ti ti-arrow-down-circle text-red-500"></i></span></label>
             {{ form_sub.atleta_sai }}
           </div>
           <div>
@@ -429,16 +429,16 @@
           </div>
         </div>
         <button type="submit" class="btn btn-ghost btn-sm gap-1 mt-3">
-          <i class="bi bi-plus-circle"></i> Registrar Substituição
+          <i class="ti ti-circle-plus"></i> Registrar Substituição
         </button>
       </form>
     </div>
   </div>
 
   <!-- Árbitros do Jogo -->
-  <div class="card bg-base-200 border border-base-300">
-    <div class="px-4 py-3 border-b border-base-300 flex items-center gap-2">
-      <i class="bi bi-person-badge text-warning text-sm"></i>
+  <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+    <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
+      <i class="ti ti-id-badge-2 text-yellow-500 text-sm"></i>
       <span class="font-semibold text-sm">Árbitros do Jogo</span>
     </div>
     <div class="p-4">
@@ -446,17 +446,17 @@
       <div class="space-y-2 mb-4">
         {% for arb in arbitros_jogo %}
         <div class="flex items-center gap-2 text-sm">
-          <span class="badge badge-ghost badge-sm shrink-0">{{ arb.get_tipo_display }}</span>
+          <span class="badge badge-gray badge-sm shrink-0">{{ arb.get_tipo_display }}</span>
           <span class="flex-1 font-medium">{{ arb.arbitro.nome }}</span>
           <form method="post" action="{% url 'competicao:arbitros_jogo_excluir' arb.pk %}" class="inline">
             {% csrf_token %}
-            <button class="btn btn-ghost btn-xs text-error"><i class="bi bi-x"></i></button>
+            <button class="btn btn-ghost btn-xs text-red-500"><i class="ti ti-x"></i></button>
           </form>
         </div>
         {% endfor %}
       </div>
       {% else %}
-      <p class="text-sm text-base-content/40 mb-4">Nenhum árbitro registrado.</p>
+      <p class="text-sm text-gray-400 dark:text-gray-500 mb-4">Nenhum árbitro registrado.</p>
       {% endif %}
 
       <form method="post" action="{% url 'competicao:arbitros_jogo_criar' jogo.pk %}" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -471,7 +471,7 @@
         </div>
         <div class="flex items-end">
           <button type="submit" class="btn btn-ghost btn-sm gap-1 w-full">
-            <i class="bi bi-plus-circle"></i> Adicionar
+            <i class="ti ti-circle-plus"></i> Adicionar
           </button>
         </div>
       </form>

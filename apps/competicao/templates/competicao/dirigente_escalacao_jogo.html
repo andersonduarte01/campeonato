@@ -1,0 +1,797 @@
+{% extends 'base/indice.html' %}
+{% block titulo %}Escalação — {{ jogo.equipe_casa.nome_equipe }} x {{ jogo.equipe_fora.nome_equipe }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
+    <ul>
+      <li><a href="{% url 'competicao:dirigente_dashboard' %}" class="hover:text-gray-700 dark:text-gray-300">Meu Painel</a></li>
+      <li><span class="text-gray-600 dark:text-gray-400">Escalação do Jogo</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block conteudo %}
+<div class="p-4 md:p-6 space-y-4">
+
+  <!-- Cabeçalho: info do jogo -->
+  <div class="flex items-start gap-4">
+    <a id="btn-voltar" href="{% url 'competicao:dirigente_dashboard' %}"
+       class="btn btn-ghost btn-sm btn-square border border-gray-200 dark:border-gray-700 text-gray-500 shrink-0">
+      <i class="ti ti-arrow-left text-sm"></i>
+    </a>
+    <div class="flex-1 min-w-0">
+      <div class="flex items-center gap-2 mb-1">
+        <i class="ti ti-layout-board text-blue-500 text-sm"></i>
+        <span class="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 print:text-gray-600">
+          Escalação — {{ competicao.nome }}
+        </span>
+      </div>
+      <div class="flex items-center gap-3 flex-wrap">
+        <span class="text-lg font-bold text-gray-900 dark:text-white print:text-gray-900">
+          {{ jogo.equipe_casa.nome_equipe }}
+        </span>
+        <span class="text-gray-400 dark:text-gray-500 font-black text-sm print:text-gray-600">×</span>
+        <span class="text-lg font-bold text-gray-900 dark:text-white print:text-gray-900">
+          {{ jogo.equipe_fora.nome_equipe }}
+        </span>
+      </div>
+      {% if jogo.data_hora %}
+      <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5 flex items-center gap-1.5 print:text-gray-600">
+        <i class="ti ti-calendar text-[11px]"></i>
+        {{ jogo.data_hora|date:"d/m/Y" }} às {{ jogo.data_hora|date:"H:i" }}
+        {% if jogo.local %}<span class="mx-1">·</span><i class="ti ti-map-pin text-[11px]"></i>{{ jogo.local.nome }}{% endif %}
+      </p>
+      {% else %}
+      <p class="text-xs text-gray-400 italic mt-0.5 print:text-gray-600">Data a definir</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Aviso: jogo bloqueado -->
+  {% if bloqueado %}
+  <div class="flex items-center gap-3 px-4 py-3 rounded-xl
+       bg-amber-50 dark:bg-amber-900/20
+       border border-amber-200 dark:border-amber-800/40">
+    <div class="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0">
+      <i class="ti ti-lock text-amber-500 text-sm"></i>
+    </div>
+    <p class="text-xs text-gray-600 dark:text-amber-300 flex-1 leading-relaxed">
+      <span class="font-semibold text-gray-800 dark:text-amber-200">Escalação bloqueada.</span>
+      O horário do jogo já chegou — a escalação não pode ser modificada.
+    </p>
+  </div>
+  {% endif %}
+
+  <!-- Aviso: apenas inscritos -->
+  <div id="aviso-inscritos" class="flex items-center gap-3 px-4 py-3 rounded-xl
+       bg-white dark:bg-blue-900/20
+       border border-blue-200 dark:border-blue-800/40
+       shadow-sm">
+    <div class="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
+      <i class="ti ti-info-circle text-blue-500 text-sm"></i>
+    </div>
+    <p class="text-xs text-gray-500 dark:text-blue-300 flex-1 leading-relaxed">
+      Apenas atletas <span class="font-semibold text-gray-700 dark:text-blue-200">inscritos nesta competição</span> aparecem na lista.
+      Posições da escalação padrão ficam vazias se o atleta não estiver inscrito.
+    </p>
+    <button type="button" onclick="document.getElementById('aviso-inscritos').remove()"
+            class="shrink-0 text-gray-300 hover:text-gray-500 dark:text-blue-500 dark:hover:text-blue-300 transition-colors">
+      <i class="ti ti-x text-sm"></i>
+    </button>
+  </div>
+
+  <!-- ── Card de escalação ──────────────────────────────────────────── -->
+  <div class="card" id="card-escalacao">
+
+    <!-- Header -->
+    <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30 rounded-t-lg flex-wrap">
+      <i class="ti ti-layout-board text-blue-500 text-sm shrink-0"></i>
+      <span class="section-heading text-sm text-gray-700 dark:text-gray-300 print:text-gray-900 tracking-widest">ESCALAÇÃO</span>
+      <span id="print-equipe-nome" style="display:none" class="text-sm font-bold text-gray-900 tracking-widest">— {{ equipe.nome_equipe|upper }}</span>
+
+      <select id="sel-formacao"
+              {% if bloqueado %}disabled{% endif %}
+              class="ml-2 text-xs py-1 px-2 rounded-lg border border-gray-200 dark:border-gray-600
+                     bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300
+                     focus:outline-none focus:border-blue-400 {% if bloqueado %}cursor-not-allowed opacity-50{% else %}cursor-pointer{% endif %}">
+      </select>
+
+      <span id="contador-escalados" class="badge badge-gray text-[10px]">0/11</span>
+
+      <div class="ml-auto flex gap-1.5 shrink-0">
+        <button type="button"
+                data-modal-target="modal-limpar" data-modal-toggle="modal-limpar"
+                class="btn btn-sm gap-1.5
+                       bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300
+                       dark:bg-transparent dark:text-gray-400 dark:hover:bg-gray-700 dark:border-gray-600
+                       {% if bloqueado %}hidden{% endif %}">
+          <i class="ti ti-trash text-xs"></i><span class="hidden sm:inline">Limpar</span>
+        </button>
+        <button id="btn-imprimir" type="button" onclick="imprimirEscalacao()"
+                class="btn btn-sm gap-1.5
+                       bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300
+                       dark:bg-transparent dark:text-gray-400 dark:hover:bg-gray-700 dark:border-gray-600
+                       hidden">
+          <i class="ti ti-printer text-xs"></i><span class="hidden sm:inline">Imprimir</span>
+        </button>
+        <button id="btn-imagem" type="button" onclick="baixarImagem()"
+                class="btn btn-sm gap-1.5
+                       bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300
+                       dark:bg-transparent dark:text-gray-400 dark:hover:bg-gray-700 dark:border-gray-600
+                       hidden">
+          <i class="ti ti-download text-xs"></i><span class="hidden sm:inline">Baixar</span>
+        </button>
+        <button id="btn-confirmar" type="button" onclick="confirmarEscalacao()"
+                class="btn btn-sm gap-1.5 btn-primary hidden">
+          <i class="ti ti-circle-check text-xs"></i><span class="hidden sm:inline">Confirmar</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Corpo: campo + banco -->
+    <div id="corpo-escalacao" class="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-gray-200 dark:divide-gray-700">
+
+      <!-- Campo -->
+      <div id="campo-col" class="lg:col-span-2 p-6 flex justify-center items-start">
+        <div class="relative" id="campo-outer" style="width:360px;height:504px;">
+
+          <svg id="campo-svg" viewBox="0 0 340 476"
+               style="position:absolute;inset:0;width:100%;height:100%;"
+               xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="listras" x="0" y="0" width="340" height="52.9" patternUnits="userSpaceOnUse">
+                <rect width="340" height="52.9" fill="#1a5e1a"/>
+                <rect width="340" height="26.4" fill="#1e6b1e"/>
+              </pattern>
+              <filter id="sombra-jogador" x="-30%" y="-30%" width="160%" height="160%">
+                <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.4"/>
+              </filter>
+            </defs>
+            <rect width="340" height="476" fill="url(#listras)" rx="6"/>
+            <rect x="10" y="10" width="320" height="456" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.5" rx="2"/>
+            <line x1="10" y1="238" x2="330" y2="238" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/>
+            <circle cx="170" cy="238" r="40" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/>
+            <circle cx="170" cy="238" r="2.5" fill="rgba(255,255,255,0.8)"/>
+            <rect x="64"  y="376" width="212" height="90"  fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/>
+            <rect x="112" y="430" width="116" height="36"  fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/>
+            <rect x="138" y="462" width="64"  height="14"  fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/>
+            <circle cx="170" cy="408" r="2.5" fill="rgba(255,255,255,0.8)"/>
+            <path d="M108 376 A62 62 0 0 0 232 376" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/>
+            <rect x="64"  y="10"  width="212" height="90"  fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/>
+            <rect x="112" y="10"  width="116" height="36"  fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/>
+            <rect x="138" y="0"   width="64"  height="14"  fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/>
+            <circle cx="170" cy="68" r="2.5" fill="rgba(255,255,255,0.8)"/>
+            <path d="M108 100 A62 62 0 0 1 232 100" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/>
+            <path d="M10 10 Q10 18 18 18"  fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+            <path d="M330 10 Q330 18 322 18" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+            <path d="M10 466 Q10 458 18 458"  fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+            <path d="M330 466 Q330 458 322 458" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+            <g id="jogadores-svg"></g>
+          </svg>
+
+          <div id="selects-overlay" style="position:absolute;inset:0;pointer-events:none;"></div>
+        </div>
+      </div>
+
+      <!-- Banco de Reservas -->
+      <div id="banco-col" class="p-5 min-w-0">
+        <p class="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-3 flex items-center gap-2">
+          <i class="ti ti-armchair text-sm"></i> Banco de Reservas
+        </p>
+        <div id="banco-reservas" class="space-y-1"></div>
+
+        <div class="mt-6 flex flex-wrap gap-3 text-[10px] text-gray-400 dark:text-gray-500">
+          <div class="flex items-center gap-1.5">
+            <div class="w-3 h-3 rounded-full shrink-0" style="background:#1d4ed8;"></div>
+            <span>Disponível</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <div class="w-3 h-3 rounded-full shrink-0" style="background:#ef4444;"></div>
+            <span>Suspenso/Lesionado</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <div class="w-3 h-3 rounded-full shrink-0" style="background:transparent;border:1.5px dashed #9ca3af;"></div>
+            <span>Vazio</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Modal: confirmar limpar -->
+  <div id="modal-limpar" tabindex="-1" aria-hidden="true"
+       class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50
+              justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+    <div class="relative p-4 w-full max-w-sm max-h-full">
+      <div class="relative bg-white rounded-2xl shadow-xl dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+        <div class="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl border border-red-400 dark:border-red-500 flex items-center justify-center shrink-0">
+              <i class="ti ti-trash text-red-500 dark:text-red-400 text-base"></i>
+            </div>
+            <h3 class="text-base font-bold text-gray-900 dark:text-white">Limpar Escalação</h3>
+          </div>
+          <button type="button" data-modal-hide="modal-limpar"
+                  class="btn-icon text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+            <i class="ti ti-x text-lg"></i>
+          </button>
+        </div>
+        <div class="p-5">
+          <p class="text-sm text-gray-600 dark:text-gray-400">
+            Todos os jogadores serão removidos das posições. Esta ação não pode ser desfeita.
+          </p>
+        </div>
+        <div class="flex items-center justify-end gap-2 p-5 border-t border-gray-200 dark:border-gray-700">
+          <button type="button" data-modal-hide="modal-limpar" class="btn btn-ghost">Cancelar</button>
+          <button type="button" id="btn-confirmar-limpar"
+                  class="btn border border-red-500 text-red-500 hover:bg-red-50
+                         dark:border-red-400 dark:text-red-400 dark:hover:bg-red-500/10">
+            <i class="ti ti-trash"></i> Sim, limpar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+'use strict';
+
+const ATLETAS      = {{ atletas_json|safe }};
+const BLOQUEADO    = {{ bloqueado|yesno:"true,false" }};
+const W = 340, H = 476;
+const NS = 'http://www.w3.org/2000/svg';
+
+const SALVAR_URL   = '{% url "competicao:escalacao_tatica_jogo_salvar" jogo.pk %}';
+const CSRF_TOKEN   = '{{ csrf_token }}';
+
+const _imgNome       = 'escalacao-jogo-{{ jogo.pk }}.png';
+const _EQUIPE_NOME   = '{{ equipe.nome_equipe|upper }}';
+const _EQUIPE_ESCUDO = '{% if equipe.escudo %}{{ equipe.escudo.thumbnail.url }}{% endif %}';
+const _COMPETICAO    = '{{ competicao.nome }}';
+const _JOGO_CASA     = '{{ jogo.equipe_casa.nome_equipe }}';
+const _JOGO_FORA     = '{{ jogo.equipe_fora.nome_equipe }}';
+const _JOGO_DATA     = '{% if jogo.data_hora %}{{ jogo.data_hora|date:"d/m/Y  H:i" }}{% endif %}';
+
+const FORMACOES = {
+  '4-3-3':   { label:'4-3-3',   pos:[
+    {id:'gk',  label:'GOL', x:50, y:91},
+    {id:'rd',  label:'LD',  x:82, y:74},{id:'cd1',label:'ZAG',x:62,y:74},
+    {id:'cd2', label:'ZAG', x:38, y:74},{id:'ld', label:'LE', x:18,y:74},
+    {id:'mc1', label:'VOL', x:25, y:52},{id:'mc2',label:'MEI',x:50,y:50},{id:'mc3',label:'VOL',x:75,y:52},
+    {id:'lw',  label:'AE',  x:18, y:24},{id:'cf', label:'CA', x:50,y:18},{id:'rw',label:'AD',x:82,y:24},
+  ]},
+  '4-4-2':   { label:'4-4-2',   pos:[
+    {id:'gk', label:'GOL',x:50,y:91},
+    {id:'rd', label:'LD', x:82,y:74},{id:'cd1',label:'ZAG',x:62,y:74},{id:'cd2',label:'ZAG',x:38,y:74},{id:'ld',label:'LE',x:18,y:74},
+    {id:'rm', label:'MD', x:80,y:50},{id:'mc1',label:'VOL',x:58,y:50},{id:'mc2',label:'MEI',x:42,y:50},{id:'lm',label:'ME',x:20,y:50},
+    {id:'cf1',label:'CA', x:35,y:20},{id:'cf2',label:'CA', x:65,y:20},
+  ]},
+  '4-2-3-1': { label:'4-2-3-1', pos:[
+    {id:'gk', label:'GOL',x:50,y:91},
+    {id:'rd', label:'LD', x:82,y:74},{id:'cd1',label:'ZAG',x:62,y:74},{id:'cd2',label:'ZAG',x:38,y:74},{id:'ld',label:'LE',x:18,y:74},
+    {id:'dm1',label:'VOL',x:62,y:57},{id:'dm2',label:'VOL',x:38,y:57},
+    {id:'am1',label:'MAE',x:18,y:36},{id:'am2',label:'MEI',x:50,y:33},{id:'am3',label:'MAD',x:82,y:36},
+    {id:'cf', label:'CA', x:50,y:15},
+  ]},
+  '3-5-2':   { label:'3-5-2',   pos:[
+    {id:'gk', label:'GOL',x:50,y:91},
+    {id:'cd1',label:'ZAG',x:25,y:74},{id:'cd2',label:'ZAG',x:50,y:74},{id:'cd3',label:'ZAG',x:75,y:74},
+    {id:'rm', label:'VD', x:88,y:52},{id:'mc1',label:'VOL',x:67,y:52},{id:'mc2',label:'MEI',x:50,y:50},{id:'mc3',label:'VOL',x:33,y:52},{id:'lm',label:'VE',x:12,y:52},
+    {id:'cf1',label:'CA', x:35,y:20},{id:'cf2',label:'CA', x:65,y:20},
+  ]},
+  '3-4-3':   { label:'3-4-3',   pos:[
+    {id:'gk', label:'GOL',x:50,y:91},
+    {id:'cd1',label:'ZAG',x:25,y:74},{id:'cd2',label:'ZAG',x:50,y:74},{id:'cd3',label:'ZAG',x:75,y:74},
+    {id:'rm', label:'MD', x:78,y:52},{id:'mc1',label:'VOL',x:58,y:52},{id:'mc2',label:'MEI',x:42,y:52},{id:'lm',label:'ME',x:22,y:52},
+    {id:'lw', label:'AE', x:18,y:24},{id:'cf', label:'CA', x:50,y:18},{id:'rw',label:'AD',x:82,y:24},
+  ]},
+  '5-3-2':   { label:'5-3-2',   pos:[
+    {id:'gk', label:'GOL',x:50,y:91},
+    {id:'rb', label:'LD', x:88,y:74},{id:'cd1',label:'ZAG',x:68,y:74},{id:'cd2',label:'ZAG',x:50,y:74},{id:'cd3',label:'ZAG',x:32,y:74},{id:'lb',label:'LE',x:12,y:74},
+    {id:'mc1',label:'VOL',x:70,y:48},{id:'mc2',label:'MEI',x:50,y:46},{id:'mc3',label:'VOL',x:30,y:48},
+    {id:'cf1',label:'CA', x:35,y:20},{id:'cf2',label:'CA', x:65,y:20},
+  ]},
+};
+
+const POS_ABREV = {
+  GOLEIRO:'GOL', ZAGUEIRO:'ZAG',
+  LATERAL_DIREIRO:'LD', LATERAL_ESQUERDO:'LE',
+  VOLANTE:'VOL', MEIO_CAMPO:'MEI',
+  MEIA_ATACANTE:'MAT', PONTA_ESQUERDA:'AE', PONTA_DIREITA:'AD',
+  ATACANTE:'ATA',
+};
+
+const POS_MAP = {
+  GOL:['GOLEIRO'], ZAG:['ZAGUEIRO'],
+  LD:['LATERAL_DIREIRO'], LE:['LATERAL_ESQUERDO'],
+  VD:['LATERAL_DIREIRO','VOLANTE'], VE:['LATERAL_ESQUERDO','VOLANTE'],
+  VOL:['VOLANTE'], MEI:['MEIO_CAMPO'], MD:['MEIO_CAMPO'], ME:['MEIO_CAMPO'],
+  MAE:['MEIA_ATACANTE','PONTA_ESQUERDA'], MAD:['MEIA_ATACANTE','PONTA_DIREITA'],
+  AE:['PONTA_ESQUERDA','MEIA_ATACANTE'], AD:['PONTA_DIREITA','MEIA_ATACANTE'],
+  CA:['ATACANTE'],
+};
+
+let formacaoAtual = '4-3-3';
+let escalacao     = {};
+let _salvarTimer  = null;
+let confirmado    = false;
+
+function _aplicarEstadoBtn(){
+  const btn = document.getElementById('btn-confirmar');
+  if(!btn) return;
+  if(confirmado){
+    btn.className = 'btn btn-sm gap-1.5 text-white border-0 bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600';
+    btn.innerHTML = '<i class="ti ti-circle-check text-xs"></i><span class="hidden sm:inline">Confirmada</span>';
+  } else {
+    btn.className = 'btn btn-sm gap-1.5 btn-primary';
+    btn.innerHTML = '<i class="ti ti-circle-check text-xs"></i><span class="hidden sm:inline">Confirmar</span>';
+  }
+}
+
+function salvar(){
+  if(confirmado){ confirmado = false; _aplicarEstadoBtn(); }
+  clearTimeout(_salvarTimer);
+  _salvarTimer = setTimeout(function(){
+    fetch(SALVAR_URL, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+      body:    JSON.stringify({ formacao: formacaoAtual, posicoes: escalacao }),
+    }).catch(function(){});
+  }, 600);
+}
+
+function carregar(){
+  const d = {{ escalacao_json|safe }};
+  if(d && d.formacao && FORMACOES[d.formacao]){
+    formacaoAtual = d.formacao;
+    escalacao     = d.posicoes || {};
+  }
+  if(d && d.confirmado){ confirmado = true; }
+}
+
+function atletaPorId(id){ return ATLETAS.find(a=>a.id==id)||null; }
+function primeiroNome(nome){
+  if(!nome) return '';
+  const p = nome.trim().split(' ');
+  return p[0].substring(0,9);
+}
+function corJogador(atleta){
+  if(!atleta) return '#94a3b8';
+  if(atleta.situacao==='SUSPENSO'||atleta.situacao==='LESIONADO') return '#ef4444';
+  return '#1d4ed8';
+}
+function escalados(){ return new Set(Object.values(escalacao).filter(Boolean).map(String)); }
+function disponiveis(){
+  const esc = escalados();
+  return ATLETAS.filter(a => !esc.has(String(a.id)));
+}
+function svgEl(tag, attrs, txt){
+  const el = document.createElementNS(NS, tag);
+  for(const [k,v] of Object.entries(attrs||{})) el.setAttribute(k,String(v));
+  if(txt!==undefined) el.textContent=txt;
+  return el;
+}
+
+function renderFormacaoSelect(){
+  const sel = document.getElementById('sel-formacao');
+  if(sel.options.length === 0){
+    Object.keys(FORMACOES).forEach(key=>{
+      const opt = document.createElement('option');
+      opt.value = key; opt.textContent = FORMACOES[key].label;
+      sel.appendChild(opt);
+    });
+    sel.onchange = ()=>{ formacaoAtual=sel.value; escalacao={}; salvar(); render(); };
+  }
+  sel.value = formacaoAtual;
+}
+
+function renderCampo(){
+  const g    = document.getElementById('jogadores-svg');
+  const svg  = document.getElementById('campo-svg');
+  const defs = svg.querySelector('defs');
+  g.innerHTML = '';
+  defs.querySelectorAll('[id^="clip-pos-"]').forEach(el=>el.remove());
+
+  FORMACOES[formacaoAtual].pos.forEach(pos=>{
+    const atletaId = escalacao[pos.id];
+    const atleta   = atletaId ? atletaPorId(atletaId) : null;
+    const cx = (pos.x/100)*W;
+    const cy = (pos.y/100)*H;
+    const grp = svgEl('g',{transform:`translate(${cx},${cy})`});
+
+    if(atleta){
+      const cor = corJogador(atleta);
+      grp.appendChild(svgEl('circle',{cx:0,cy:0,r:17,fill:cor,stroke:'rgba(255,255,255,0.9)','stroke-width':2,filter:'url(#sombra-jogador)'}));
+      if(atleta.foto){
+        const clipId = 'clip-pos-'+pos.id;
+        const clip   = svgEl('clipPath',{id:clipId});
+        clip.appendChild(svgEl('circle',{cx:0,cy:0,r:15}));
+        defs.appendChild(clip);
+        grp.appendChild(svgEl('image',{
+          href:atleta.foto, x:-15, y:-15, width:30, height:30,
+          'clip-path':'url(#'+clipId+')',
+          preserveAspectRatio:'xMidYMid slice',
+        }));
+      } else {
+        const inicial = (atleta.nome||'?')[0].toUpperCase();
+        grp.appendChild(svgEl('text',{
+          x:0, y:0.5, 'text-anchor':'middle','dominant-baseline':'middle',
+          'font-family':'Inter,sans-serif','font-size':15,'font-weight':800,
+          fill:'rgba(255,255,255,0.95)',
+        }, inicial));
+      }
+      grp.appendChild(svgEl('text',{x:0,y:-23,'text-anchor':'middle','dominant-baseline':'middle','font-family':'Inter,sans-serif','font-size':7,'font-weight':700,fill:'rgba(255,255,255,0.7)'},pos.label));
+      if(atleta.camisa){
+        grp.appendChild(svgEl('rect',{x:-23,y:17,width:46,height:21,rx:3,fill:'rgba(0,0,0,0.6)'}));
+        grp.appendChild(svgEl('text',{x:0,y:22.5,'text-anchor':'middle','dominant-baseline':'middle','font-family':'Inter,sans-serif','font-size':8,'font-weight':600,fill:'white'},primeiroNome(atleta.nome)));
+        grp.appendChild(svgEl('text',{x:0,y:32,'text-anchor':'middle','dominant-baseline':'middle','font-family':'Inter,sans-serif','font-size':7,'font-weight':700,fill:'rgba(255,255,255,0.65)'},String(atleta.camisa)));
+      } else {
+        grp.appendChild(svgEl('rect',{x:-23,y:19,width:46,height:14,rx:3,fill:'rgba(0,0,0,0.6)'}));
+        grp.appendChild(svgEl('text',{x:0,y:26,'text-anchor':'middle','dominant-baseline':'middle','font-family':'Inter,sans-serif','font-size':8.5,'font-weight':600,fill:'white'},primeiroNome(atleta.nome)));
+      }
+    } else {
+      grp.appendChild(svgEl('circle',{cx:0,cy:0,r:17,fill:'rgba(255,255,255,0.07)',stroke:'rgba(255,255,255,0.28)','stroke-width':1.5,'stroke-dasharray':'5 3'}));
+      grp.appendChild(svgEl('text',{x:0,y:0,'text-anchor':'middle','dominant-baseline':'middle','font-family':'Inter,sans-serif','font-size':9,'font-weight':700,fill:'rgba(255,255,255,0.35)'},pos.label));
+    }
+    g.appendChild(grp);
+  });
+}
+
+function renderDropdownsOverlay(){
+  const overlay = document.getElementById('selects-overlay');
+  overlay.innerHTML = '';
+  const esc = escalados();
+
+  FORMACOES[formacaoAtual].pos.forEach(pos=>{
+    const atletaId = escalacao[pos.id];
+    const nativas  = POS_MAP[pos.label]||[];
+    const disp = ATLETAS.filter(a=>{
+      if(a.situacao==='SUSPENSO') return false;
+      const id=String(a.id);
+      return !esc.has(id)||id===String(atletaId);
+    });
+    const nativos = disp.filter(a=>nativas.includes(a.posicao));
+    const outros  = disp.filter(a=>!nativas.includes(a.posicao));
+
+    const btnId = 'btn-pos-'+pos.id;
+    const ddId  = 'dd-pos-' +pos.id;
+
+    const wrap = document.createElement('div');
+    wrap.style.cssText = `position:absolute;left:${pos.x}%;top:${pos.y}%;transform:translate(-50%,-50%);pointer-events:all;`;
+
+    const btn = document.createElement('button');
+    btn.id   = btnId; btn.type = 'button';
+    btn.setAttribute('data-dropdown-toggle', ddId);
+    btn.setAttribute('data-dropdown-placement', 'bottom');
+    btn.className = 'w-9 h-9 opacity-0 cursor-pointer block';
+
+    const dd = document.createElement('div');
+    dd.id        = ddId;
+    dd.className = 'z-50 hidden bg-white rounded-xl shadow-xl border border-gray-200 w-48 dark:bg-gray-800 dark:border-gray-700';
+
+    const inner = document.createElement('div');
+    inner.className = 'py-1 max-h-56 overflow-y-auto';
+
+    if(atletaId){
+      const rem = document.createElement('button');
+      rem.type = 'button';
+      rem.className = 'w-full flex items-center gap-2 px-3 py-2 text-xs text-red-500 hover:bg-gray-50 dark:hover:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700';
+      rem.innerHTML = '<i class="ti ti-x text-xs"></i> Remover';
+      rem.addEventListener('click', ()=>{ escalacao[pos.id]=null; salvar(); render(); });
+      inner.appendChild(rem);
+    }
+
+    function addGroup(lista, rotulo){
+      if(!lista.length) return;
+      const lbl = document.createElement('p');
+      lbl.className = 'px-3 pt-2 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500';
+      lbl.textContent = rotulo;
+      inner.appendChild(lbl);
+      lista.forEach(a=>{
+        const isSelected = String(a.id)===String(atletaId);
+        const row = document.createElement('button');
+        row.type = 'button';
+        row.className = 'w-full flex items-center gap-2 px-3 py-2 text-left text-xs '+(
+          isSelected
+            ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-semibold'
+            : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50');
+        const nm = document.createElement('span');
+        nm.className = 'flex-1 truncate'; nm.textContent = a.nome;
+        row.appendChild(nm);
+        if(a.situacao!=='APTO'){
+          const w = document.createElement('span');
+          w.className = 'text-[9px] text-red-500 shrink-0 font-bold';
+          w.textContent = '⚠';
+          row.appendChild(w);
+        }
+        row.addEventListener('click', ()=>{ escalacao[pos.id]=a.id; salvar(); render(); });
+        inner.appendChild(row);
+      });
+    }
+
+    addGroup(nativos, pos.label);
+    if(nativos.length && outros.length){
+      const div = document.createElement('div');
+      div.className = 'my-1 border-t border-gray-100 dark:border-gray-700';
+      inner.appendChild(div);
+    }
+    addGroup(outros, 'Outros');
+
+    dd.appendChild(inner);
+    wrap.appendChild(btn);
+    wrap.appendChild(dd);
+    overlay.appendChild(wrap);
+  });
+
+  if(typeof initFlowbite==='function') initFlowbite();
+}
+
+function renderBanco(){
+  const container = document.getElementById('banco-reservas');
+  container.innerHTML='';
+  const lista = disponiveis();
+  if(!lista.length){
+    const p=document.createElement('p');
+    p.className='text-xs text-gray-400 dark:text-gray-500 italic';
+    p.textContent='Todos os jogadores foram escalados.';
+    container.appendChild(p); return;
+  }
+  lista.forEach(a=>{
+    const row=document.createElement('div');
+    row.className='flex items-center gap-2 py-1';
+    const dot=document.createElement('span');
+    dot.style.cssText='width:8px;height:8px;border-radius:9999px;flex-shrink:0;background:'+(
+      a.situacao==='SUSPENSO'||a.situacao==='LESIONADO'?'#ef4444':'#1d4ed8'
+    );
+    const pos=document.createElement('span');
+    pos.className='text-[9px] font-bold text-gray-400 dark:text-gray-500 shrink-0 w-7 text-center';
+    pos.textContent='('+(POS_ABREV[a.posicao]||'—')+')';
+    const nome=document.createElement('span');
+    nome.className='text-xs text-gray-600 dark:text-gray-400 truncate flex-1';
+    nome.textContent=a.nome;
+    const num=document.createElement('span');
+    num.className='text-[9px] font-bold text-gray-400 dark:text-gray-500 shrink-0';
+    num.textContent=a.camisa?String(a.camisa):'';
+    const sit=document.createElement('span');
+    sit.className='ml-auto text-[9px] shrink-0 '+(
+      a.situacao==='SUSPENSO'?'text-red-500 font-bold':
+      a.situacao==='LESIONADO'?'text-yellow-500 font-bold':'text-gray-400'
+    );
+    sit.textContent=a.situacao==='APTO'?'':a.situacao;
+    row.appendChild(dot); row.appendChild(pos); row.appendChild(nome); row.appendChild(num); row.appendChild(sit);
+    container.appendChild(row);
+  });
+}
+
+function renderContador(){
+  const count    = Object.values(escalacao).filter(Boolean).length;
+  const completo = count === 11;
+  document.getElementById('contador-escalados').textContent = count + '/11';
+  ['btn-imprimir','btn-imagem'].forEach(function(id){
+    const el = document.getElementById(id);
+    if(!el) return;
+    completo ? el.classList.remove('hidden') : el.classList.add('hidden');
+  });
+  if(BLOQUEADO) return;
+  const btn = document.getElementById('btn-confirmar');
+  if(!btn) return;
+  if(completo){
+    btn.classList.remove('hidden');
+    _aplicarEstadoBtn();
+  } else {
+    btn.classList.add('hidden');
+  }
+}
+
+function render(){
+  renderFormacaoSelect();
+  renderCampo();
+  if(!BLOQUEADO) renderDropdownsOverlay();
+  renderBanco();
+  renderContador();
+}
+
+window.confirmarEscalacao = function(){
+  const btn = document.getElementById('btn-confirmar');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader-2 animate-spin text-xs"></i>';
+  fetch(SALVAR_URL, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+    body:    JSON.stringify({ formacao: formacaoAtual, posicoes: escalacao }),
+  })
+  .then(r=>r.json())
+  .then(function(data){
+    btn.disabled = false;
+    if(data.ok){ confirmado = true; }
+    _aplicarEstadoBtn();
+  })
+  .catch(function(){
+    btn.disabled = false;
+    _aplicarEstadoBtn();
+  });
+};
+
+document.addEventListener('DOMContentLoaded', function(){
+  document.getElementById('btn-confirmar-limpar')
+    .addEventListener('click', function(){
+      escalacao={}; salvar(); render();
+      const modalEl = document.getElementById('modal-limpar');
+      modalEl.classList.add('hidden');
+      modalEl.classList.remove('flex');
+      modalEl.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      document.querySelectorAll('[modal-backdrop]').forEach(function(b){ b.remove(); });
+    });
+});
+
+window.imprimirEscalacao = function(){ window.print(); };
+
+window.baixarImagem = function(){
+  if(typeof htmlToImage==='undefined'){
+    alert('Biblioteca de imagem não carregada. Tente recarregar a página.');
+    return;
+  }
+  const corpo    = document.getElementById('corpo-escalacao');
+  const campoCol = document.getElementById('campo-col');
+  const bancoCol = document.getElementById('banco-col');
+  const overlay  = document.getElementById('selects-overlay');
+  const btn      = document.getElementById('btn-imagem');
+  btn.disabled   = true;
+  btn.innerHTML  = '<i class="ti ti-loader-2 animate-spin text-xs"></i>';
+  overlay.style.display = 'none';
+  const bg = '#ffffff';
+
+  corpo.style.display             = 'grid';
+  corpo.style.gridTemplateColumns = '1fr';
+  corpo.style.width               = '480px';
+  campoCol.style.padding = '16px';
+  bancoCol.style.padding = '16px';
+
+  htmlToImage.toPng(corpo, { backgroundColor: bg, pixelRatio: 3 })
+    .then(function(dataUrl){
+      corpo.style.display             = '';
+      corpo.style.gridTemplateColumns = '';
+      corpo.style.width               = '';
+      campoCol.style.padding = '';
+      bancoCol.style.padding = '';
+      overlay.style.display  = '';
+
+      const img = new Image();
+      img.onload = function(){
+        const SIZE_W  = 1080;
+        const SIZE_H  = 1350;
+        const HEAD_H  = 236;
+        const PAD     = 32;
+        const GAP     = 8;
+        const TOP     = 36;    /* respiro no topo */
+        const CARD_Y  = 184;
+        const CARD_H  = 44;
+
+        const canvas = document.createElement('canvas');
+        canvas.width  = SIZE_W;
+        canvas.height = SIZE_H;
+        const ctx = canvas.getContext('2d');
+
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, SIZE_W, SIZE_H);
+
+        const availW = SIZE_W - PAD * 2;
+        const availH = SIZE_H - HEAD_H - GAP - PAD;
+        const scale  = Math.min(availW / img.width, availH / img.height);
+        const w = img.width  * scale;
+        const h = img.height * scale;
+        ctx.drawImage(img, (SIZE_W - w) / 2, HEAD_H + GAP, w, h);
+
+        function drawHeader(){
+          ctx.textBaseline = 'middle';
+
+          /* ── label: ESCALAÇÃO · COMPETIÇÃO (centralizado) ── */
+          ctx.font      = 'bold 18px Inter,Arial,sans-serif';
+          ctx.fillStyle = '#9ca3af';
+          ctx.textAlign = 'center';
+          ctx.fillText('ESCALAÇÃO  ·  ' + _COMPETICAO.toUpperCase(), SIZE_W / 2, TOP + 24);
+
+          /* ── equipes: Casa × Fora (centralizado) ── */
+          ctx.font      = 'bold 48px Inter,Arial,sans-serif';
+          ctx.fillStyle = '#111827';
+          ctx.fillText(_JOGO_CASA + '   ×   ' + _JOGO_FORA, SIZE_W / 2, TOP + 76);
+
+          /* ── data/hora (centralizado) ── */
+          if(_JOGO_DATA){
+            ctx.font      = '20px Inter,Arial,sans-serif';
+            ctx.fillStyle = '#9ca3af';
+            ctx.fillText(_JOGO_DATA, SIZE_W / 2, TOP + 116);
+          }
+
+          /* ── separador topo da barra ── */
+          ctx.strokeStyle = 'rgba(0,0,0,0.07)';
+          ctx.lineWidth   = 1;
+          ctx.beginPath();
+          ctx.moveTo(0, CARD_Y);
+          ctx.lineTo(SIZE_W, CARD_Y);
+          ctx.stroke();
+
+          /* ── barra cinza card-header ── */
+          ctx.fillStyle = '#f9fafb';
+          ctx.fillRect(0, CARD_Y, SIZE_W, CARD_H);
+
+          /* ── "ESCALAÇÃO — EQUIPE" (centralizado) ── */
+          ctx.font      = 'bold 20px Inter,Arial,sans-serif';
+          ctx.fillStyle = '#374151';
+          ctx.textAlign = 'center';
+          ctx.fillText('ESCALAÇÃO  —  ' + _EQUIPE_NOME, SIZE_W / 2, CARD_Y + CARD_H / 2);
+
+          /* ── separador base da barra ── */
+          ctx.strokeStyle = 'rgba(0,0,0,0.07)';
+          ctx.beginPath();
+          ctx.moveTo(0, CARD_Y + CARD_H);
+          ctx.lineTo(SIZE_W, CARD_Y + CARD_H);
+          ctx.stroke();
+        }
+
+        function finish(){
+          const url  = canvas.toDataURL('image/png');
+          const link = document.createElement('a');
+          link.download = _imgNome;
+          link.href     = url;
+          link.click();
+          btn.disabled  = false;
+          btn.innerHTML = '<i class="ti ti-download text-xs"></i> Baixar';
+        }
+
+        drawHeader();
+        finish();
+      };
+      img.onerror = function(){
+        btn.disabled  = false;
+        btn.innerHTML = '<i class="ti ti-download text-xs"></i> Baixar';
+      };
+      img.src = dataUrl;
+    })
+    .catch(function(err){
+      corpo.style.display             = '';
+      corpo.style.gridTemplateColumns = '';
+      campoCol.style.padding = '';
+      bancoCol.style.padding = '';
+      overlay.style.display  = '';
+      btn.disabled  = false;
+      btn.innerHTML = '<i class="ti ti-download text-xs"></i> Baixar';
+      console.error('html-to-image:', err);
+    });
+};
+
+carregar(); render();
+
+}());
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.min.js"></script>
+
+<style>
+@media print {
+  aside, nav, header, .breadcrumbs { display:none!important; }
+  body { background:white!important; margin:0!important; }
+  .sm\:ml-64 { margin-left:0!important; }
+  .p-4, .p-6, .p-5 { padding:0!important; }
+  #card-escalacao {
+    box-shadow:none!important;
+    border:1px solid #ddd!important;
+    break-inside: avoid;
+  }
+  #btn-voltar, #aviso-inscritos,
+  #sel-formacao, #contador-escalados,
+  #btn-imprimir, #btn-imagem, #btn-confirmar,
+  [data-modal-target],
+  #selects-overlay { display:none!important; }
+  #print-equipe-nome { display:inline!important; }
+  #banco-reservas { display:block!important; }
+}
+</style>
+{% endblock %}

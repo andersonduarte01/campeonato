@@ -1,0 +1,405 @@
+{% extends 'base/indice.html' %}
+{% block titulo %}{{ equipe.nome_equipe }} — Painel{% endblock %}
+
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
+    <ul>
+      <li><span class="text-gray-600 dark:text-gray-400">Meu Painel</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block conteudo %}
+<div class="p-4 md:p-6 space-y-6">
+
+  <!-- ── Cabeçalho ──────────────────────────────────────────────────── -->
+  <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+    <div class="flex items-center gap-4">
+      {% if equipe.escudo %}
+      <img src="{{ equipe.escudo.thumbnail.url }}"
+           class="w-14 h-14 rounded-xl object-cover border-2 border-gray-200 dark:border-gray-700 shrink-0">
+      {% else %}
+      <div class="w-14 h-14 rounded-xl bg-green-50 dark:bg-green-900/20 border-2 border-gray-200 dark:border-gray-700
+                  flex items-center justify-center shrink-0">
+        <i class="ti ti-shield text-2xl text-green-500"></i>
+      </div>
+      {% endif %}
+      <div>
+        <div class="flex items-center gap-2 mb-0.5">
+          <i class="ti ti-shield text-green-500 text-sm"></i>
+          <span class="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">Dirigente</span>
+        </div>
+        <h1 class="section-heading text-4xl text-gray-900 dark:text-white leading-none">{{ equipe.nome_equipe|upper }}</h1>
+        <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">{{ request.user.nome }}</p>
+      </div>
+    </div>
+    <div class="flex gap-2 shrink-0">
+      <a href="{% url 'competicao:dirigente_escalacao' %}"
+         class="btn btn-outline btn-sm gap-1.5">
+        <i class="ti ti-layout-board"></i> Escalação
+      </a>
+      <a href="{% url 'equipe:detalhe' equipe.pk %}"
+         class="btn btn-ghost btn-sm gap-1.5 border border-gray-200/60 dark:border-gray-700/60">
+        <i class="ti ti-external-link"></i> Perfil do clube
+      </a>
+    </div>
+  </div>
+
+  <!-- ── Stats rápidos ─────────────────────────────────────────────── -->
+  <div class="grid grid-cols-3 gap-3">
+    <div class="card p-4 text-center">
+      <div class="stat-number text-3xl {% if competicoes %}text-yellow-500{% else %}text-gray-300 dark:text-gray-600{% endif %}">
+        {{ competicoes|length }}
+      </div>
+      <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mt-1">Competições</p>
+    </div>
+    <div class="card p-4 text-center">
+      <div class="stat-number text-3xl {% if proximos %}text-blue-500{% else %}text-gray-300 dark:text-gray-600{% endif %}">
+        {{ proximos|length }}
+      </div>
+      <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mt-1">Agendados</p>
+    </div>
+    <div class="card p-4 text-center">
+      <div class="stat-number text-3xl text-gray-500 dark:text-gray-400">{{ total_atletas }}</div>
+      <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mt-1">Atletas</p>
+    </div>
+  </div>
+
+  <!-- ── Layout principal ──────────────────────────────────────────── -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+    <!-- Coluna esquerda (2/3) -->
+    <div class="lg:col-span-2 space-y-5">
+
+      <!-- Ao Vivo -->
+      {% if ao_vivo %}
+      <div class="card overflow-hidden">
+        <div class="card-header">
+          <span class="live-dot shrink-0"></span>
+          <span class="section-title text-red-500 dark:text-red-400">Ao Vivo</span>
+          <span class="badge badge-red ml-auto">{{ ao_vivo|length }}</span>
+        </div>
+        <div class="divide-y divide-gray-100 dark:divide-gray-700">
+          {% for jogo in ao_vivo %}
+          {% include 'competicao/_dirigente_jogo_card.html' with jogo=jogo equipe=equipe %}
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Próximos jogos -->
+      <div class="card overflow-hidden">
+        <div class="card-header">
+          <i class="ti ti-calendar-event text-blue-600 dark:text-blue-400 text-base shrink-0"></i>
+          <span class="section-title">Próximos Jogos</span>
+          <a href="{% url 'competicao:dirigente_jogos' %}?tab=agendados"
+             class="ml-auto text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5">
+            Ver tudo <i class="ti ti-chevron-right text-xs"></i>
+          </a>
+        </div>
+        {% if proximos %}
+        <div class="divide-y divide-gray-100 dark:divide-gray-700">
+          {% for jogo in proximos %}
+          {% include 'competicao/_dirigente_jogo_card.html' with jogo=jogo equipe=equipe show_escalacao=True jogos_confirmados=proximos_confirmados %}
+          {% endfor %}
+        </div>
+        {% else %}
+        {% include 'components/empty_state.html' with icon="calendar-x" title="Nenhum jogo agendado." %}
+        {% endif %}
+      </div>
+
+      <!-- Elenco -->
+      <div class="card overflow-hidden">
+        <div class="card-header">
+          <i class="ti ti-users text-green-500 text-base shrink-0"></i>
+          <span class="section-title">Elenco</span>
+          <span class="badge badge-gray ml-auto">{{ total_atletas }}</span>
+        </div>
+        {% if atletas %}
+        <div class="overflow-x-auto">
+          <table class="table table-sm">
+            <thead>
+              <tr class="bg-gray-50 dark:bg-gray-700/50 text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th>Nome</th>
+                <th>Posição</th>
+                <th>Situação</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for atleta in atletas %}
+              <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+                <td>
+                  <a href="{% url 'competicao:portal_atleta' atleta.pk %}"
+                     class="font-medium text-sm hover:text-blue-500 transition-colors">
+                    {{ atleta.nome }}
+                  </a>
+                </td>
+                <td class="text-xs text-gray-500 dark:text-gray-400">{{ atleta.get_posicao_display }}</td>
+                <td>
+                  {% if atleta.situacao == 'SUSPENSO' %}
+                    <span class="badge badge-red badge-xs">Suspenso</span>
+                  {% else %}
+                  <button type="button"
+                          class="js-sit-btn {% if atleta.situacao == 'APTO' %}badge badge-green{% elif atleta.situacao == 'LESIONADO' %}badge badge-yellow{% else %}badge badge-gray{% endif %} badge-xs cursor-pointer"
+                          data-modal-target="modal-situacao" data-modal-toggle="modal-situacao"
+                          data-pk="{{ atleta.pk }}"
+                          data-nome="{{ atleta.nome }}"
+                          data-sit="{{ atleta.situacao }}">
+                    {% if atleta.situacao == 'APTO' %}Apto{% elif atleta.situacao == 'LESIONADO' %}Lesionado{% else %}Fora{% endif %}
+                  </button>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        {% include 'components/empty_state.html' with icon="user-x" title="Nenhum atleta cadastrado ainda." %}
+        {% endif %}
+      </div>
+
+    </div>
+
+    <!-- Coluna direita (1/3) -->
+    <div class="space-y-5">
+
+      <!-- Competições -->
+      <div class="card overflow-hidden">
+        <div class="card-header">
+          <i class="ti ti-trophy text-yellow-500 text-base shrink-0"></i>
+          <span class="section-title">Competições</span>
+          {% if competicoes %}
+          <span class="badge badge-gray ml-auto">{{ competicoes|length }}</span>
+          {% endif %}
+        </div>
+        {% if competicoes %}
+        <div class="divide-y divide-gray-100 dark:divide-gray-700">
+          {% for comp in competicoes %}
+          <div class="block px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+            <div class="flex items-center gap-3">
+              <div class="w-7 h-7 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 flex items-center justify-center shrink-0">
+                <i class="ti ti-trophy text-yellow-500 text-xs"></i>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
+                  {{ comp.nome }}
+                </p>
+                {% if comp.formato %}
+                <p class="text-[10px] text-gray-400 dark:text-gray-500">{{ comp.formato.nome }}</p>
+                {% endif %}
+              </div>
+              <div class="flex items-center gap-1 shrink-0">
+                <a href="{% url 'competicao:dirigente_inscricao' comp.pk %}"
+                   class="btn btn-ghost btn-xs gap-1 border border-gray-200/60 dark:border-gray-700/60"
+                   title="Inscrições de atletas">
+                  <i class="ti ti-id-badge-2 text-xs"></i>
+                  <span class="hidden sm:inline text-[10px]">Inscrições</span>
+                </a>
+                <a href="{% url 'competicao:classificacao' comp.pk %}"
+                   class="btn btn-ghost btn-xs border border-gray-200/60 dark:border-gray-700/60"
+                   title="Classificação">
+                  <i class="ti ti-table text-xs"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        {% include 'components/empty_state.html' with icon="trophy-off" title="Sem competições inscritas." %}
+        {% endif %}
+      </div>
+
+      <!-- Pendências do elenco -->
+      {% if atletas_sem_registro or atletas_suspensos %}
+      <div class="card overflow-hidden">
+        <div class="card-header">
+          <i class="ti ti-alert-triangle text-amber-500 text-base shrink-0"></i>
+          <span class="section-title">Pendências do Elenco</span>
+          <span class="badge badge-yellow ml-auto">{{ total_pendencias }}</span>
+        </div>
+        <div class="divide-y divide-gray-100 dark:divide-gray-700">
+          {% for atleta in atletas_sem_registro %}
+          <div class="flex items-center gap-3 px-4 py-2.5">
+            <div class="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center shrink-0">
+              <i class="ti ti-id-badge-off text-amber-500 text-xs"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{{ atleta.nome }}</p>
+              <p class="text-[10px] text-amber-600 dark:text-amber-400">Aguardando registro federativo</p>
+            </div>
+          </div>
+          {% endfor %}
+          {% for atleta in atletas_suspensos %}
+          <div class="flex items-center gap-3 px-4 py-2.5">
+            <div class="w-7 h-7 rounded-lg bg-red-50 dark:bg-red-900/20 flex items-center justify-center shrink-0">
+              <i class="ti ti-ban text-red-500 text-xs"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{{ atleta.nome }}</p>
+              <p class="text-[10px] text-red-500 dark:text-red-400">Suspenso</p>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Histórico -->
+      <div class="card overflow-hidden">
+        <div class="card-header">
+          <i class="ti ti-history text-gray-400 dark:text-gray-500 text-base shrink-0"></i>
+          <span class="section-title">Histórico</span>
+          <a href="{% url 'competicao:dirigente_jogos' %}?tab=realizados"
+             class="ml-auto text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5">
+            Ver tudo <i class="ti ti-chevron-right text-xs"></i>
+          </a>
+        </div>
+        {% if historico %}
+        <div class="divide-y divide-gray-100 dark:divide-gray-700">
+          {% for jogo in historico %}
+          <a href="{% url 'competicao:jogo_detalhe' jogo.pk %}"
+             class="block px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors group">
+
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-[10px] text-gray-400 dark:text-gray-500">
+                {% if jogo.data_hora %}{{ jogo.data_hora|date:"d/m/Y" }}{% else %}—{% endif %}
+              </span>
+              <span class="text-[10px] text-gray-400 dark:text-gray-500 truncate ml-2 max-w-[100px]">
+                {{ jogo.rodada.competicao.nome }}
+              </span>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <div class="flex-1 flex items-center gap-1.5 justify-end min-w-0">
+                {% if jogo.equipe_casa.escudo %}
+                <img src="{{ jogo.equipe_casa.escudo.thumbnail.url }}"
+                     class="w-5 h-5 rounded-full object-cover border border-gray-200 dark:border-gray-700 shrink-0
+                            {% if jogo.gols_casa < jogo.gols_fora %}opacity-40{% endif %}">
+                {% else %}
+                <div class="w-5 h-5 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-[9px] font-black shrink-0
+                            {% if jogo.gols_casa < jogo.gols_fora %}opacity-40{% endif %} text-gray-500">
+                  {{ jogo.equipe_casa.nome_equipe|first|upper }}
+                </div>
+                {% endif %}
+                <span class="text-xs font-medium truncate
+                  {% if jogo.gols_casa < jogo.gols_fora %}text-gray-400 dark:text-gray-500
+                  {% elif jogo.equipe_casa == equipe %}text-green-600 dark:text-green-400
+                  {% else %}text-gray-800 dark:text-gray-200{% endif %}">
+                  {{ jogo.equipe_casa.nome_equipe|truncatechars:10 }}
+                </span>
+              </div>
+
+              <div class="shrink-0 px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-center min-w-[42px]">
+                <span class="stat-number text-sm
+                  {% if jogo.gols_casa > jogo.gols_fora %}text-green-600 dark:text-green-400
+                  {% elif jogo.gols_casa == jogo.gols_fora %}text-gray-500 dark:text-gray-400
+                  {% else %}text-gray-300 dark:text-gray-600{% endif %}">{{ jogo.gols_casa }}</span>
+                <span class="text-gray-300 dark:text-gray-600 text-xs">–</span>
+                <span class="stat-number text-sm
+                  {% if jogo.gols_fora > jogo.gols_casa %}text-green-600 dark:text-green-400
+                  {% elif jogo.gols_casa == jogo.gols_fora %}text-gray-500 dark:text-gray-400
+                  {% else %}text-gray-300 dark:text-gray-600{% endif %}">{{ jogo.gols_fora }}</span>
+              </div>
+
+              <div class="flex-1 flex items-center gap-1.5 min-w-0">
+                {% if jogo.equipe_fora.escudo %}
+                <img src="{{ jogo.equipe_fora.escudo.thumbnail.url }}"
+                     class="w-5 h-5 rounded-full object-cover border border-gray-200 dark:border-gray-700 shrink-0
+                            {% if jogo.gols_fora < jogo.gols_casa %}opacity-40{% endif %}">
+                {% else %}
+                <div class="w-5 h-5 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-[9px] font-black shrink-0
+                            {% if jogo.gols_fora < jogo.gols_casa %}opacity-40{% endif %} text-gray-500">
+                  {{ jogo.equipe_fora.nome_equipe|first|upper }}
+                </div>
+                {% endif %}
+                <span class="text-xs font-medium truncate
+                  {% if jogo.gols_fora < jogo.gols_casa %}text-gray-400 dark:text-gray-500
+                  {% elif jogo.equipe_fora == equipe %}text-green-600 dark:text-green-400
+                  {% else %}text-gray-800 dark:text-gray-200{% endif %}">
+                  {{ jogo.equipe_fora.nome_equipe|truncatechars:10 }}
+                </span>
+              </div>
+            </div>
+
+          </a>
+          {% endfor %}
+        </div>
+        {% else %}
+        {% include 'components/empty_state.html' with icon="calendar-x" title="Nenhum jogo registrado ainda." %}
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal: alterar situação do atleta -->
+<div id="modal-situacao" tabindex="-1" aria-hidden="true"
+     class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50
+            justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+  <div class="relative p-4 w-full max-w-sm max-h-full">
+    <div class="relative bg-white rounded-2xl shadow-xl dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+
+      <div class="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700">
+        <div>
+          <p class="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-0.5">Situação</p>
+          <h3 id="modal-sit-nome" class="text-base font-bold text-gray-900 dark:text-white"></h3>
+        </div>
+        <button type="button" data-modal-hide="modal-situacao"
+                class="btn-icon text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+          <i class="ti ti-x text-lg"></i>
+        </button>
+      </div>
+
+      <form id="form-situacao" method="post" class="p-5 space-y-2">
+        {% csrf_token %}
+        <button type="submit" name="situacao" value="APTO"
+                class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-colors
+                       border-green-200 dark:border-green-800 hover:bg-green-50 dark:hover:bg-green-900/20
+                       text-green-700 dark:text-green-400 js-opt-APTO">
+          <i class="ti ti-circle-check text-base"></i>
+          <span class="text-sm font-medium">Apto</span>
+          <i class="ti ti-check ml-auto js-check-APTO hidden"></i>
+        </button>
+        <button type="submit" name="situacao" value="LESIONADO"
+                class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-colors
+                       border-yellow-200 dark:border-yellow-800 hover:bg-yellow-50 dark:hover:bg-yellow-900/20
+                       text-yellow-700 dark:text-yellow-400 js-opt-LESIONADO">
+          <i class="ti ti-bandage text-base"></i>
+          <span class="text-sm font-medium">Lesionado</span>
+          <i class="ti ti-check ml-auto js-check-LESIONADO hidden"></i>
+        </button>
+        <button type="submit" name="situacao" value="FORA"
+                class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-colors
+                       border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/40
+                       text-gray-600 dark:text-gray-400 js-opt-FORA">
+          <i class="ti ti-user-off text-base"></i>
+          <span class="text-sm font-medium">Fora do Elenco</span>
+          <i class="ti ti-check ml-auto js-check-FORA hidden"></i>
+        </button>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('.js-sit-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    const sit = this.dataset.sit;
+    document.getElementById('modal-sit-nome').textContent = this.dataset.nome;
+    document.getElementById('form-situacao').action =
+      '/competicao/dashboard/dirigente/atleta/' + this.dataset.pk + '/situacao/';
+    ['APTO','LESIONADO','FORA'].forEach(function(s){
+      const chk = document.querySelector('.js-check-' + s);
+      if(chk) chk.classList.toggle('hidden', s !== sit);
+    });
+  });
+});
+</script>
+{% endblock %}

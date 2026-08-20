@@ -3,289 +3,354 @@
 
 {% block breadcrumbs %}
 <div class="px-4 md:px-6 pt-3 pb-0">
-  <div class="breadcrumbs text-xs text-base-content/40">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
     <ul>
-      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-base-content/70">Dashboard</a></li>
-      <li><a href="{% url 'competicao:competicao_lista' %}" class="hover:text-base-content/70">Competições</a></li>
-      <li><a href="{% url 'competicao:classificacao' competicao.pk %}" class="hover:text-base-content/70">{{ competicao.nome }}</a></li>
-      <li><span class="text-base-content/60">Rodadas</span></li>
+      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-gray-700 dark:hover:text-gray-300">Dashboard</a></li>
+      <li><a href="{% url 'competicao:competicao_lista' %}" class="hover:text-gray-700 dark:hover:text-gray-300">Competições</a></li>
+      <li><a href="{% url 'competicao:classificacao' competicao.pk %}" class="hover:text-gray-700 dark:hover:text-gray-300">{{ competicao.nome }}</a></li>
+      <li><span class="text-gray-600 dark:text-gray-400">Rodadas</span></li>
     </ul>
   </div>
 </div>
 {% endblock %}
 
 {% block conteudo %}
-<div class="p-4 md:p-6 max-w-[1100px] mx-auto space-y-5">
+<div class="p-4 md:p-6 space-y-5">
 
   <!-- ── Cabeçalho ────────────────────────────────────────────────────── -->
-  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+  <div class="flex items-center justify-between gap-4">
     <div class="flex items-center gap-3">
-      <div class="w-9 h-9 rounded-xl bg-warning/10 border border-warning/20 flex items-center justify-center shrink-0">
-        <i class="bi bi-calendar3 text-warning text-base"></i>
-      </div>
+      <a href="{% url 'competicao:classificacao' competicao.pk %}"
+         class="btn btn-ghost btn-sm btn-square border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
+        <i class="ti ti-arrow-left text-sm"></i>
+      </a>
       <div>
-        <h1 class="section-heading text-2xl leading-none">{{ competicao.nome|upper }}</h1>
-        <p class="text-xs text-base-content/40 mt-0.5">
-          {{ rodadas|length }} rodada{{ rodadas|length|pluralize }}
+        <h1 class="section-heading text-4xl text-gray-900 dark:text-white leading-none">RODADAS</h1>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
+          {{ competicao.nome }} · {{ rodadas|length }} rodada{{ rodadas|length|pluralize }}
         </p>
       </div>
     </div>
     <div class="flex flex-wrap gap-2 shrink-0">
-      <a href="{% url 'competicao:classificacao' competicao.pk %}"
-         class="btn btn-ghost btn-sm gap-1.5 border border-base-content/10 text-base-content/60">
-        <i class="bi bi-trophy text-sm"></i> Classificação
+      {% if not is_liga_pura %}
+      <a href="{% url 'competicao:etapas' competicao.pk %}"
+         class="btn btn-ghost btn-sm gap-1.5 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
+        <i class="ti ti-layers-intersect text-sm"></i>
+        <span class="hidden sm:inline">Etapas</span>
       </a>
-      <a href="{% url 'competicao:fases' competicao.pk %}"
-         class="btn btn-ghost btn-sm gap-1.5 border border-base-content/10 text-base-content/60">
-        <i class="bi bi-layers text-sm"></i> Fases
-      </a>
-      <a href="{% url 'competicao:criar_jogos' competicao.pk %}"
-         class="btn btn-warning btn-sm gap-1.5 shadow-sm shadow-warning/20 font-semibold">
-        <i class="bi bi-plus-circle text-sm"></i> Gerar Jogos
-      </a>
+      {% endif %}
     </div>
   </div>
 
-  {% if rodadas %}
+  {% url 'competicao:criar_jogos' competicao.pk as url_gerar %}
+  {% if not is_liga_pura %}{% url 'competicao:etapas' competicao.pk as url_etapas %}{% endif %}
 
-  <!-- ── Barra de Tabs por Rodada (scroll horizontal) ─────────────────── -->
-  <div class="relative">
-    <div class="overflow-x-auto scrollbar-none -mx-4 px-4 md:-mx-6 md:px-6">
-      <div id="round-tabs" class="flex gap-1 min-w-max border-b border-base-300 pb-0">
-        {% for rodada in rodadas %}
+  <!-- ── Card principal ───────────────────────────────────────────────── -->
+  <div class="card overflow-hidden">
 
-        {# Detecta se tem jogo ao vivo ou é a primeira rodada com jogo pendente #}
-        {% with has_live=False %}
-        {% for jogo in rodada.jogo_set.all %}
-          {% if jogo.em_andamento %}{% with has_live=True %}{% endwith %}{% endif %}
-        {% endfor %}
-
-        <button
-          class="round-tab group relative shrink-0 px-3.5 py-2.5 text-[11px] font-bold
-                 tracking-wide rounded-t-lg border-b-2 transition-all duration-150 whitespace-nowrap"
-          data-panel="panel-{{ rodada.pk }}"
-          data-index="{{ forloop.counter0 }}">
-
-          <span class="flex items-center gap-1.5">
-            <!-- Dot ao vivo -->
-            {% for jogo in rodada.jogo_set.all %}{% if jogo.em_andamento %}
-            <span class="live-dot w-1.5 h-1.5"></span>
-            {% endif %}{% endfor %}
-
-            {% if rodada.fase %}
-            <span class="text-base-content/30 font-normal text-[10px]">{{ rodada.fase.nome|truncatechars:8 }}</span>
-            {% endif %}
-            {% if rodada.grupo %}
-            <span class="text-base-content/30 font-normal text-[10px]">Gr.{{ rodada.grupo.nome }}</span>
-            {% endif %}
-            R{{ rodada.numero }}
-          </span>
-
-          <!-- Resumo compacto de status -->
-          {% with total=rodada.jogo_set.count %}
-          {% if total %}
-          <span class="block text-[9px] font-normal text-center mt-0.5 opacity-60">
-            {{ total }} jogo{{ total|pluralize }}
-          </span>
-          {% endif %}
-          {% endwith %}
-        </button>
-        {% endwith %}
-        {% endfor %}
-      </div>
-    </div>
-  </div>
-
-  <!-- ── Painéis de Rodada ─────────────────────────────────────────────── -->
-  {% for rodada in rodadas %}
-  <div id="panel-{{ rodada.pk }}" class="round-panel hidden space-y-3">
-
-    <!-- Header da rodada -->
-    {% with jogos=rodada.jogo_set.all %}
-    <div class="flex items-center gap-3 flex-wrap">
-      <h2 class="font-bold text-sm text-base-content/70 flex items-center gap-2">
-        {% if rodada.fase %}
-        <span class="badge badge-ghost badge-sm">{{ rodada.fase.nome }}</span>
+    <!-- Cabeçalho fixo do card -->
+    <div class="card-header justify-between">
+      <div class="flex items-center gap-2">
+        <i class="ti ti-calendar text-blue-600 dark:text-blue-400 text-base"></i>
+        <span class="section-title">Tabela de Jogos</span>
+        {% if is_liga_pura and total_rodadas %}
+          <span class="badge badge-blue badge-sm">{{ rodadas|length }}/{{ total_rodadas }}</span>
+        {% elif rodadas %}
+          <span class="badge badge-gray badge-sm">{{ rodadas|length }} rodada{{ rodadas|length|pluralize }}</span>
         {% endif %}
-        {% if rodada.grupo %}
-        <span class="badge badge-ghost badge-sm">Grupo {{ rodada.grupo.nome }}</span>
-        {% endif %}
-        {{ rodada.numero }}ª Rodada
-      </h2>
-      <!-- Status summary -->
-      <div class="flex items-center gap-2 ml-auto flex-wrap">
-        {% for jogo in jogos %}{% if jogo.em_andamento %}
-          {% if forloop.first %}<span class="flex items-center gap-1.5 text-xs font-bold text-error"><span class="live-dot"></span> Ao Vivo</span>{% endif %}
-        {% endif %}{% endfor %}
-
-        <span class="text-xs text-base-content/30">
-          {{ jogos.count }} jogo{{ jogos.count|pluralize }}
-        </span>
       </div>
+      {% if is_liga_pura %}
+        {% if total_rodadas and rodadas|length >= total_rodadas %}
+          <span class="flex items-center gap-1.5 text-xs font-semibold text-green-600 dark:text-green-400">
+            <i class="ti ti-circle-check text-sm"></i>
+            <span class="hidden sm:inline">Todas geradas</span>
+          </span>
+        {% elif pode_gerar_proxima %}
+          <a href="{{ url_gerar }}" class="btn btn-outline btn-sm gap-1.5">
+            <i class="ti ti-player-skip-forward text-sm"></i>
+            <span class="hidden sm:inline">{% if rodadas %}Gerar Rodada {{ rodadas|length|add:1 }}{% else %}Gerar Jogos{% endif %}</span>
+          </a>
+        {% else %}
+          <span title="Agende data, horário e local de todos os jogos da rodada atual para liberar a próxima."
+                class="btn btn-outline btn-sm gap-1.5 opacity-40 cursor-not-allowed pointer-events-none">
+            <i class="ti ti-player-skip-forward text-sm"></i>
+            <span class="hidden sm:inline">Gerar Rodada {{ rodadas|length|add:1 }}</span>
+          </span>
+        {% endif %}
+      {% elif tem_pontos_corridos %}
+        <a href="{{ url_gerar }}" class="btn btn-outline btn-sm gap-1.5">
+          <i class="ti ti-circle-plus text-sm"></i>
+          <span class="hidden sm:inline">Gerar Jogos</span>
+        </a>
+      {% endif %}
     </div>
 
-    <!-- Grid de cards de jogo -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-      {% for jogo in jogos %}
+    {% if rodadas %}
 
-      <div class="card bg-base-200 border card-sport overflow-hidden
-                  {% if jogo.em_andamento %}border-error/40{% else %}border-base-300{% endif %}">
-
-        <!-- Barra de status no topo -->
-        <div class="h-0.5 w-full
-          {% if jogo.em_andamento %}bg-error animate-pulse
-          {% elif jogo.finalizado %}bg-success
-          {% elif jogo.anulado %}bg-base-300
-          {% else %}bg-base-300{% endif %}">
-        </div>
-
-        <div class="p-4">
-
-          <!-- Meta: data + local -->
-          {% if jogo.data_hora or jogo.local %}
-          <div class="flex items-center gap-3 text-[10px] text-base-content/35 mb-3 flex-wrap">
-            {% if jogo.data_hora %}
+    <!-- Barra de tabs -->
+    <div class="flex items-stretch border-b border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700/10">
+      <div class="flex-1 overflow-x-auto">
+        <div id="round-tabs" class="flex gap-1 min-w-max px-3 pt-1">
+          {% for rodada in rodadas %}
+          <button
+            class="round-tab relative shrink-0 px-3.5 py-2.5
+                   rounded-t-lg border-b-2 border-transparent -mb-px
+                   transition-all duration-150 whitespace-nowrap
+                   flex flex-col items-center justify-center gap-0.5"
+            data-panel="panel-{{ rodada.pk }}"
+            data-index="{{ forloop.counter0 }}">
             <span class="flex items-center gap-1">
-              <i class="bi bi-calendar3 text-[9px]"></i>
-              {{ jogo.data_hora|date:"d/m/Y" }} · {{ jogo.data_hora|time:"H:i" }}
-            </span>
-            {% endif %}
-            {% if jogo.local %}
-            <span class="flex items-center gap-1">
-              <i class="bi bi-geo-alt-fill text-[9px]"></i>
-              {{ jogo.local.nome }}
-            </span>
-            {% endif %}
-          </div>
-          {% endif %}
-
-          <!-- Times e placar -->
-          <div class="flex items-center gap-2">
-
-            <!-- Equipe Casa -->
-            <div class="flex-1 flex flex-col items-center text-center gap-1.5 min-w-0">
-              {% if jogo.equipe_casa.escudo %}
-              <img src="{{ jogo.equipe_casa.escudo.thumbnail.url }}" alt="{{ jogo.equipe_casa.nome_equipe }}"
-                   class="w-10 h-10 rounded-full object-cover border-2 shrink-0
-                          {% if jogo.finalizado and jogo.gols_casa < jogo.gols_fora %}border-base-300 opacity-50{% else %}border-warning/30{% endif %}">
-              {% else %}
-              <div class="w-10 h-10 rounded-full bg-base-300 border-2 border-base-300
-                          flex items-center justify-center shrink-0
-                          {% if jogo.finalizado and jogo.gols_casa < jogo.gols_fora %}opacity-50{% endif %}">
-                <span class="text-xs font-black text-base-content/40">{{ jogo.equipe_casa.nome_equipe|first|upper }}</span>
-              </div>
+              {% for jogo in rodada.jogo_set.all %}{% if jogo.em_andamento %}
+              <span class="live-dot w-1.5 h-1.5"></span>
+              {% endif %}{% endfor %}
+              {% if rodada.etapa %}
+              <span class="text-[9px] font-normal text-gray-400 dark:text-gray-500">{{ rodada.etapa.nome|truncatechars:8 }}</span>
               {% endif %}
-              <span class="text-xs font-semibold leading-snug truncate w-full
-                           {% if jogo.finalizado and jogo.gols_casa < jogo.gols_fora %}text-base-content/40{% endif %}">
-                {{ jogo.equipe_casa.nome_equipe|truncatechars:14 }}
-              </span>
-            </div>
+              {% if rodada.grupo %}
+              <span class="text-[9px] font-normal text-gray-400 dark:text-gray-500">Gr.{{ rodada.grupo.nome }}</span>
+              {% endif %}
+              <span class="text-[11px] font-bold text-blue-600 dark:text-blue-400 tracking-wide">R{{ rodada.numero }}</span>
+            </span>
+            {% with total=rodada.jogo_set.count %}
+            {% if total %}
+            <span class="text-[9px] font-normal text-gray-400 dark:text-gray-500">{{ total }} jogo{{ total|pluralize }}</span>
+            {% endif %}
+            {% endwith %}
+          </button>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
 
-            <!-- Placar central -->
-            <div class="shrink-0 flex flex-col items-center gap-1 px-1">
-              {% if jogo.anulado %}
-                <span class="badge badge-error badge-sm text-[10px]">Anulado</span>
-              {% elif jogo.finalizado or jogo.em_andamento %}
-                <div class="flex items-center gap-1.5">
-                  <span class="stat-number text-2xl
-                    {% if jogo.gols_casa > jogo.gols_fora %}text-base-content
-                    {% elif jogo.gols_casa == jogo.gols_fora %}text-base-content/70
-                    {% else %}text-base-content/35{% endif %}">{{ jogo.gols_casa }}</span>
-                  <span class="text-base-content/25 font-bold text-sm">–</span>
-                  <span class="stat-number text-2xl
-                    {% if jogo.gols_fora > jogo.gols_casa %}text-base-content
-                    {% elif jogo.gols_casa == jogo.gols_fora %}text-base-content/70
-                    {% else %}text-base-content/35{% endif %}">{{ jogo.gols_fora }}</span>
+    <!-- Painéis de rodada -->
+    {% for rodada in rodadas %}
+    <div id="panel-{{ rodada.pk }}" class="round-panel hidden p-4 space-y-3">
+      {% with jogos=rodada.jogo_set.all %}
+      <div class="flex items-center gap-3 flex-wrap">
+        <h2 class="font-bold text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2">
+          {% if rodada.etapa %}<span class="badge badge-gray badge-sm">{{ rodada.etapa.nome }}</span>{% endif %}
+          {% if rodada.grupo %}<span class="badge badge-gray badge-sm">Grupo {{ rodada.grupo.nome }}</span>{% endif %}
+          {{ rodada.numero }}ª Rodada
+        </h2>
+        <div class="flex items-center gap-2 ml-auto flex-wrap">
+          {% for jogo in jogos %}{% if jogo.em_andamento %}
+            {% if forloop.first %}<span class="flex items-center gap-1.5 text-xs font-bold text-red-500"><span class="live-dot"></span> Ao Vivo</span>{% endif %}
+          {% endif %}{% endfor %}
+          <span class="text-xs text-gray-500 dark:text-gray-400">{{ jogos.count }} jogo{{ jogos.count|pluralize }}</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {% for jogo in jogos %}
+        <div class="card bg-gray-50 dark:bg-gray-800 border card-sport overflow-hidden
+                    {% if jogo.em_andamento %}border-red-400/50 dark:border-red-500/40{% else %}border-gray-200 dark:border-gray-700{% endif %}">
+          <div class="h-0.5 w-full {% if jogo.em_andamento %}bg-red-500 animate-pulse{% elif jogo.finalizado %}bg-green-500{% else %}bg-gray-200 dark:bg-gray-700{% endif %}"></div>
+          <div class="p-4">
+            {% if jogo.data_hora or jogo.local %}
+            <div class="flex items-center gap-3 text-[10px] text-gray-500 dark:text-gray-500 mb-3 flex-wrap">
+              {% if jogo.data_hora %}<span class="flex items-center gap-1"><i class="ti ti-calendar text-[9px]"></i>{{ jogo.data_hora|date:"d/m/Y" }} · {{ jogo.data_hora|time:"H:i" }}</span>{% endif %}
+              {% if jogo.local %}<span class="flex items-center gap-1"><i class="ti ti-map-pin text-[9px]"></i>{{ jogo.local.nome }}</span>{% endif %}
+            </div>
+            {% endif %}
+            <div class="flex items-center gap-2">
+              <!-- Casa -->
+              <div class="flex-1 flex flex-col items-center text-center gap-1.5 min-w-0">
+                {% if jogo.equipe_casa.escudo %}
+                <img src="{{ jogo.equipe_casa.escudo.thumbnail.url }}" alt="{{ jogo.equipe_casa.nome_equipe }}"
+                     class="w-10 h-10 rounded-full object-cover border-2 shrink-0 {% if jogo.finalizado and jogo.gols_casa < jogo.gols_fora %}opacity-40 border-gray-200 dark:border-gray-700{% else %}border-yellow-400/30{% endif %}">
+                {% else %}
+                <div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-700 flex items-center justify-center shrink-0 {% if jogo.finalizado and jogo.gols_casa < jogo.gols_fora %}opacity-40{% endif %}">
+                  <span class="text-xs font-black text-gray-500 dark:text-gray-400">{{ jogo.equipe_casa.nome_equipe|first|upper }}</span>
                 </div>
-              {% else %}
-                <span class="text-xs text-base-content/30 font-medium px-2 py-1">
-                  {% if jogo.data_hora %}{{ jogo.data_hora|time:"H:i" }}{% else %}×{% endif %}
-                </span>
-              {% endif %}
-
-              <!-- Status badge -->
-              <div>
-                {% if jogo.em_andamento %}
-                  <span class="flex items-center gap-1 text-[10px] font-bold text-error">
-                    <span class="live-dot w-1.5 h-1.5"></span> AO VIVO
-                  </span>
-                {% elif jogo.wo %}
-                  <span class="badge badge-warning badge-xs">W.O.</span>
-                {% elif jogo.finalizado %}
-                  <span class="badge badge-success badge-xs">FIM</span>
-                {% elif not jogo.anulado %}
-                  <span class="badge badge-ghost badge-xs text-[9px]">Pendente</span>
                 {% endif %}
+                <span class="text-xs font-semibold leading-snug truncate w-full {% if jogo.finalizado and jogo.gols_casa < jogo.gols_fora %}text-gray-400 dark:text-gray-500{% else %}text-gray-800 dark:text-gray-200{% endif %}">{{ jogo.equipe_casa.nome_equipe|truncatechars:14 }}</span>
+              </div>
+              <!-- Placar -->
+              <div class="shrink-0 flex flex-col items-center gap-1 px-1">
+                {% if jogo.anulado %}
+                  <span class="badge badge-red badge-sm text-[10px]">Anulado</span>
+                {% elif jogo.finalizado or jogo.em_andamento %}
+                  <div class="flex items-center gap-1.5">
+                    <span class="stat-number text-2xl {% if jogo.gols_casa > jogo.gols_fora %}text-gray-900 dark:text-white{% elif jogo.gols_casa == jogo.gols_fora %}text-gray-700 dark:text-gray-300{% else %}text-gray-400 dark:text-gray-500{% endif %}">{{ jogo.gols_casa }}</span>
+                    <span class="text-gray-300 dark:text-gray-600 font-bold text-sm">–</span>
+                    <span class="stat-number text-2xl {% if jogo.gols_fora > jogo.gols_casa %}text-gray-900 dark:text-white{% elif jogo.gols_casa == jogo.gols_fora %}text-gray-700 dark:text-gray-300{% else %}text-gray-400 dark:text-gray-500{% endif %}">{{ jogo.gols_fora }}</span>
+                  </div>
+                {% else %}
+                  <span class="text-sm font-bold text-gray-400 dark:text-gray-500 px-2 py-1">{% if jogo.data_hora %}{{ jogo.data_hora|time:"H:i" }}{% else %}×{% endif %}</span>
+                {% endif %}
+                <div>
+                  {% if jogo.em_andamento %}<span class="flex items-center gap-1 text-[10px] font-bold text-red-500"><span class="live-dot w-1.5 h-1.5"></span> AO VIVO</span>
+                  {% elif jogo.wo %}<span class="badge badge-yellow badge-xs">W.O.</span>
+                  {% elif jogo.finalizado %}<span class="badge badge-green badge-xs">FIM</span>
+                  {% elif not jogo.anulado %}<span class="badge badge-gray badge-xs text-[9px]">Pendente</span>{% endif %}
+                </div>
+              </div>
+              <!-- Fora -->
+              <div class="flex-1 flex flex-col items-center text-center gap-1.5 min-w-0">
+                {% if jogo.equipe_fora.escudo %}
+                <img src="{{ jogo.equipe_fora.escudo.thumbnail.url }}" alt="{{ jogo.equipe_fora.nome_equipe }}"
+                     class="w-10 h-10 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700 shrink-0 {% if jogo.finalizado and jogo.gols_fora < jogo.gols_casa %}opacity-40{% endif %}">
+                {% else %}
+                <div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-700 flex items-center justify-center shrink-0 {% if jogo.finalizado and jogo.gols_fora < jogo.gols_casa %}opacity-40{% endif %}">
+                  <span class="text-xs font-black text-gray-500 dark:text-gray-400">{{ jogo.equipe_fora.nome_equipe|first|upper }}</span>
+                </div>
+                {% endif %}
+                <span class="text-xs font-semibold leading-snug truncate w-full {% if jogo.finalizado and jogo.gols_fora < jogo.gols_casa %}text-gray-400 dark:text-gray-500{% else %}text-gray-800 dark:text-gray-200{% endif %}">{{ jogo.equipe_fora.nome_equipe|truncatechars:14 }}</span>
               </div>
             </div>
-
-            <!-- Equipe Fora -->
-            <div class="flex-1 flex flex-col items-center text-center gap-1.5 min-w-0">
-              {% if jogo.equipe_fora.escudo %}
-              <img src="{{ jogo.equipe_fora.escudo.thumbnail.url }}" alt="{{ jogo.equipe_fora.nome_equipe }}"
-                   class="w-10 h-10 rounded-full object-cover border-2 shrink-0
-                          {% if jogo.finalizado and jogo.gols_fora < jogo.gols_casa %}border-base-300 opacity-50{% else %}border-base-300{% endif %}">
+            <div class="flex items-center justify-between mt-3 pt-2.5 border-t border-gray-200 dark:border-gray-700/60">
+              {% if not is_arbitro_only and not is_dirigente_only %}
+              <button type="button"
+                data-pk="{{ jogo.pk }}"
+                data-url="{% url 'competicao:jogo_configurar' jogo.pk %}"
+                data-data="{{ jogo.data_hora|date:'Y-m-d H:i' }}"
+                data-local="{{ jogo.local_id|default:'' }}"
+                data-arbitro="{{ jogo.arbitro_id|default:'' }}"
+                data-label="{{ jogo.equipe_casa.nome_equipe|truncatechars:14 }} × {{ jogo.equipe_fora.nome_equipe|truncatechars:14 }}"
+                onclick="abrirModalConfig(this)"
+                class="btn btn-ghost btn-xs gap-1 text-gray-500 dark:text-gray-400">
+                <i class="ti ti-settings text-xs"></i>
+                <span class="text-[10px]">Configurar</span>
+              </button>
               {% else %}
-              <div class="w-10 h-10 rounded-full bg-base-300 border-2 border-base-300
-                          flex items-center justify-center shrink-0
-                          {% if jogo.finalizado and jogo.gols_fora < jogo.gols_casa %}opacity-50{% endif %}">
-                <span class="text-xs font-black text-base-content/40">{{ jogo.equipe_fora.nome_equipe|first|upper }}</span>
-              </div>
+              <span></span>
               {% endif %}
-              <span class="text-xs font-semibold leading-snug truncate w-full
-                           {% if jogo.finalizado and jogo.gols_fora < jogo.gols_casa %}text-base-content/40{% endif %}">
-                {{ jogo.equipe_fora.nome_equipe|truncatechars:14 }}
-              </span>
+              <a href="{% url 'competicao:jogo_detalhe' jogo.pk %}" class="btn btn-ghost btn-xs gap-1">
+                <i class="ti ti-eye text-xs"></i>
+                <span class="text-[10px]">Detalhes</span>
+              </a>
             </div>
-
           </div>
-
-          <!-- Footer: link para detalhes -->
-          <div class="flex items-center justify-end mt-3 pt-2.5 border-t border-base-300/60 gap-2">
-            <a href="{% url 'competicao:jogo_detalhe' jogo.pk %}"
-               class="btn btn-ghost btn-xs gap-1 text-base-content/40 hover:text-base-content transition-colors">
-              <i class="bi bi-pencil-square text-xs"></i>
-              <span class="text-[10px]">Detalhes / Editar</span>
-            </a>
-          </div>
-
         </div>
+        {% empty %}
+        {% include 'components/empty_state.html' with icon="calendar-x" title="Nenhum jogo nesta rodada." %}
+        {% endfor %}
       </div>
-
-      {% empty %}
-      {% include 'components/empty_state.html' with icon="calendar-x" title="Nenhum jogo nesta rodada." %}
-      {% endfor %}
+      {% endwith %}
     </div>
-    {% endwith %}
-  </div>
-  {% endfor %}
+    {% endfor %}
 
-  {% else %}
-  <!-- Empty state: sem rodadas -->
-  <div class="card bg-base-200 border border-base-300">
-    <div class="card-body">
-      {% url 'competicao:criar_jogos' competicao.pk as url_gerar %}
-      {% url 'competicao:fases' competicao.pk as url_fases %}
-      {% include 'components/empty_state.html' with
-         icon="calendar-x"
-         title="Nenhuma rodada gerada ainda."
-         subtitle="Configure as fases da competição e gere a tabela de jogos."
-         cta_url=url_gerar
-         cta_label="Gerar Tabela" %}
-      <div class="flex justify-center mt-2">
-        <a href="{{ url_fases }}" class="btn btn-ghost btn-sm gap-1">
-          <i class="bi bi-layers"></i> Configurar Fases
+    {% else %}
+    <!-- Empty state dentro do card -->
+    {% if is_liga_pura %}
+      {% include 'components/empty_state.html' with icon="calendar-x" title="Nenhuma rodada gerada ainda." subtitle="Clique em Gerar Jogos para criar a tabela." %}
+    {% else %}
+      {% include 'components/empty_state.html' with icon="calendar-x" title="Nenhuma rodada gerada ainda." subtitle="Configure as etapas e clique em Gerar Jogos." %}
+      <div class="flex justify-center pb-8 -mt-3">
+        <a href="{{ url_etapas }}" class="btn btn-ghost btn-sm gap-1">
+          <i class="ti ti-layers-intersect"></i> Configurar Etapas
         </a>
       </div>
-    </div>
-  </div>
-  {% endif %}
+    {% endif %}
+    {% endif %}
+
+  </div><!-- /card principal -->
 
 </div>
+
+<!-- ── Modal Flowbite: configurar jogo (top-center) ────────────────── -->
+{% if not is_arbitro_only and not is_dirigente_only %}
+<div id="modal-config-jogo" tabindex="-1" aria-hidden="true"
+     class="hidden fixed inset-0 z-50 flex justify-center items-start pt-10
+            overflow-y-auto bg-gray-900/60 dark:bg-gray-900/80 backdrop-blur-sm">
+  <div class="relative w-full max-w-md mx-4 mb-10">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl ring-1 ring-black/5 dark:ring-white/5">
+
+      <!-- Cabeçalho -->
+      <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 rounded-t-xl">
+        <div class="flex items-center gap-2">
+          <i class="ti ti-settings text-blue-500 text-base"></i>
+          <h5 class="font-semibold text-gray-900 dark:text-white text-sm">Configurar Jogo</h5>
+        </div>
+        <button type="button" onclick="fecharModalConfig()"
+                class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300
+                       hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg p-1 transition-colors">
+          <i class="ti ti-x text-base"></i>
+        </button>
+      </div>
+
+      <!-- Identificação do jogo -->
+      <div class="px-4 pt-3 pb-0">
+        <p id="modal-config-label"
+           class="text-[11px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500"></p>
+      </div>
+
+      <!-- Formulário -->
+      <form id="form-config-jogo" method="post" class="p-4 space-y-4">
+        {% csrf_token %}
+        <input type="hidden" name="next" id="config-next" value="">
+
+        <div>
+          <label for="config-data-hora"
+                 class="flex items-center gap-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+            <i class="ti ti-calendar text-gray-400 text-sm"></i> Data e Hora
+          </label>
+          <input type="datetime-local" name="data_hora" id="config-data-hora" class="form-input">
+        </div>
+
+        <div>
+          <label for="config-local"
+                 class="flex items-center gap-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+            <i class="ti ti-map-pin text-gray-400 text-sm"></i> Local / Campo
+          </label>
+          <select name="local" id="config-local" class="form-select">
+            <option value="">— Sem local definido —</option>
+            {% for local in locais %}
+            <option value="{{ local.pk }}">{{ local.nome }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label for="config-arbitro"
+                 class="flex items-center gap-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+            <i class="ti ti-id-badge-2 text-gray-400 text-sm"></i> Árbitro Principal
+          </label>
+          <select name="arbitro" id="config-arbitro" class="form-select">
+            <option value="">— Sem árbitro definido —</option>
+            {% for arb in arbitros %}
+            <option value="{{ arb.pk }}">{{ arb.usuario.nome }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+          <button type="button" onclick="fecharModalConfig()" class="btn btn-ghost btn-sm">Cancelar</button>
+          <button type="submit" class="btn btn-primary btn-sm gap-1">
+            <i class="ti ti-check text-sm"></i> Salvar
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+{% endif %}
+
 {% endblock %}
 
 {% block script %}
 <script>
+// ── Modal Flowbite: configurar jogo ──────────────────────────────────
+function abrirModalConfig(btn) {
+  document.getElementById('modal-config-label').textContent = btn.dataset.label;
+  document.getElementById('form-config-jogo').action = btn.dataset.url;
+  document.getElementById('config-next').value = window.location.pathname + window.location.search;
+  var dt = btn.dataset.data;
+  document.getElementById('config-data-hora').value = dt ? dt.replace(' ', 'T') : '';
+  document.getElementById('config-local').value = btn.dataset.local || '';
+  document.getElementById('config-arbitro').value = btn.dataset.arbitro || '';
+  var m = document.getElementById('modal-config-jogo');
+  m.classList.remove('hidden'); m.classList.add('flex');
+}
+function fecharModalConfig() {
+  var m = document.getElementById('modal-config-jogo');
+  m.classList.add('hidden'); m.classList.remove('flex');
+}
+var _mcj = document.getElementById('modal-config-jogo');
+if (_mcj) { _mcj.addEventListener('click', function(e) { if (e.target === this) fecharModalConfig(); }); }
+
+// ── Tabs de rodadas ───────────────────────────────────────────────────
 (function () {
   'use strict';
 
@@ -293,29 +358,24 @@
   var panels = document.querySelectorAll('.round-panel');
 
   function activateTab(tab) {
-    // Reset all
     tabs.forEach(function (t) {
-      t.classList.remove('border-warning', 'text-warning', 'bg-warning/5');
-      t.classList.add('border-transparent', 'text-base-content/40');
+      t.classList.remove('border-yellow-400', 'text-yellow-500', 'bg-yellow-400/5', 'dark:bg-yellow-400/5');
+      t.classList.add('border-transparent', 'text-gray-500');
     });
     panels.forEach(function (p) { p.classList.add('hidden'); });
 
-    // Activate selected
-    tab.classList.add('border-warning', 'text-warning', 'bg-warning/5');
-    tab.classList.remove('border-transparent', 'text-base-content/40');
+    tab.classList.remove('border-transparent', 'text-gray-500');
+    tab.classList.add('border-yellow-400', 'text-yellow-500', 'bg-yellow-400/5', 'dark:bg-yellow-400/5');
     var panel = document.getElementById(tab.dataset.panel);
     if (panel) panel.classList.remove('hidden');
 
-    // Scroll tab into view
     tab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
   }
 
-  // Bind click handlers
   tabs.forEach(function (tab) {
     tab.addEventListener('click', function () { activateTab(this); });
   });
 
-  // Auto-select: prefer tab with live game, then first with pending, else first
   var target = null;
   tabs.forEach(function (tab) {
     var panel = document.getElementById(tab.dataset.panel);
@@ -325,12 +385,11 @@
   });
 
   if (!target) {
-    // Find first round with a pending game (no "FIM" badge and no "Anulado")
     tabs.forEach(function (tab) {
       if (target) return;
       var panel = document.getElementById(tab.dataset.panel);
       if (!panel) return;
-      var badges = panel.querySelectorAll('.badge-success, .badge-error');
+      var badges = panel.querySelectorAll('.badge-green, .badge-red');
       var cards  = panel.querySelectorAll('.card');
       if (cards.length > 0 && badges.length < cards.length) { target = tab; }
     });

@@ -1,0 +1,84 @@
+{% load static %}
+<!doctype html>
+<html lang="pt-br" id="html-root" class="">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Selecionar Federação — CHAMPS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+  <link rel="stylesheet" href="{% static 'css/dist/styles.css' %}">
+</head>
+
+<body class="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-6 py-12 antialiased">
+
+  <div class="w-full max-w-md">
+
+    <!-- Brand -->
+    <div class="flex items-center gap-2.5 justify-center mb-8">
+      <div class="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg">
+        <i class="ti ti-trophy text-white text-lg"></i>
+      </div>
+      <div class="section-heading text-2xl text-gray-900 dark:text-white tracking-widest">CHAMPS</div>
+    </div>
+
+    <!-- Título -->
+    <div class="text-center mb-8">
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white leading-none mb-2">Selecione a federação</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Olá, <span class="font-medium text-gray-700 dark:text-gray-300">{{ request.user.nome }}</span>.
+        Você possui vínculo com mais de uma federação.
+      </p>
+    </div>
+
+    <!-- Alertas -->
+    {% if messages %}
+    <div class="space-y-2 mb-6">
+      {% for message in messages %}
+      <div class="alert alert-danger text-sm" role="alert">
+        <i class="ti ti-alert-triangle shrink-0 text-base"></i>
+        <span>{{ message }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Lista de federações -->
+    <form method="post" class="space-y-3">
+      {% csrf_token %}
+      {% for vinculo in vinculos %}
+      <button type="submit"
+              name="federacao_id"
+              value="{{ vinculo.federacao.id }}"
+              class="w-full flex items-center gap-4 p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md transition-all text-left group">
+        <div class="w-12 h-12 rounded-lg bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800 flex items-center justify-center shrink-0 overflow-hidden">
+          {% if vinculo.federacao.logo %}
+          <img src="{{ vinculo.federacao.logo.url }}" alt="{{ vinculo.federacao.nome }}" class="w-full h-full object-cover">
+          {% else %}
+          <i class="ti ti-shield text-blue-600 dark:text-blue-400 text-xl"></i>
+          {% endif %}
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="font-semibold text-gray-900 dark:text-white truncate">{{ vinculo.federacao.nome }}</div>
+          <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ vinculo.get_papel_display }}</div>
+        </div>
+        <i class="ti ti-chevron-right text-gray-300 dark:text-gray-600 group-hover:text-blue-500 transition-colors text-lg shrink-0"></i>
+      </button>
+      {% endfor %}
+    </form>
+
+    <!-- Sair -->
+    <div class="text-center mt-8">
+      <a href="{% url 'core:logout' %}"
+         class="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors">
+        <i class="ti ti-logout text-base"></i>
+        Sair da conta
+      </a>
+    </div>
+
+  </div>
+
+</body>
+</html>

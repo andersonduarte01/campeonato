@@ -24,21 +24,21 @@
     /* Buttons */
     .btn { display: inline-block; padding: 3px 10px; border-radius: 4px; border: 1px solid transparent; cursor: pointer; font-size: 0.8rem; }
     .btn-sm { padding: 2px 8px; font-size: 0.75rem; }
-    .btn-dark { background: #212529; color: #fff; border-color: #212529; }
-    .btn-outline-secondary { background: transparent; color: #6c757d; border-color: #6c757d; }
+    .btn-primary { background: #212529; color: #fff; border-color: #212529; }
+    .btn-ghost { background: transparent; color: #6c757d; border-color: #6c757d; }
 
     /* Tables */
     .table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
     .table th, .table td { padding: 5px 7px; vertical-align: top; }
-    .table-bordered th, .table-bordered td { border: 1px solid #dee2e6; }
+    . th, . td { border: 1px solid #dee2e6; }
     .table-sm th, .table-sm td { padding: 3px 5px; }
-    .table-dark thead tr th { background: #212529; color: #fff; border-color: #373b3e; }
+    . thead tr th { background: #212529; color: #fff; border-color: #373b3e; }
 
     /* Badges */
     .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 700; }
     .bg-secondary { background: #6c757d; color: #fff; }
-    .bg-success { background: #198754; color: #fff; }
-    .bg-warning { background: #ffc107; }
+    .bg-green-500 { background: #198754; color: #fff; }
+    .bg-yellow-400 { background: #ffc107; }
     .text-dark { color: #212529; }
 
     @media print {
@@ -50,10 +50,10 @@
 <body>
 
   <div class="no-print mb-3">
-    <button onclick="window.print()" class="btn btn-dark btn-sm">
-      <i class="bi bi-printer"></i> Imprimir / Salvar PDF
+    <button onclick="window.print()" class="btn btn-primary btn-sm">
+      <i class="ti ti-printer"></i> Imprimir / Salvar PDF
     </button>
-    <button onclick="window.history.back()" class="btn btn-outline-secondary btn-sm ms-2">Voltar</button>
+    <button onclick="window.history.back()" class="btn btn-ghost btn-sm ms-2">Voltar</button>
   </div>
 
   <div class="text-center mb-3">
@@ -64,13 +64,12 @@
   <hr>
 
   {% if inscricoes %}
-  <table class="table table-sm table-bordered">
-    <thead class="table-dark">
+  <table class="table table-sm ">
+    <thead class="">
       <tr>
         <th style="width:50px">#</th>
         <th>Nome do Atleta</th>
         <th>Posição</th>
-        <th>Taxa</th>
       </tr>
     </thead>
     <tbody>
@@ -79,13 +78,6 @@
         <td class="text-center fw-bold">{{ i.numero_camisa|default:"—" }}</td>
         <td>{{ i.atleta.nome }}</td>
         <td><span class="badge bg-secondary">{{ i.atleta.get_posicao_display }}</span></td>
-        <td>
-          {% if i.taxa_paga %}
-            <span class="badge bg-success">Paga</span>
-          {% else %}
-            <span class="badge bg-warning text-dark">Pendente</span>
-          {% endif %}
-        </td>
       </tr>
       {% endfor %}
     </tbody>

@@ -1,0 +1,154 @@
+{% extends 'base/indice.html' %}
+{% block titulo %}Configurar Jogo — {{ jogo.equipe_casa }} × {{ jogo.equipe_fora }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
+    <ul>
+      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-gray-700 dark:hover:text-gray-300">Dashboard</a></li>
+      {% if jogo.rodada %}
+      <li><a href="{% url 'competicao:classificacao' jogo.rodada.competicao.pk %}" class="hover:text-gray-700 dark:hover:text-gray-300">{{ jogo.rodada.competicao.nome }}</a></li>
+      <li><a href="{% url 'competicao:rodadas' jogo.rodada.competicao.pk %}" class="hover:text-gray-700 dark:hover:text-gray-300">Rodadas</a></li>
+      <li><a href="{% url 'competicao:jogo_detalhe' jogo.pk %}" class="hover:text-gray-700 dark:hover:text-gray-300">Jogo</a></li>
+      {% endif %}
+      <li><span class="text-gray-600 dark:text-gray-400">Configurar</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block conteudo %}
+<div class="p-4 md:p-6 max-w-2xl mx-auto space-y-5">
+
+  <!-- ── Cabeçalho ──────────────────────────────────────────────────── -->
+  <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2 mb-1">
+        <i class="ti ti-settings text-yellow-500 text-base"></i>
+        <span class="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">Configuração</span>
+      </div>
+      <h1 class="section-heading text-3xl text-gray-900 dark:text-white leading-none">
+        Configurar Jogo
+      </h1>
+    </div>
+    <a href="{% url 'competicao:jogo_detalhe' jogo.pk %}"
+       class="btn btn-ghost btn-sm gap-1 border border-gray-200/60 dark:border-gray-700/60 shrink-0">
+      <i class="ti ti-arrow-left"></i> Voltar
+    </a>
+  </div>
+
+  <!-- ── Confronto ─────────────────────────────────────────────────── -->
+  <div class="card overflow-hidden">
+    <div class="p-5">
+
+      <!-- Times -->
+      <div class="flex items-center justify-center gap-6 mb-5 pb-5 border-b border-gray-200 dark:border-gray-700">
+        <div class="text-center flex-1">
+          {% if jogo.equipe_casa.escudo %}
+          <img src="{{ jogo.equipe_casa.escudo.thumbnail.url }}"
+               class="w-14 h-14 rounded-full mx-auto mb-2 border-2 border-yellow-400/30 shadow">
+          {% else %}
+          <div class="w-14 h-14 rounded-full bg-yellow-400/10 border-2 border-yellow-400/20
+                      flex items-center justify-center mx-auto mb-2 shadow">
+            <span class="text-xl font-black text-yellow-500">{{ jogo.equipe_casa.nome_equipe|first|upper }}</span>
+          </div>
+          {% endif %}
+          <p class="font-bold text-sm text-gray-900 dark:text-white">{{ jogo.equipe_casa.nome_equipe }}</p>
+          <p class="text-xs text-gray-400 dark:text-gray-500">Mandante</p>
+        </div>
+
+        <div class="font-black text-2xl text-gray-300 dark:text-gray-600 shrink-0">×</div>
+
+        <div class="text-center flex-1">
+          {% if jogo.equipe_fora.escudo %}
+          <img src="{{ jogo.equipe_fora.escudo.thumbnail.url }}"
+               class="w-14 h-14 rounded-full mx-auto mb-2 border-2 border-gray-200 dark:border-gray-700 shadow">
+          {% else %}
+          <div class="w-14 h-14 rounded-full bg-gray-100 dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-700
+                      flex items-center justify-center mx-auto mb-2 shadow">
+            <span class="text-xl font-black text-gray-400 dark:text-gray-500">{{ jogo.equipe_fora.nome_equipe|first|upper }}</span>
+          </div>
+          {% endif %}
+          <p class="font-bold text-sm text-gray-900 dark:text-white">{{ jogo.equipe_fora.nome_equipe }}</p>
+          <p class="text-xs text-gray-400 dark:text-gray-500">Visitante</p>
+        </div>
+      </div>
+
+      <!-- Formulário -->
+      <form method="post" class="space-y-4">
+        {% csrf_token %}
+
+        <!-- Data e hora -->
+        <div>
+          <div class="flex items-center gap-1.5 mb-1.5">
+            <i class="ti ti-calendar text-gray-400 dark:text-gray-500 text-sm"></i>
+            <label class="text-xs font-semibold text-gray-700 dark:text-gray-300">Data e Hora</label>
+          </div>
+          {{ form.data_hora }}
+        </div>
+
+        <!-- Local -->
+        <div>
+          <div class="flex items-center gap-1.5 mb-1.5">
+            <i class="ti ti-map-pin text-gray-400 dark:text-gray-500 text-sm"></i>
+            <label class="text-xs font-semibold text-gray-700 dark:text-gray-300">Local / Campo</label>
+          </div>
+          {{ form.local }}
+          <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+            Locais cadastrados em
+            <a href="{% url 'competicao:local_lista' %}" class="underline hover:text-gray-600 dark:hover:text-gray-300">
+              Locais
+            </a>.
+          </p>
+        </div>
+
+        <!-- Árbitro -->
+        <div>
+          <div class="flex items-center gap-1.5 mb-1.5">
+            <i class="ti ti-id-badge-2 text-gray-400 dark:text-gray-500 text-sm"></i>
+            <label class="text-xs font-semibold text-gray-700 dark:text-gray-300">Árbitro Principal</label>
+          </div>
+          {{ form.arbitro }}
+        </div>
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger text-sm">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <div class="flex justify-end gap-2 pt-3 border-t border-gray-200 dark:border-gray-700">
+          <a href="{% url 'competicao:jogo_detalhe' jogo.pk %}" class="btn btn-ghost btn-sm">Cancelar</a>
+          <button type="submit" class="btn btn-primary btn-sm gap-1">
+            <i class="ti ti-check text-sm"></i> Salvar configuração
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- ── Status atual ───────────────────────────────────────────────── -->
+  <div class="card overflow-hidden">
+    <div class="card-header">
+      <i class="ti ti-info-circle text-gray-400 dark:text-gray-500 text-base"></i>
+      <span class="section-title text-gray-500 dark:text-gray-400">Status atual do jogo</span>
+    </div>
+    <div class="px-4 py-3 flex flex-wrap gap-2 items-center text-sm text-gray-500 dark:text-gray-400">
+      {% if jogo.em_andamento %}
+      <span class="badge badge-red badge-sm font-semibold">Ao vivo</span>
+      {% elif jogo.finalizado %}
+      <span class="badge badge-green badge-sm font-semibold">Finalizado</span>
+      {% elif jogo.anulado %}
+      <span class="badge badge-red badge-sm font-semibold">Anulado</span>
+      {% else %}
+      <span class="badge badge-gray badge-sm">Pendente</span>
+      {% endif %}
+      {% if jogo.wo %}<span class="badge badge-yellow badge-sm">W.O.</span>{% endif %}
+      <span class="text-gray-400 dark:text-gray-500 text-xs ml-auto">
+        Para alterar o status ou o placar, use
+        <a href="{% url 'competicao:jogo_editar' jogo.pk %}" class="underline hover:text-gray-600 dark:hover:text-gray-300">Editar resultado</a>.
+      </span>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

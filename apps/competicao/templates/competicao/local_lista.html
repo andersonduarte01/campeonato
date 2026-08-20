@@ -1,12 +1,13 @@
 {% extends 'base/indice.html' %}
+{% load static %}
 {% block titulo %}Locais / Campos{% endblock %}
 
 {% block breadcrumbs %}
 <div class="px-4 md:px-6 pt-3 pb-0">
-  <div class="breadcrumbs text-xs text-base-content/40">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
     <ul>
-      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-base-content/70">Dashboard</a></li>
-      <li><span class="text-base-content/60">Locais</span></li>
+      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-gray-700 dark:text-gray-300">Dashboard</a></li>
+      <li><span class="text-gray-600 dark:text-gray-400">Locais</span></li>
     </ul>
   </div>
 </div>
@@ -16,91 +17,89 @@
 <div class="p-4 md:p-6 space-y-5">
 
   <!-- Cabeçalho -->
-  <div class="flex items-center justify-between gap-4">
-    <div class="flex items-center gap-3">
-      <div class="w-9 h-9 rounded-xl bg-warning/10 border border-warning/20
-                  flex items-center justify-center shrink-0">
-        <i class="bi bi-geo-alt-fill text-warning text-base"></i>
-      </div>
-      <div>
-        <h1 class="section-heading text-2xl text-base-content leading-none">Locais</h1>
-        <p class="text-xs text-base-content/40 mt-0.5">
-          {{ locais|length }} local{{ locais|length|pluralize:",is" }} cadastrado{{ locais|length|pluralize }}
-        </p>
-      </div>
+  <div class="flex items-end justify-between gap-4">
+    <div>
+      <h1 class="section-heading text-4xl text-gray-900 dark:text-white leading-none">LOCAIS</h1>
+      <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">
+        {{ locais|length }} local{{ locais|length|pluralize:",is" }} cadastrado{{ locais|length|pluralize }}
+      </p>
     </div>
-    <button class="btn btn-warning btn-sm gap-1.5 shadow-lg shadow-warning/20"
-            onclick="document.getElementById('form-novo-local').classList.toggle('hidden')">
-      <i class="bi bi-plus-circle"></i>
+    <button type="button"
+            onclick="document.getElementById('form-novo-local').classList.toggle('hidden')"
+            class="btn btn-outline shrink-0">
+      <i class="ti ti-plus"></i>
       <span class="hidden sm:inline">Novo Local</span>
-      <span class="sm:hidden">Novo</span>
     </button>
   </div>
 
   <!-- Formulário de criação (toggle) -->
   <div id="form-novo-local" class="hidden">
-    <div class="card bg-base-200 border border-warning/30">
-      <div class="px-4 py-3 border-b border-base-300 flex items-center gap-2">
-        <i class="bi bi-geo-alt text-warning text-sm"></i>
-        <span class="font-semibold text-sm">Cadastrar Novo Local</span>
+    <div class="card overflow-hidden">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30">
+        <i class="ti ti-map-pin text-blue-500 text-sm"></i>
+        <span class="section-heading text-sm text-gray-700 dark:text-gray-300 tracking-widest">NOVO LOCAL</span>
       </div>
-      <div class="card-body p-4">
-        <form method="post" action="{% url 'competicao:local_criar' %}" class="space-y-3">
+      <div class="p-5">
+        <form method="post" action="{% url 'competicao:local_criar' %}" class="space-y-4">
           {% csrf_token %}
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label class="label py-0 mb-1">
-                <span class="label-text font-semibold text-xs">Nome *</span>
+              <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">
+                Nome <span class="text-blue-500">*</span>
               </label>
               {{ form.nome }}
             </div>
             <div>
-              <label class="label py-0 mb-1">
-                <span class="label-text font-semibold text-xs">Cidade</span>
-              </label>
+              <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Cidade</label>
               {{ form.cidade }}
             </div>
             <div>
-              <label class="label py-0 mb-1">
-                <span class="label-text font-semibold text-xs">Capacidade</span>
-              </label>
+              <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Capacidade</label>
               {{ form.capacidade }}
             </div>
           </div>
           <div>
-            <label class="label py-0 mb-1">
-              <span class="label-text font-semibold text-xs">Endereço</span>
-            </label>
+            <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Endereço</label>
             {{ form.endereco }}
           </div>
-          <button type="submit" class="btn btn-warning btn-sm gap-1">
-            <i class="bi bi-save"></i> Salvar
-          </button>
+          <div class="flex justify-end gap-3 pt-2">
+            <button type="button"
+                    onclick="document.getElementById('form-novo-local').classList.add('hidden')"
+                    class="btn btn-ghost">Cancelar</button>
+            <button type="submit" class="btn btn-primary">
+              <i class="ti ti-device-floppy"></i> Salvar
+            </button>
+          </div>
         </form>
       </div>
     </div>
   </div>
 
-  <!-- Busca -->
-  <form method="get" class="flex gap-2 max-w-sm">
-    <label class="input input-sm flex-1 flex items-center gap-2 bg-base-200 border-base-300">
-      <i class="bi bi-search text-base-content/30 text-xs"></i>
-      <input type="search" name="q" value="{{ q }}" class="grow bg-transparent text-sm outline-none"
-             placeholder="Buscar local...">
-    </label>
-    <button type="submit" class="btn btn-sm btn-ghost">Buscar</button>
-    {% if q %}
-    <a href="{% url 'competicao:local_lista' %}" class="btn btn-sm btn-ghost text-error">Limpar</a>
-    {% endif %}
-  </form>
+  <!-- Card principal -->
+  <div class="card overflow-hidden">
 
-  <!-- Listagem ou empty state -->
-  {% if locais %}
-  <div class="card bg-base-200 border border-base-300 overflow-hidden">
+    <!-- Filtro -->
+    <div class="p-4 md:p-6 border-b border-gray-200 dark:border-gray-700">
+      <form method="get" class="flex gap-2 max-w-sm">
+        <div class="relative flex-1">
+          <i class="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm pointer-events-none"></i>
+          <input type="search" name="q" value="{{ q }}"
+                 class="form-input pl-9 text-sm"
+                 placeholder="Buscar local...">
+        </div>
+        <button type="submit" class="btn btn-outline">Buscar</button>
+        {% if q %}
+        <a href="{% url 'competicao:local_lista' %}" class="btn btn-ghost text-red-500">Limpar</a>
+        {% endif %}
+      </form>
+    </div>
+
+    <!-- Conteúdo -->
+    {% if locais %}
     <div class="overflow-x-auto">
       <table class="table table-sm">
         <thead>
-          <tr class="bg-base-300/70 text-xs text-base-content/60 uppercase tracking-wider">
+          <tr class="bg-gray-50 dark:bg-gray-700/50 text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">
             <th>Nome</th>
             <th>Cidade</th>
             <th>Endereço</th>
@@ -110,46 +109,112 @@
         </thead>
         <tbody>
           {% for local in locais %}
-          <tr class="hover:bg-base-300/30 transition-colors">
-            <td class="font-semibold text-sm">
-              <i class="bi bi-geo-alt text-base-content/30 text-xs mr-1"></i>
+          <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+            <td class="font-semibold text-sm text-gray-900 dark:text-white">
+              <i class="ti ti-map-pin text-blue-400 text-xs mr-1"></i>
               {{ local.nome }}
             </td>
-            <td class="text-sm text-base-content/60">{{ local.cidade|default:"—" }}</td>
-            <td class="text-xs text-base-content/50">{{ local.endereco|default:"—" }}</td>
+            <td class="text-sm text-gray-500 dark:text-gray-400">{{ local.cidade|default:"—" }}</td>
+            <td class="text-xs text-gray-500 dark:text-gray-400">{{ local.endereco|default:"—" }}</td>
             <td class="text-center">
               {% if local.capacidade %}
-                <span class="badge badge-ghost badge-sm">{{ local.capacidade }}</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+                             bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400">
+                  {{ local.capacidade }}
+                </span>
               {% else %}
-                <span class="text-base-content/30">—</span>
+                <span class="text-gray-400 dark:text-gray-600">—</span>
               {% endif %}
             </td>
             <td class="text-center">
-              <a href="{% url 'competicao:local_editar' local.pk %}" class="btn btn-ghost btn-xs"
+              <a href="{% url 'competicao:local_editar' local.pk %}"
+                 class="btn btn-ghost btn-xs text-gray-400 hover:text-gray-900 dark:hover:text-white"
                  title="Editar">
-                <i class="bi bi-pencil"></i>
+                <i class="ti ti-pencil text-xs"></i>
               </a>
-              <form method="post" action="{% url 'competicao:local_excluir' local.pk %}" class="inline"
-                    onsubmit="return confirm('Excluir local {{ local.nome }}?')">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-ghost btn-xs text-error" title="Excluir">
-                  <i class="bi bi-trash"></i>
-                </button>
-              </form>
+              <button type="button"
+                      data-modal-target="modal-excluir-{{ local.pk }}"
+                      data-modal-toggle="modal-excluir-{{ local.pk }}"
+                      class="btn btn-ghost btn-xs text-red-400/60 hover:text-red-500 hover:bg-red-500/10"
+                      title="Excluir local">
+                <i class="ti ti-trash text-xs"></i>
+              </button>
             </td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
+
+    {% else %}
+    <div class="flex flex-col items-center justify-center py-24 gap-4 text-center">
+      <div class="relative">
+        <div class="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+          <i class="ti ti-map-pin text-4xl text-gray-300 dark:text-gray-600"></i>
+        </div>
+        <div class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full
+                    bg-blue-600 dark:bg-transparent dark:border-2 dark:border-blue-500
+                    flex items-center justify-center shadow">
+          <i class="ti ti-plus text-white dark:text-blue-400 text-sm"></i>
+        </div>
+      </div>
+      <div>
+        <p class="section-heading text-xl text-gray-400 dark:text-gray-500">NENHUM LOCAL</p>
+        <p class="text-sm text-gray-400 dark:text-gray-600 mt-1">Cadastre campos e arenas para associá-los aos jogos.</p>
+      </div>
+      <button type="button"
+              onclick="document.getElementById('form-novo-local').classList.remove('hidden'); this.closest('.p-4, .p-6, [class*=py-24]').scrollIntoView()"
+              class="btn btn-outline">
+        <i class="ti ti-plus"></i> Novo Local
+      </button>
+    </div>
+    {% endif %}
+
   </div>
 
-  {% else %}
-  {% include 'components/empty_state.html' with
-     icon="geo-alt"
-     title="Nenhum local cadastrado."
-     subtitle="Cadastre campos e arenas para associá-los aos jogos." %}
-  {% endif %}
-
 </div>
+
+<!-- ── Modais de confirmação de exclusão ──────────────────────────────── -->
+{% for local in locais %}
+<div id="modal-excluir-{{ local.pk }}" tabindex="-1" aria-hidden="true"
+     class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50
+            justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+  <div class="relative p-4 w-full max-w-md max-h-full">
+    <div class="relative bg-white rounded-2xl shadow-xl dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+
+      <div class="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center shrink-0">
+            <i class="ti ti-alert-triangle text-red-500 text-base"></i>
+          </div>
+          <h3 class="text-base font-bold text-gray-900 dark:text-white">Excluir local</h3>
+        </div>
+        <button type="button" data-modal-hide="modal-excluir-{{ local.pk }}"
+                class="btn-icon text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+          <i class="ti ti-x text-lg"></i>
+        </button>
+      </div>
+
+      <div class="p-5">
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+          O local <strong class="text-gray-900 dark:text-white">{{ local.nome }}</strong>
+          será excluído permanentemente. Esta ação não pode ser revertida.
+        </p>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 p-5 border-t border-gray-200 dark:border-gray-700">
+        <button type="button" data-modal-hide="modal-excluir-{{ local.pk }}" class="btn btn-ghost">Cancelar</button>
+        <form method="post" action="{% url 'competicao:local_excluir' local.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger-outline">
+            <i class="ti ti-trash"></i> Excluir
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endfor %}
+
 {% endblock %}

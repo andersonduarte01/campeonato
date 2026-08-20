@@ -1,207 +1,157 @@
 {% extends 'base/indice.html' %}
-{% block titulo %}Gerenciar Usuários{% endblock %}
+{% block titulo %}Usuários{% endblock %}
 
 {% block breadcrumbs %}
 <div class="px-4 md:px-6 pt-3 pb-0">
-  <div class="breadcrumbs text-xs text-base-content/40">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
     <ul>
-      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-base-content/70">Dashboard</a></li>
-      <li><span class="text-base-content/60">Usuários</span></li>
+      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-gray-700 dark:text-gray-300">Dashboard</a></li>
+      <li><span class="text-gray-600 dark:text-gray-400">Usuários</span></li>
     </ul>
   </div>
 </div>
 {% endblock %}
 
 {% block conteudo %}
-<div class="p-4 md:p-6 max-w-[1200px] mx-auto space-y-5">
+<div class="p-4 md:p-6 space-y-5">
 
   <!-- Cabeçalho -->
   <div class="flex items-end justify-between gap-4">
     <div>
-      <h1 class="section-heading text-4xl text-base-content leading-none">USUÁRIOS</h1>
-      <p class="text-sm text-base-content/40 mt-1">Gerenciamento de contas e permissões</p>
+      <h1 class="section-heading text-4xl text-gray-900 dark:text-white leading-none">USUÁRIOS</h1>
+      <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Contas e permissões em {{ request.federacao.nome }}</p>
     </div>
-    <a href="{% url 'core:usuario_novo' %}"
-       class="btn btn-warning gap-2 shadow-lg shadow-warning/20 font-semibold shrink-0">
-      <i class="bi bi-person-plus-fill"></i>
+    <a href="{% url 'core:usuario_novo' %}" class="btn btn-outline shrink-0">
+      <i class="ti ti-user-plus"></i>
       <span class="hidden sm:inline">Novo Usuário</span>
     </a>
   </div>
 
-  <!-- Stats header -->
+  <!-- Stats -->
   <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-
-    <div class="card bg-base-200 border border-base-300 card-sport group overflow-hidden">
-      <div class="card-body p-4">
-        <div class="flex items-center justify-between mb-2">
-          <div class="w-8 h-8 rounded-xl bg-warning/10 border border-warning/20
-                      flex items-center justify-center
-                      group-hover:bg-warning/20 transition-all">
-            <i class="bi bi-people-fill text-warning text-sm"></i>
-          </div>
-        </div>
-        <div class="stat-number text-3xl text-base-content leading-none">{{ usuarios|length }}</div>
-        <p class="text-xs text-base-content/40 mt-1">Total</p>
-      </div>
+    <div class="card p-4">
+      <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Total</p>
+      <span class="stat-number text-3xl text-gray-900 dark:text-white">{{ vinculos|length }}</span>
     </div>
-
-    <div class="card bg-base-200 border border-base-300 card-sport group overflow-hidden">
-      <div class="card-body p-4">
-        <div class="flex items-center justify-between mb-2">
-          <div class="w-8 h-8 rounded-xl bg-success/10 border border-success/20
-                      flex items-center justify-center
-                      group-hover:bg-success/20 transition-all">
-            <i class="bi bi-person-check-fill text-success text-sm"></i>
-          </div>
-        </div>
-        <div class="stat-number text-3xl text-base-content leading-none" id="count-ativos">—</div>
-        <p class="text-xs text-base-content/40 mt-1">Ativos</p>
-      </div>
+    <div class="card p-4">
+      <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Ativos</p>
+      <span class="stat-number text-3xl text-gray-900 dark:text-white" id="count-ativos">—</span>
     </div>
-
-    <div class="card bg-base-200 border border-base-300 card-sport group overflow-hidden">
-      <div class="card-body p-4">
-        <div class="flex items-center justify-between mb-2">
-          <div class="w-8 h-8 rounded-xl bg-error/10 border border-error/20
-                      flex items-center justify-center
-                      group-hover:bg-error/20 transition-all">
-            <i class="bi bi-shield-fill text-error text-sm"></i>
-          </div>
-        </div>
-        <div class="stat-number text-3xl text-base-content leading-none" id="count-admins">—</div>
-        <p class="text-xs text-base-content/40 mt-1">Admins</p>
-      </div>
+    <div class="card p-4">
+      <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Admins</p>
+      <span class="stat-number text-3xl text-gray-900 dark:text-white" id="count-admins">—</span>
     </div>
-
-    <div class="card bg-base-200 border border-base-300 card-sport group overflow-hidden">
-      <div class="card-body p-4">
-        <div class="flex items-center justify-between mb-2">
-          <div class="w-8 h-8 rounded-xl bg-base-300 border border-base-content/10
-                      flex items-center justify-center
-                      group-hover:bg-base-300/60 transition-all">
-            <i class="bi bi-person-slash text-base-content/40 text-sm"></i>
-          </div>
-        </div>
-        <div class="stat-number text-3xl text-base-content/40 leading-none" id="count-inativos">—</div>
-        <p class="text-xs text-base-content/40 mt-1">Inativos</p>
-      </div>
+    <div class="card p-4">
+      <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Inativos</p>
+      <span class="stat-number text-3xl text-gray-400 dark:text-gray-500" id="count-inativos">—</span>
     </div>
-
   </div>
 
-  <!-- Busca -->
-  <form method="get" class="flex gap-2 max-w-sm">
-    <label class="input input-sm flex-1 flex items-center gap-2 bg-base-200 border-base-300 rounded-xl">
-      <i class="bi bi-search text-base-content/30 text-xs shrink-0"></i>
-      <input type="text" name="q" value="{{ q }}" class="grow bg-transparent text-sm outline-none"
-             placeholder="Buscar por nome ou e-mail...">
-    </label>
-    <button type="submit" class="btn btn-warning btn-sm font-semibold">Buscar</button>
-    {% if q %}
-    <a href="{% url 'core:usuarios_lista' %}" class="btn btn-ghost btn-sm border border-base-content/10">
-      Limpar
-    </a>
-    {% endif %}
-  </form>
+  <!-- Card principal -->
+  <div class="card overflow-hidden">
 
-  <!-- Tabela desktop / Cards mobile -->
-  {% if usuarios %}
+    <!-- Filtro -->
+    <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+      <form method="get" class="flex gap-2 max-w-sm">
+        <div class="relative flex-1">
+          <i class="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm pointer-events-none"></i>
+          <input type="search" name="q" value="{{ q }}"
+                 class="form-input pl-9 text-sm"
+                 placeholder="Buscar por nome ou e-mail...">
+        </div>
+        <button type="submit" class="btn btn-outline">Buscar</button>
+        {% if q %}
+        <a href="{% url 'core:usuarios_lista' %}" class="btn btn-ghost">Limpar</a>
+        {% endif %}
+      </form>
+    </div>
 
-  <!-- Desktop: tabela -->
-  <div class="hidden md:block card bg-base-200 border border-base-300 overflow-hidden">
-    <div class="overflow-x-auto">
+    {% if vinculos %}
+
+    <!-- Desktop: tabela -->
+    <div class="hidden md:block overflow-x-auto">
       <table class="table table-sm" id="users-table">
         <thead>
-          <tr class="bg-base-300/50 text-[10px] text-base-content/40 uppercase tracking-wider">
+          <tr class="bg-gray-50 dark:bg-gray-700/50 text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">
             <th>Usuário</th>
             <th>E-mail</th>
-            <th>Perfil</th>
-            <th>Status</th>
+            <th>Papel</th>
+            <th>Vínculo</th>
+            <th>Conta</th>
             <th class="text-right">Ações</th>
           </tr>
         </thead>
         <tbody>
-          {% for u in usuarios %}
-          <tr class="hover:bg-base-300/30 transition-colors user-row"
-              data-ativo="{{ u.is_active|yesno:'1,0' }}"
-              data-perfil="{{ u.perfil }}">
+          {% for v in vinculos %}
+          <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors vinculo-row"
+              data-ativo="{{ v.ativo|yesno:'1,0' }}"
+              data-papel="{{ v.papel }}">
 
-            <!-- Usuário com avatar -->
             <td class="py-3">
               <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full shrink-0 flex items-center justify-center
-                            font-black text-sm
-                  {% if u.perfil == 'admin' %}bg-error/15 text-error border border-error/25
-                  {% elif u.perfil == 'organizador' %}bg-info/15 text-info border border-info/25
-                  {% elif u.perfil == 'delegado' %}bg-success/15 text-success border border-success/25
-                  {% elif u.perfil == 'arbitro' %}bg-warning/15 text-warning border border-warning/25
-                  {% else %}bg-base-300 text-base-content/40 border border-base-content/10{% endif %}">
-                  {{ u.nome|default:u.email|first|upper }}
+                <div class="w-8 h-8 rounded-full shrink-0 flex items-center justify-center font-black text-sm
+                  {% if v.papel == 'ADMIN' %}bg-red-500/10 text-red-500 border border-red-500/20
+                  {% elif v.papel == 'SEC' %}bg-blue-500/10 text-blue-500 border border-blue-500/20
+                  {% elif v.papel == 'ARB' %}bg-orange-400/10 text-orange-400 border border-orange-400/20
+                  {% else %}bg-green-500/10 text-green-500 border border-green-500/20{% endif %}">
+                  {{ v.usuario.nome|default:v.usuario.email|first|upper }}
                 </div>
-                <div class="min-w-0">
-                  <p class="text-sm font-semibold text-base-content leading-snug truncate">{{ u.nome }}</p>
-                  <p class="text-xs text-base-content/40 truncate hidden sm:block">{{ u.email }}</p>
-                </div>
+                <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ v.usuario.nome }}</p>
               </div>
             </td>
 
-            <!-- E-mail (visível na tabela) -->
-            <td class="text-xs text-base-content/50">{{ u.email }}</td>
+            <td class="text-xs text-gray-500 dark:text-gray-400">{{ v.usuario.email }}</td>
 
-            <!-- Perfil badge -->
             <td>
-              {% if u.perfil == 'admin' %}
-                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold
-                             bg-error/15 text-error border border-error/20">Admin</span>
-              {% elif u.perfil == 'organizador' %}
-                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold
-                             bg-info/15 text-info border border-info/20">Organizador</span>
-              {% elif u.perfil == 'delegado' %}
-                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold
-                             bg-success/15 text-success border border-success/20">Delegado</span>
-              {% elif u.perfil == 'arbitro' %}
-                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold
-                             bg-warning/15 text-warning border border-warning/20">Árbitro</span>
+              {% if v.papel == 'ADMIN' %}
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-red-500/10 text-red-500 border border-red-500/20">Administrador</span>
+              {% elif v.papel == 'SEC' %}
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-500/10 text-blue-500 border border-blue-500/20">Secretário</span>
+              {% elif v.papel == 'ARB' %}
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-orange-400/10 text-orange-400 border border-orange-400/20">Árbitro</span>
               {% else %}
-                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold
-                             bg-base-300 text-base-content/40">Visitante</span>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-green-500/10 text-green-500 border border-green-500/20">Dirigente</span>
               {% endif %}
             </td>
 
-            <!-- Status -->
             <td>
-              {% if u.is_active %}
-                <span class="flex items-center gap-1.5 text-xs font-semibold text-success">
-                  <span class="w-2 h-2 rounded-full bg-success animate-pulse shrink-0"></span>
-                  Ativo
+              {% if v.ativo %}
+                <span class="flex items-center gap-1.5 text-xs font-semibold text-green-500">
+                  <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse shrink-0"></span>Ativo
                 </span>
               {% else %}
-                <span class="flex items-center gap-1.5 text-xs font-semibold text-base-content/30">
-                  <span class="w-2 h-2 rounded-full bg-base-300 shrink-0"></span>
-                  Inativo
+                <span class="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-600">
+                  <span class="w-2 h-2 rounded-full bg-gray-300 dark:bg-gray-600 shrink-0"></span>Inativo
                 </span>
               {% endif %}
             </td>
 
-            <!-- Ações -->
+            <td>
+              {% if v.usuario.is_active %}
+                <span class="text-xs text-green-500 font-medium">Ativa</span>
+              {% else %}
+                <span class="text-xs text-red-500 font-medium">Bloqueada</span>
+              {% endif %}
+            </td>
+
             <td class="text-right">
               <div class="flex items-center justify-end gap-1">
-                <a href="{% url 'core:usuario_editar' u.pk %}"
-                   class="btn btn-ghost btn-xs gap-1 border border-base-content/10 text-base-content/50
-                          hover:text-base-content">
-                  <i class="bi bi-pencil text-xs"></i>
+                {% if is_admin_op or v.papel == 'ARB' or v.papel == 'DIR' %}
+                <a href="{% url 'core:usuario_editar' v.usuario.pk %}"
+                   class="btn btn-ghost btn-xs text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                   title="Editar">
+                  <i class="ti ti-pencil text-xs"></i>
                 </a>
-                {% if u.pk != request.user.pk %}
-                <form method="post" action="{% url 'core:usuario_toggle_ativo' u.pk %}" class="inline">
-                  {% csrf_token %}
-                  <button type="submit"
-                          class="btn btn-ghost btn-xs gap-1 border border-base-content/10
-                                 {% if u.is_active %}text-error/70 hover:text-error hover:bg-error/10
-                                 {% else %}text-success/70 hover:text-success hover:bg-success/10{% endif %}"
-                          title="{% if u.is_active %}Desativar{% else %}Ativar{% endif %}">
-                    <i class="bi bi-{% if u.is_active %}person-dash{% else %}person-check{% endif %} text-xs"></i>
-                  </button>
-                </form>
+                {% if v.usuario != request.user %}
+                <button type="button"
+                        data-email="{{ v.usuario.email }}"
+                        data-url="{% url 'core:usuario_remover' v.usuario.pk %}"
+                        onclick="abrirModalRemover(this)"
+                        class="btn btn-ghost btn-xs text-red-400/60 hover:text-red-500 hover:bg-red-500/10"
+                        title="Remover da federação">
+                  <i class="ti ti-user-x text-xs"></i>
+                </button>
+                {% endif %}
                 {% endif %}
               </div>
             </td>
@@ -211,89 +161,158 @@
         </tbody>
       </table>
     </div>
-  </div>
 
-  <!-- Mobile: cards -->
-  <div class="md:hidden space-y-2">
-    {% for u in usuarios %}
-    <div class="card bg-base-200 border border-base-300 user-row"
-         data-ativo="{{ u.is_active|yesno:'1,0' }}"
-         data-perfil="{{ u.perfil }}">
-      <div class="card-body p-4">
+    <!-- Mobile: cards -->
+    <div class="md:hidden divide-y divide-gray-200 dark:divide-gray-700">
+      {% for v in vinculos %}
+      <div class="p-4 vinculo-row" data-ativo="{{ v.ativo|yesno:'1,0' }}" data-papel="{{ v.papel }}">
         <div class="flex items-start gap-3">
           <div class="w-10 h-10 rounded-full shrink-0 flex items-center justify-center font-black text-sm
-            {% if u.perfil == 'admin' %}bg-error/15 text-error border border-error/25
-            {% elif u.perfil == 'organizador' %}bg-info/15 text-info border border-info/25
-            {% elif u.perfil == 'delegado' %}bg-success/15 text-success border border-success/25
-            {% elif u.perfil == 'arbitro' %}bg-warning/15 text-warning border border-warning/25
-            {% else %}bg-base-300 text-base-content/40 border border-base-content/10{% endif %}">
-            {{ u.nome|default:u.email|first|upper }}
+            {% if v.papel == 'ADMIN' %}bg-red-500/10 text-red-500 border border-red-500/20
+            {% elif v.papel == 'SEC' %}bg-blue-500/10 text-blue-500 border border-blue-500/20
+            {% elif v.papel == 'ARB' %}bg-orange-400/10 text-orange-400 border border-orange-400/20
+            {% else %}bg-green-500/10 text-green-500 border border-green-500/20{% endif %}">
+            {{ v.usuario.nome|default:v.usuario.email|first|upper }}
           </div>
           <div class="flex-1 min-w-0">
-            <p class="font-semibold text-sm text-base-content truncate">{{ u.nome }}</p>
-            <p class="text-xs text-base-content/40 truncate">{{ u.email }}</p>
+            <p class="font-semibold text-sm text-gray-900 dark:text-white truncate">{{ v.usuario.nome }}</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 truncate">{{ v.usuario.email }}</p>
             <div class="flex items-center gap-2 mt-1.5 flex-wrap">
-              {% if u.perfil == 'admin' %}<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-error/15 text-error border border-error/20">Admin</span>
-              {% elif u.perfil == 'organizador' %}<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-info/15 text-info border border-info/20">Organizador</span>
-              {% elif u.perfil == 'delegado' %}<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-success/15 text-success border border-success/20">Delegado</span>
-              {% elif u.perfil == 'arbitro' %}<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-warning/15 text-warning border border-warning/20">Árbitro</span>
-              {% else %}<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-base-300 text-base-content/40">Visitante</span>{% endif %}
-              {% if u.is_active %}
-                <span class="flex items-center gap-1 text-[10px] font-semibold text-success">
-                  <span class="w-1.5 h-1.5 rounded-full bg-success animate-pulse"></span>Ativo
+              {% if v.papel == 'ADMIN' %}<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-500/10 text-red-500 border border-red-500/20">Administrador</span>
+              {% elif v.papel == 'SEC' %}<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-500 border border-blue-500/20">Secretário</span>
+              {% elif v.papel == 'ARB' %}<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-400/10 text-orange-400 border border-orange-400/20">Árbitro</span>
+              {% else %}<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-500/10 text-green-500 border border-green-500/20">Dirigente</span>{% endif %}
+              {% if v.ativo %}
+                <span class="flex items-center gap-1 text-[10px] font-semibold text-green-500">
+                  <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>Ativo
                 </span>
               {% else %}
-                <span class="text-[10px] text-base-content/30">Inativo</span>
+                <span class="text-[10px] text-gray-400 dark:text-gray-600">Inativo</span>
               {% endif %}
             </div>
           </div>
           <div class="flex gap-1 shrink-0">
-            <a href="{% url 'core:usuario_editar' u.pk %}" class="btn btn-ghost btn-xs">
-              <i class="bi bi-pencil text-xs"></i>
+            {% if is_admin_op or v.papel == 'ARB' or v.papel == 'DIR' %}
+            <a href="{% url 'core:usuario_editar' v.usuario.pk %}"
+               class="btn btn-ghost btn-xs text-gray-400 hover:text-gray-900 dark:hover:text-white">
+              <i class="ti ti-pencil text-xs"></i>
             </a>
-            {% if u.pk != request.user.pk %}
-            <form method="post" action="{% url 'core:usuario_toggle_ativo' u.pk %}" class="inline">
-              {% csrf_token %}
-              <button type="submit" class="btn btn-ghost btn-xs {% if u.is_active %}text-error/70{% else %}text-success/70{% endif %}">
-                <i class="bi bi-{% if u.is_active %}person-dash{% else %}person-check{% endif %} text-xs"></i>
-              </button>
-            </form>
+            {% if v.usuario != request.user %}
+            <button type="button"
+                    data-email="{{ v.usuario.email }}"
+                    data-url="{% url 'core:usuario_remover' v.usuario.pk %}"
+                    onclick="abrirModalRemover(this)"
+                    class="btn btn-ghost btn-xs text-red-400/60 hover:text-red-500 hover:bg-red-500/10">
+              <i class="ti ti-user-x text-xs"></i>
+            </button>
+            {% endif %}
             {% endif %}
           </div>
         </div>
       </div>
+      {% endfor %}
     </div>
-    {% endfor %}
-  </div>
 
-  {% else %}
-  <div class="card bg-base-200 border border-base-300">
-    <div class="flex flex-col items-center justify-center py-14 gap-3 text-base-content/30">
-      <i class="bi bi-person-x text-4xl opacity-30"></i>
-      <p class="text-sm font-medium">Nenhum usuário encontrado.</p>
+    {% else %}
+    <!-- Empty state -->
+    <div class="flex flex-col items-center justify-center py-20 gap-4 text-center">
+      <div class="relative">
+        <div class="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+          <i class="ti ti-users text-4xl text-gray-300 dark:text-gray-600"></i>
+        </div>
+        <div class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full
+                    bg-blue-600 dark:bg-transparent dark:border-2 dark:border-blue-500
+                    flex items-center justify-center shadow">
+          <i class="ti ti-plus text-white dark:text-blue-400 text-sm"></i>
+        </div>
+      </div>
+      <div>
+        <p class="section-heading text-xl text-gray-400 dark:text-gray-500">NENHUM USUÁRIO</p>
+        <p class="text-sm text-gray-400 dark:text-gray-600 mt-1">Adicione o primeiro usuário à esta federação.</p>
+      </div>
+      <a href="{% url 'core:usuario_novo' %}" class="btn btn-outline">
+        <i class="ti ti-user-plus"></i> Novo Usuário
+      </a>
     </div>
+    {% endif %}
+
   </div>
-  {% endif %}
 
 </div>
+
+<!-- Modal confirmação de remoção -->
+<div id="modal-remover-usuario" tabindex="-1" aria-hidden="true"
+     class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50
+            justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+  <div class="relative p-4 w-full max-w-md max-h-full">
+    <div class="relative bg-white rounded-2xl shadow-xl dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+
+      <div class="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center shrink-0">
+            <i class="ti ti-alert-triangle text-red-500 text-base"></i>
+          </div>
+          <h3 class="text-base font-bold text-gray-900 dark:text-white">Remover usuário</h3>
+        </div>
+        <button type="button" onclick="fecharModalRemover()"
+                class="btn-icon text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+          <i class="ti ti-x text-lg"></i>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-2">
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+          O usuário <strong id="modal-remover-email" class="text-gray-900 dark:text-white"></strong>
+          será removido desta federação.
+        </p>
+        <p class="text-xs text-gray-400 dark:text-gray-500">
+          Se não houver vínculo com outras federações, a conta será desativada automaticamente.
+        </p>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 p-5 border-t border-gray-200 dark:border-gray-700">
+        <button type="button" onclick="fecharModalRemover()" class="btn btn-ghost">Cancelar</button>
+        <form id="form-remover" method="post" action="" class="inline">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger-outline">
+            <i class="ti ti-user-x"></i> Remover
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 {% endblock %}
 
 {% block script %}
 <script>
 (function () {
-  'use strict';
-  var rows    = document.querySelectorAll('.user-row');
-  var ativos  = 0, admins = 0, inativos = 0;
+  var rows = document.querySelectorAll('.vinculo-row');
+  var ativos = 0, admins = 0, inativos = 0;
   rows.forEach(function (r) {
     if (r.dataset.ativo === '1') ativos++; else inativos++;
-    if (r.dataset.perfil === 'admin') admins++;
+    if (r.dataset.papel === 'ADMIN') admins++;
   });
-  var elAt  = document.getElementById('count-ativos');
-  var elAd  = document.getElementById('count-admins');
-  var elIn  = document.getElementById('count-inativos');
-  if (elAt) elAt.textContent  = ativos;
-  if (elAd) elAd.textContent  = admins;
-  if (elIn) elIn.textContent  = inativos;
+  var el;
+  if ((el = document.getElementById('count-ativos')))   el.textContent = ativos;
+  if ((el = document.getElementById('count-admins')))   el.textContent = admins;
+  if ((el = document.getElementById('count-inativos'))) el.textContent = inativos;
 })();
+
+function abrirModalRemover(btn) {
+  document.getElementById('modal-remover-email').textContent = btn.dataset.email;
+  document.getElementById('form-remover').action = btn.dataset.url;
+  var modal = document.getElementById('modal-remover-usuario');
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+
+function fecharModalRemover() {
+  var modal = document.getElementById('modal-remover-usuario');
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+}
 </script>
 {% endblock %}

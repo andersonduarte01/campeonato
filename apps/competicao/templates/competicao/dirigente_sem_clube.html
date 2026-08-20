@@ -1,0 +1,29 @@
+{% extends 'base/indice.html' %}
+{% block titulo %}Meu Painel — Dirigente{% endblock %}
+
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
+    <ul>
+      <li><span class="text-gray-600 dark:text-gray-400">Meu Painel</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block conteudo %}
+<div class="p-4 md:p-6 flex items-center justify-center min-h-[60vh]">
+  <div class="text-center max-w-sm space-y-4">
+    <div class="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mx-auto">
+      <i class="ti ti-shield-off text-3xl text-gray-300 dark:text-gray-600"></i>
+    </div>
+    <h2 class="section-heading text-2xl text-gray-900 dark:text-white">SEM CLUBE VINCULADO</h2>
+    <p class="text-sm text-gray-500 dark:text-gray-400">
+      Seu perfil ainda não está vinculado a um clube. Entre em contato com o administrador da federação para que ele atribua o seu clube.
+    </p>
+    <a href="{% url 'core:usuario_editar' request.user.pk %}" class="btn btn-outline btn-sm inline-flex gap-1.5">
+      <i class="ti ti-user-cog"></i> Meu Perfil
+    </a>
+  </div>
+</div>
+{% endblock %}

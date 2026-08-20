@@ -1,0 +1,204 @@
+{% extends 'base/indice.html' %}
+{% block titulo %}Federação — Dashboard{% endblock %}
+
+{% block breadcrumbs %}
+<div class="px-4 md:px-6 pt-3 pb-0">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
+    <ul>
+      <li><a href="{% url 'competicao:dashboard' %}" class="hover:text-gray-700 dark:text-gray-300">Dashboard</a></li>
+      <li><span class="text-gray-500 dark:text-gray-400">Federação</span></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block conteudo %}
+<div class="p-4 md:p-6 space-y-6">
+
+  <!-- Cabeçalho -->
+  <div>
+    <h1 class="section-heading text-4xl text-gray-900 dark:text-white leading-none">FEDERAÇÃO</h1>
+    <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Visão geral do módulo federativo</p>
+  </div>
+
+  <!-- Alerta de janela ativa -->
+  {% if janela_ativa %}
+  <div class="flex items-center gap-3 px-4 py-3 rounded-xl border border-blue-500/20 dark:border-green-500/30 bg-blue-500/10 dark:bg-green-500/8 text-sm">
+    <div class="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/20 dark:bg-transparent dark:border-transparent flex items-center justify-center shrink-0">
+      <i class="ti ti-calendar-check text-blue-500 dark:text-green-500 text-sm"></i>
+    </div>
+    <span class="text-gray-700 dark:text-gray-300">
+      Janela de transferências <strong>{{ janela_ativa.nome }}</strong> está aberta até
+      <strong>{{ janela_ativa.data_fim|date:"d/m/Y" }}</strong>.
+    </span>
+    <a href="{% url 'registro:janela_lista' %}"
+       class="btn btn-xs btn-ghost border border-blue-500/20 dark:border-green-500/20 text-blue-500 dark:text-green-500 ml-auto shrink-0">
+      Ver janelas
+    </a>
+  </div>
+  {% endif %}
+
+  <!-- Clubes em regularização -->
+  {% if clubes_regularizacao_lista %}
+  <div class="card overflow-hidden">
+    <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-amber-50 dark:bg-amber-900/10">
+      <i class="ti ti-alert-circle text-amber-500 text-sm"></i>
+      <span class="section-heading text-sm text-amber-600 dark:text-amber-400 tracking-widest">CLUBES EM REGULARIZAÇÃO</span>
+      <span class="ml-auto text-xs font-bold text-amber-500 bg-amber-500/10 border border-amber-400/20 px-2 py-0.5 rounded-full">
+        {{ clubes_regularizacao }}
+      </span>
+    </div>
+    <div class="divide-y divide-gray-100 dark:divide-gray-700">
+      {% for clube in clubes_regularizacao_lista %}
+      <div class="flex items-center gap-3 px-4 py-3">
+        {% if clube.escudo %}
+        <img src="{{ clube.escudo.thumbnail.url }}" alt="{{ clube.nome_equipe }}"
+             class="w-8 h-8 rounded-full object-cover border border-gray-200 dark:border-gray-700 shrink-0">
+        {% else %}
+        <div class="w-8 h-8 rounded-full bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800
+                    flex items-center justify-center shrink-0">
+          <span class="text-xs font-black text-amber-400">{{ clube.nome_equipe|first|upper }}</span>
+        </div>
+        {% endif %}
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ clube.nome_equipe }}</p>
+          {% if clube.cidade %}
+          <p class="text-xs text-gray-400 dark:text-gray-500">{{ clube.cidade }}{% if clube.estado %}/{{ clube.estado }}{% endif %}</p>
+          {% endif %}
+        </div>
+        <a href="{% url 'equipe:editar' clube.pk %}"
+           class="btn btn-ghost btn-xs gap-1 text-amber-500 hover:bg-amber-500/10 border border-amber-400/20 shrink-0">
+          <i class="ti ti-pencil text-xs"></i> Regularizar
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- KPIs -->
+  <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+
+    <a href="{% url 'registro:registro_lista' %}"
+       class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 card-sport group overflow-hidden hover:border-blue-400/40">
+      <div class="card-body p-4">
+        <div class="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-2 group-hover:bg-blue-500/20 transition-all">
+          <i class="ti ti-id-badge-2 text-blue-500 text-sm"></i>
+        </div>
+        <div class="stat-number text-3xl text-gray-900 dark:text-white leading-none">{{ total_registros }}</div>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Registros</p>
+      </div>
+    </a>
+
+    <a href="{% url 'registro:registro_lista' %}"
+       class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 card-sport group overflow-hidden hover:border-red-400/40">
+      <div class="card-body p-4">
+        <div class="w-8 h-8 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-2 group-hover:bg-red-500/20 transition-all">
+          <i class="ti ti-user-x text-red-500 text-sm"></i>
+        </div>
+        <div class="stat-number text-3xl {% if atletas_sem_reg %}text-red-500{% else %}text-gray-900 dark:text-white{% endif %} leading-none">{{ atletas_sem_reg }}</div>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Sem registro</p>
+      </div>
+    </a>
+
+    <a href="{% url 'registro:transferencia_lista' %}"
+       class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 card-sport group overflow-hidden hover:border-orange-400/40">
+      <div class="card-body p-4">
+        <div class="w-8 h-8 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center mb-2 group-hover:bg-orange-500/20 transition-all">
+          <i class="ti ti-arrows-exchange text-orange-500 text-sm"></i>
+        </div>
+        <div class="stat-number text-3xl {% if transferencias_pend %}text-orange-500{% else %}text-gray-900 dark:text-white{% endif %} leading-none">{{ transferencias_pend }}</div>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Transf. pendentes</p>
+      </div>
+    </a>
+
+  </div>
+
+  <!-- Atalhos de módulo -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+
+    <a href="{% url 'registro:registro_lista' %}"
+       class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-blue-400/40 transition-all group overflow-hidden card-sport">
+      <div class="card-body p-5 items-center text-center gap-3">
+        <div class="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20 transition-all">
+          <i class="ti ti-id-badge-2 text-blue-500 text-2xl"></i>
+        </div>
+        <div>
+          <p class="section-heading text-sm text-gray-700 dark:text-gray-300 group-hover:text-blue-500 transition-colors">REGISTROS</p>
+          <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Carteirinha federativa</p>
+        </div>
+      </div>
+    </a>
+
+    <a href="{% url 'competicao:arbitro_lista' %}"
+       class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-purple-400/40 transition-all group overflow-hidden card-sport">
+      <div class="card-body p-5 items-center text-center gap-3">
+        <div class="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20 transition-all">
+          <i class="ti ti-flag text-purple-500 text-2xl"></i>
+        </div>
+        <div>
+          <p class="section-heading text-sm text-gray-700 dark:text-gray-300 group-hover:text-purple-500 transition-colors">ÁRBITROS</p>
+          <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Quadro de árbitros</p>
+        </div>
+      </div>
+    </a>
+
+    <a href="{% url 'equipe:lista' %}"
+       class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-green-400/40 transition-all group overflow-hidden card-sport">
+      <div class="card-body p-5 items-center text-center gap-3">
+        <div class="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center group-hover:bg-green-500/20 transition-all">
+          <i class="ti ti-building-community text-green-500 text-2xl"></i>
+        </div>
+        <div>
+          <p class="section-heading text-sm text-gray-700 dark:text-gray-300 group-hover:text-green-500 transition-colors">CLUBES</p>
+          <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Equipes filiadas</p>
+        </div>
+      </div>
+    </a>
+
+
+  </div>
+
+  <!-- Transferências recentes -->
+  <div class="card overflow-hidden">
+    <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30">
+      <i class="ti ti-arrows-exchange text-blue-500 text-sm"></i>
+      <span class="section-heading text-sm text-gray-600 dark:text-gray-300 tracking-widest">TRANSFERÊNCIAS RECENTES</span>
+      <a href="{% url 'registro:transferencia_lista' %}"
+         class="ml-auto text-xs text-gray-400 dark:text-gray-500 hover:text-blue-500 transition-colors">
+        ver todas →
+      </a>
+    </div>
+    {% if ultimas_transf %}
+    <div class="divide-y divide-gray-100 dark:divide-gray-700">
+      {% for t in ultimas_transf %}
+      <a href="{% url 'registro:transferencia_detalhe' t.pk %}"
+         class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors group">
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-semibold text-gray-900 dark:text-white truncate group-hover:text-blue-500 transition-colors">
+            {{ t.atleta.nome }}
+          </p>
+          <p class="text-xs text-gray-400 dark:text-gray-500 truncate">
+            {{ t.clube_origem.nome_equipe }} → {{ t.clube_destino.nome_equipe }}
+          </p>
+        </div>
+        <span class="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold border
+          {% if t.status == 'aprovada' %}bg-green-500/15 text-green-500 border-green-500/20
+          {% elif t.status == 'rejeitada' or t.status == 'cancelada' %}bg-red-500/15 text-red-500 border-red-500/20
+          {% elif t.status == 'em_analise' %}bg-blue-500/15 text-blue-500 border-blue-500/20
+          {% else %}bg-orange-500/15 text-orange-500 border-orange-500/20{% endif %}">
+          {{ t.get_status_display }}
+        </span>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="flex flex-col items-center justify-center py-10 gap-2 text-center">
+      <i class="ti ti-arrows-exchange text-3xl text-gray-300 dark:text-gray-600"></i>
+      <p class="text-sm text-gray-400 dark:text-gray-600">Nenhuma transferência ainda</p>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

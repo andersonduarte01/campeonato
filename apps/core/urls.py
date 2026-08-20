@@ -10,6 +10,9 @@ urlpatterns = [
     path('auth/login/', views.login_view, name='login'),
     path('auth/logout/', views.logout_view, name='logout'),
 
+    # Seleção de federação
+    path('federacao/selecionar/', views.selecionar_federacao_view, name='selecionar_federacao'),
+
     # Alterar senha
     path('auth/alterar-senha/', views.alterar_senha_view, name='alterar_senha'),
 
@@ -31,6 +34,8 @@ urlpatterns = [
 
     # Gestão de usuários
     path('usuarios/', views.usuarios_lista_view, name='usuarios_lista'),
+    path('usuarios/novo/', views.usuario_criar_view, name='usuario_novo'),
     path('usuarios/<int:pk>/editar/', views.usuario_editar_view, name='usuario_editar'),
     path('usuarios/<int:pk>/toggle-ativo/', views.usuario_toggle_ativo_view, name='usuario_toggle_ativo'),
+    path('usuarios/<int:pk>/remover/', views.usuario_remover_vinculo_view, name='usuario_remover'),
 ]

@@ -8,12 +8,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'unfold',
+    'unfold.contrib.filters',
+    'unfold.contrib.forms',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -23,13 +26,14 @@ INSTALLED_APPS = [
     'stdimage',
     'tailwind',
     'theme',
-    ######
+    # ── CORE SaaS (ativo) ──────────────────────────────
     'apps.core',
+    # ── Módulos desativados — reativar cirurgicamente ──
     'apps.equipe',
     'apps.competicao',
     'apps.criterios',
     'apps.auditoria',
-    'apps.federacao',
+    'apps.registro',
 ]
 
 TAILWIND_APP_NAME = 'theme'
@@ -41,6 +45,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'apps.core.middleware.FederacaoMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -58,7 +63,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'apps.competicao.context_processors.notificacoes_nao_lidas',
+                # 'apps.competicao.context_processors.notificacoes_nao_lidas',
+                'apps.competicao.context_processors.is_admin_op',
             ],
         },
     },
@@ -74,6 +80,12 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+        'OPTIONS': {
+            # Evita "database is locked" em acessos concorrentes (dev)
+            'timeout': 20,
+            'transaction_mode': 'IMMEDIATE',
+            'init_command': 'PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;',
+        },
     }
 }
 
@@ -121,8 +133,27 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# ── Email ──────────────────────────────────────────────────────────────────
+# Em desenvolvimento: imprime no terminal. Em produção: configure SMTP via .env
+EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
+EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
+EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@champs.com.br')
+
 AUTH_USER_MODEL = 'core.Usuario'
 
 LOGIN_URL = '/auth/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/auth/login/'
+
+UNFOLD = {
+    'SITE_TITLE': 'CHAMPS Admin',
+    'SITE_HEADER': 'CHAMPS',
+    'SITE_URL': '/',
+    'SITE_ICON': None,
+    'SHOW_HISTORY': True,
+    'SHOW_VIEW_ON_SITE': True,
+}

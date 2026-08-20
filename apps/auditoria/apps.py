@@ -7,4 +7,5 @@ class AuditoriaConfig(AppConfig):
     verbose_name = 'Auditoria'
 
     def ready(self):
-        import apps.auditoria.signals  # noqa: F401
+        # Conecta os signals de auditoria.
+        from . import signals  # noqa: F401

@@ -1,12 +1,12 @@
-{% extends 'base/indice.html' %}
+﻿{% extends 'base/indice.html' %}
 {% block titulo %}Processos Desportivos{% endblock %}
 
 {% block breadcrumbs %}
 <div class="px-4 md:px-6 pt-3 pb-0">
-  <div class="breadcrumbs text-xs text-base-content/40">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
     <ul>
-      <li><a href="{% url 'competicao:tribunal_dashboard' %}" class="hover:text-base-content/70">Tribunal</a></li>
-      <li><span class="text-base-content/60">Processos</span></li>
+      <li><a href="{% url 'competicao:tribunal_dashboard' %}" class="hover:text-gray-700 dark:text-gray-300">Tribunal</a></li>
+      <li><span class="text-gray-600 dark:text-gray-400">Processos</span></li>
     </ul>
   </div>
 </div>
@@ -18,15 +18,15 @@
   <!-- Cabeçalho -->
   <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
     <div>
-      <h1 class="section-heading text-4xl text-base-content leading-none">PROCESSOS</h1>
-      <p class="text-sm text-base-content/40 mt-1">
+      <h1 class="section-heading text-4xl text-gray-900 dark:text-white leading-none">PROCESSOS</h1>
+      <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">
         {{ total_abertos }} aberto{{ total_abertos|pluralize }} ·
         {{ total_em_julgamento }} em julgamento
       </p>
     </div>
     <a href="{% url 'competicao:processo_criar' %}"
-       class="btn btn-warning gap-2 font-bold shadow shadow-warning/20 shrink-0">
-      <i class="bi bi-plus-circle-fill"></i> Novo Processo
+       class="btn btn-outline gap-2 shrink-0">
+      <i class="ti ti-circle-plus"></i> Novo Processo
     </a>
   </div>
 
@@ -34,13 +34,13 @@
   <form method="get" class="flex flex-wrap items-end gap-2">
 
     <!-- Busca -->
-    <label class="input input-sm input-bordered flex items-center gap-2 flex-1 min-w-48">
-      <i class="bi bi-search text-xs text-base-content/30"></i>
+    <label class="input input-sm  flex items-center gap-2 flex-1 min-w-48">
+      <i class="ti ti-search text-xs text-gray-400 dark:text-gray-600"></i>
       <input type="search" name="q" value="{{ q }}" placeholder="Buscar por número, denunciante..." class="grow bg-transparent outline-none text-sm">
     </label>
 
     <!-- Status -->
-    <select name="status" class="select select-sm select-bordered">
+    <select name="status" class="select select-sm ">
       <option value="">Todos os status</option>
       {% for val, label in status_choices %}
       <option value="{{ val }}" {% if filtro_status == val %}selected{% endif %}>{{ label }}</option>
@@ -48,50 +48,50 @@
     </select>
 
     <!-- Tipo -->
-    <select name="tipo" class="select select-sm select-bordered">
+    <select name="tipo" class="select select-sm ">
       <option value="">Todos os tipos</option>
       {% for val, label in tipo_choices %}
       <option value="{{ val }}" {% if filtro_tipo == val %}selected{% endif %}>{{ label }}</option>
       {% endfor %}
     </select>
 
-    <button type="submit" class="btn btn-sm btn-ghost border border-base-content/10">
-      <i class="bi bi-funnel text-sm"></i> Filtrar
+    <button type="submit" class="btn btn-sm btn-ghost border border-gray-200/60 dark:border-gray-700/60">
+      <i class="ti ti-filter text-sm"></i> Filtrar
     </button>
     {% if q or filtro_status or filtro_tipo %}
-    <a href="{% url 'competicao:processo_lista' %}" class="btn btn-sm btn-ghost text-error/60 hover:text-error">
-      <i class="bi bi-x text-sm"></i> Limpar
+    <a href="{% url 'competicao:processo_lista' %}" class="btn btn-sm btn-ghost text-red-500/60 hover:text-red-500">
+      <i class="ti ti-x text-sm"></i> Limpar
     </a>
     {% endif %}
   </form>
 
   <!-- Lista -->
-  <div class="card bg-base-200 border border-base-300 overflow-hidden">
-    <div class="divide-y divide-base-300">
+  <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div class="divide-y divide-gray-100 dark:divide-gray-700">
       {% for proc in processos %}
       <a href="{% url 'competicao:processo_detalhe' proc.pk %}"
-         class="flex items-center gap-3 px-4 py-4 hover:bg-base-300/40 transition-colors group">
+         class="flex items-center gap-3 px-4 py-4 hover:bg-gray-200/40 dark:bg-gray-700/40 transition-colors group">
 
         <div class="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center
-                    {% if proc.status == 'aberto' %}bg-warning/15{% elif proc.status == 'em_julgamento' %}bg-info/15{% elif proc.status == 'julgado' %}bg-success/15{% else %}bg-base-300{% endif %}">
+                    {% if proc.status == 'aberto' %}bg-yellow-400/15{% elif proc.status == 'em_julgamento' %}bg-blue-500/15{% elif proc.status == 'julgado' %}bg-green-500/15{% else %}bg-gray-100 dark:bg-gray-700{% endif %}">
           {% if proc.status == 'aberto' %}
-            <i class="bi bi-folder2-open text-warning"></i>
+            <i class="ti ti-folder-open text-yellow-500"></i>
           {% elif proc.status == 'em_julgamento' %}
-            <i class="bi bi-hourglass-split text-info"></i>
+            <i class="ti ti-hourglass text-blue-500"></i>
           {% elif proc.status == 'julgado' %}
-            <i class="bi bi-check-circle-fill text-success"></i>
+            <i class="ti ti-circle-check text-green-500"></i>
           {% else %}
-            <i class="bi bi-archive text-base-content/30"></i>
+            <i class="ti ti-archive text-gray-400 dark:text-gray-600"></i>
           {% endif %}
         </div>
 
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2 mb-1 flex-wrap">
-            <span class="font-bold text-sm font-mono text-base-content">{{ proc.numero }}</span>
+            <span class="font-bold text-sm font-mono text-gray-900 dark:text-white">{{ proc.numero }}</span>
             <span class="badge {{ proc.status_badge_class }} badge-sm">{{ proc.get_status_display }}</span>
-            <span class="badge badge-ghost badge-xs">{{ proc.get_tipo_display }}</span>
+            <span class="badge badge-gray badge-xs">{{ proc.get_tipo_display }}</span>
           </div>
-          <p class="text-sm text-base-content/60 truncate">
+          <p class="text-sm text-gray-600 dark:text-gray-400 truncate">
             Denunciante: <span class="font-medium">{{ proc.denunciante }}</span>
             {% if proc.denunciado_str != '—' %}· Denunciado: <span class="font-medium">{{ proc.denunciado_str }}</span>{% endif %}
             {% if proc.competicao %}· {{ proc.competicao.nome }}{% endif %}
@@ -99,17 +99,17 @@
         </div>
 
         <div class="text-right shrink-0">
-          <p class="text-xs text-base-content/30">{{ proc.criado_em|date:"d/m/Y" }}</p>
+          <p class="text-xs text-gray-400 dark:text-gray-600">{{ proc.criado_em|date:"d/m/Y" }}</p>
           {% if proc.recursos.count %}
-          <span class="badge badge-error badge-xs mt-1">{{ proc.recursos.count }} recurso{{ proc.recursos.count|pluralize }}</span>
+          <span class="badge badge-red badge-xs mt-1">{{ proc.recursos.count }} recurso{{ proc.recursos.count|pluralize }}</span>
           {% endif %}
         </div>
 
-        <i class="bi bi-chevron-right text-xs text-base-content/20 group-hover:text-warning shrink-0 transition-colors"></i>
+        <i class="ti ti-chevron-right text-xs text-gray-300 dark:text-gray-600 group-hover:text-yellow-500 shrink-0 transition-colors"></i>
       </a>
       {% empty %}
-      <div class="flex flex-col items-center justify-center py-16 gap-2 text-base-content/30">
-        <i class="bi bi-folder2 text-5xl"></i>
+      <div class="flex flex-col items-center justify-center py-16 gap-2 text-gray-400 dark:text-gray-600">
+        <i class="ti ti-folder text-5xl"></i>
         <p class="text-base font-medium">Nenhum processo encontrado</p>
         {% if q or filtro_status or filtro_tipo %}
         <p class="text-sm">Tente remover os filtros</p>

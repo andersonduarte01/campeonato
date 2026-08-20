@@ -1,0 +1,77 @@
+{% extends 'base/indice.html' %}
+{% block titulo %}Auditoria — Eventos{% endblock %}
+
+{% block conteudo %}
+<div class="p-4 md:p-6 space-y-5">
+
+  <div class="flex items-center justify-between gap-4 flex-wrap">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800 flex items-center justify-center">
+        <i class="ti ti-history text-blue-600 dark:text-blue-400 text-xl"></i>
+      </div>
+      <div>
+        <h1 class="section-heading text-2xl text-gray-900 dark:text-white leading-none">EVENTOS DE AUDITORIA</h1>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Trilha de ações e transições relevantes</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card overflow-hidden">
+    <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+      <form method="get" class="flex items-center gap-2 flex-wrap">
+        <input type="text" name="tipo" value="{{ tipo_atual }}"
+               placeholder="Filtrar por tipo (ex.: competicao_transicao)"
+               class="form-input w-72">
+        <button type="submit" class="btn btn-outline btn-sm gap-1">
+          <i class="ti ti-filter text-sm"></i> Filtrar
+        </button>
+      </form>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-sm">
+        <thead class="bg-gray-50 dark:bg-gray-700/30 text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider">
+          <tr>
+            <th class="px-4 py-2 text-left">Data</th>
+            <th class="px-4 py-2 text-left">Tipo</th>
+            <th class="px-4 py-2 text-left">Usuário</th>
+            <th class="px-4 py-2 text-left">Objeto</th>
+            <th class="px-4 py-2 text-left">Dados</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+          {% for e in page.object_list %}
+          <tr>
+            <td class="px-4 py-2 whitespace-nowrap text-gray-600 dark:text-gray-400">{{ e.registrado_em|date:"d/m/Y H:i" }}</td>
+            <td class="px-4 py-2 font-medium text-gray-900 dark:text-white">{{ e.tipo }}</td>
+            <td class="px-4 py-2 text-gray-600 dark:text-gray-400">{{ e.usuario.email|default:"sistema" }}</td>
+            <td class="px-4 py-2 text-gray-500 dark:text-gray-500">
+              {% if e.objeto_tipo %}{{ e.objeto_tipo }}#{{ e.objeto_id }}{% endif %}
+            </td>
+            <td class="px-4 py-2 text-xs text-gray-500 dark:text-gray-500">
+              <code>{{ e.dados }}</code>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" class="px-4 py-6 text-center text-gray-400">Nenhum evento registrado.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if page.paginator.num_pages > 1 %}
+    <div class="p-3 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between text-xs text-gray-500">
+      <span>Página {{ page.number }} de {{ page.paginator.num_pages }} ({{ page.paginator.count }} eventos)</span>
+      <span class="flex items-center gap-2">
+        {% if page.has_previous %}
+          <a class="btn btn-ghost btn-xs" href="?page={{ page.previous_page_number }}{% if tipo_atual %}&tipo={{ tipo_atual }}{% endif %}">Anterior</a>
+        {% endif %}
+        {% if page.has_next %}
+          <a class="btn btn-ghost btn-xs" href="?page={{ page.next_page_number }}{% if tipo_atual %}&tipo={{ tipo_atual }}{% endif %}">Próxima</a>
+        {% endif %}
+      </span>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

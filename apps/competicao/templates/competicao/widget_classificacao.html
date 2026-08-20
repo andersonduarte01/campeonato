@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ competicao.nome }}</title>
+  {% load static %}
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #1e293b; color: #e2e8f0; font-size: 13px; }
+    .header { background: #f59e0b; color: #0f172a; padding: 8px 12px; }
+    .header h2 { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: center; padding: 4px 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; color: #94a3b8; border-bottom: 1px solid #334155; }
+    th.left { text-align: left; }
+    td { padding: 6px; text-align: center; border-bottom: 1px solid #1e293b; font-size: 12px; }
+    td.team { text-align: left; font-weight: 600; color: #f1f5f9; }
+    td.pts { font-weight: 800; color: #f59e0b; font-size: 14px; }
+    tr:nth-child(1), tr:nth-child(2), tr:nth-child(3), tr:nth-child(4) { background: rgba(245,158,11,0.05); }
+    .powered { text-align: center; padding: 6px; font-size: 10px; color: #475569; }
+  </style>
+</head>
+<body>
+  <div class="header"><h2>{{ competicao.nome }}</h2></div>
+  <table>
+    <thead>
+      <tr>
+        <th class="left" style="width:24px">#</th>
+        <th class="left">Equipe</th>
+        <th>J</th><th>V</th><th>SG</th>
+        <th style="color:#f59e0b">PTS</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in classificacao %}
+      <tr>
+        <td class="left" style="color:#64748b;font-size:10px;font-weight:700">{{ forloop.counter }}</td>
+        <td class="team">{{ c.equipe.nome_equipe }}</td>
+        <td>{{ c.jogos }}</td>
+        <td>{{ c.vitorias }}</td>
+        <td>{{ c.saldo_gols }}</td>
+        <td class="pts">{{ c.pontos }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <div class="powered">CHAMPS</div>
+</body>
+</html>

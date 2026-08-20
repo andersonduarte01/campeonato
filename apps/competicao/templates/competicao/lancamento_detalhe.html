@@ -3,11 +3,11 @@
 
 {% block breadcrumbs %}
 <div class="px-4 md:px-6 pt-3 pb-0">
-  <div class="breadcrumbs text-xs text-base-content/40">
+  <div class="breadcrumbs text-xs text-gray-400 dark:text-gray-500">
     <ul>
-      <li><a href="{% url 'competicao:financeiro_dashboard' %}" class="hover:text-base-content/70">Financeiro</a></li>
-      <li><a href="{% url 'competicao:lancamento_lista' %}" class="hover:text-base-content/70">Lançamentos</a></li>
-      <li><span class="text-base-content/60">{{ lan.numero }}</span></li>
+      <li><a href="{% url 'competicao:financeiro_dashboard' %}" class="hover:text-gray-700 dark:text-gray-300">Financeiro</a></li>
+      <li><a href="{% url 'competicao:lancamento_lista' %}" class="hover:text-gray-700 dark:text-gray-300">Lançamentos</a></li>
+      <li><span class="text-gray-600 dark:text-gray-400">{{ lan.numero }}</span></li>
     </ul>
   </div>
 </div>
@@ -20,35 +20,34 @@
   <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
     <div>
       <div class="flex items-center gap-2 mb-1 flex-wrap">
-        <span class="badge badge-xs {% if lan.tipo == 'receita' %}badge-success{% else %}badge-error{% endif %}">
+        <span class="badge badge-xs {% if lan.tipo == 'receita' %}badge-green{% else %}badge-red{% endif %}">
           {{ lan.get_tipo_display }}
         </span>
         <span class="badge {{ lan.status_badge_class }} badge-xs">
           {% if lan.is_atrasado %}Atrasado{% else %}{{ lan.get_status_display }}{% endif %}
         </span>
-        <span class="text-xs text-base-content/30 font-mono">{{ lan.numero }}</span>
+        <span class="text-xs text-gray-400 dark:text-gray-600 font-mono">{{ lan.numero }}</span>
       </div>
-      <h1 class="section-heading text-3xl text-base-content leading-tight">{{ lan.descricao }}</h1>
-      <p class="stat-number text-4xl {% if lan.tipo == 'receita' %}text-success{% else %}text-error{% endif %} mt-1">
+      <h1 class="section-heading text-3xl text-gray-900 dark:text-white leading-tight">{{ lan.descricao }}</h1>
+      <p class="stat-number text-4xl {% if lan.tipo == 'receita' %}text-green-500{% else %}text-red-500{% endif %} mt-1">
         {% if lan.tipo == 'receita' %}+{% else %}-{% endif %}R$ {{ lan.valor|floatformat:2 }}
       </p>
     </div>
     <div class="flex items-center gap-2 flex-wrap">
       <a href="{% url 'competicao:pdf_comprovante' lan.pk %}" target="_blank"
-         class="btn btn-ghost btn-sm border border-base-content/10 gap-1">
-        <i class="bi bi-printer text-sm"></i> Comprovante
+         class="btn btn-ghost btn-sm border border-gray-200/60 dark:border-gray-700/60 gap-1">
+        <i class="ti ti-printer text-sm"></i> Comprovante
       </a>
       <a href="{% url 'competicao:lancamento_editar' lan.pk %}"
-         class="btn btn-ghost btn-sm border border-base-content/10 gap-1">
-        <i class="bi bi-pencil text-sm"></i> Editar
+         class="btn btn-ghost btn-sm border border-gray-200/60 dark:border-gray-700/60 gap-1">
+        <i class="ti ti-pencil text-sm"></i> Editar
       </a>
-      <form method="post" action="{% url 'competicao:lancamento_excluir' lan.pk %}" class="inline">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-ghost btn-sm border border-base-content/10 text-error/50 hover:text-error hover:border-error/30"
-                onclick="return confirm('Excluir este lançamento?')">
-          <i class="bi bi-trash text-sm"></i>
-        </button>
-      </form>
+      <button type="button"
+              data-modal-target="modal-excluir-lancamento"
+              data-modal-toggle="modal-excluir-lancamento"
+              class="btn btn-ghost btn-sm border border-gray-200/60 dark:border-gray-700/60 text-red-500/50 hover:text-red-500 hover:border-red-500/30">
+        <i class="ti ti-trash text-sm"></i>
+      </button>
     </div>
   </div>
 
@@ -58,60 +57,60 @@
     <div class="lg:col-span-2 space-y-4">
 
       <!-- Detalhes -->
-      <div class="card bg-base-200 border border-base-300 overflow-hidden">
-        <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
-          <i class="bi bi-info-circle text-warning text-sm"></i>
-          <span class="section-heading text-sm text-base-content/70 tracking-widest">DETALHES</span>
+      <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-200/30 dark:bg-gray-700/30">
+          <i class="ti ti-info-circle text-yellow-500 text-sm"></i>
+          <span class="section-heading text-sm text-gray-700 dark:text-gray-300 tracking-widest">DETALHES</span>
         </div>
         <div class="p-4 grid grid-cols-2 gap-4">
           <div>
-            <p class="text-xs text-base-content/40 font-bold uppercase tracking-wider mb-1">Categoria</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider mb-1">Categoria</p>
             <p class="text-sm font-semibold">{{ lan.get_categoria_display }}</p>
           </div>
           <div>
-            <p class="text-xs text-base-content/40 font-bold uppercase tracking-wider mb-1">Vencimento</p>
-            <p class="text-sm font-semibold {% if lan.is_atrasado %}text-error{% endif %}">{{ lan.data_vencimento|date:"d/m/Y" }}</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider mb-1">Vencimento</p>
+            <p class="text-sm font-semibold {% if lan.is_atrasado %}text-red-500{% endif %}">{{ lan.data_vencimento|date:"d/m/Y" }}</p>
           </div>
           {% if lan.data_pagamento %}
           <div>
-            <p class="text-xs text-base-content/40 font-bold uppercase tracking-wider mb-1">Data do Pagamento</p>
-            <p class="text-sm font-semibold text-success">{{ lan.data_pagamento|date:"d/m/Y" }}</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider mb-1">Data do Pagamento</p>
+            <p class="text-sm font-semibold text-green-500">{{ lan.data_pagamento|date:"d/m/Y" }}</p>
           </div>
           {% endif %}
           {% if lan.forma_pagamento %}
           <div>
-            <p class="text-xs text-base-content/40 font-bold uppercase tracking-wider mb-1">Forma</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider mb-1">Forma</p>
             <p class="text-sm font-semibold">{{ lan.get_forma_pagamento_display }}</p>
           </div>
           {% endif %}
           {% if lan.numero_referencia %}
           <div class="col-span-2">
-            <p class="text-xs text-base-content/40 font-bold uppercase tracking-wider mb-1">Referência</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider mb-1">Referência</p>
             <p class="text-sm font-mono">{{ lan.numero_referencia }}</p>
           </div>
           {% endif %}
           {% if lan.competicao %}
           <div>
-            <p class="text-xs text-base-content/40 font-bold uppercase tracking-wider mb-1">Competição</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider mb-1">Competição</p>
             <p class="text-sm font-semibold">{{ lan.competicao.nome }}</p>
           </div>
           {% endif %}
           {% if lan.equipe %}
           <div>
-            <p class="text-xs text-base-content/40 font-bold uppercase tracking-wider mb-1">Equipe</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider mb-1">Equipe</p>
             <p class="text-sm font-semibold">{{ lan.equipe.nome_equipe }}</p>
           </div>
           {% endif %}
           {% if lan.atleta %}
           <div>
-            <p class="text-xs text-base-content/40 font-bold uppercase tracking-wider mb-1">Atleta</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider mb-1">Atleta</p>
             <p class="text-sm font-semibold">{{ lan.atleta.nome }}</p>
           </div>
           {% endif %}
           {% if lan.observacoes %}
           <div class="col-span-2">
-            <p class="text-xs text-base-content/40 font-bold uppercase tracking-wider mb-1">Observações</p>
-            <p class="text-sm text-base-content/70">{{ lan.observacoes }}</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider mb-1">Observações</p>
+            <p class="text-sm text-gray-700 dark:text-gray-300">{{ lan.observacoes }}</p>
           </div>
           {% endif %}
         </div>
@@ -119,24 +118,24 @@
 
       <!-- Comprovante (se imagem) -->
       {% if lan.comprovante and lan.comprovante_is_imagem %}
-      <div class="card bg-base-200 border border-base-300 overflow-hidden">
-        <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 bg-base-300/30">
-          <i class="bi bi-image text-warning text-sm"></i>
-          <span class="section-heading text-sm text-base-content/70 tracking-widest">COMPROVANTE</span>
+      <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-200/30 dark:bg-gray-700/30">
+          <i class="ti ti-photo text-yellow-500 text-sm"></i>
+          <span class="section-heading text-sm text-gray-700 dark:text-gray-300 tracking-widest">COMPROVANTE</span>
         </div>
         <div class="p-4">
-          <img src="{{ lan.comprovante.url }}" class="rounded-xl max-h-64 object-contain w-full bg-base-300/50">
+          <img src="{{ lan.comprovante.url }}" class="rounded-xl max-h-64 object-contain w-full bg-gray-200/50 dark:bg-gray-700/50">
         </div>
       </div>
       {% elif lan.comprovante %}
       <a href="{{ lan.comprovante.url }}" target="_blank"
-         class="flex items-center gap-3 p-4 bg-base-200 border border-base-300 rounded-xl hover:border-warning/30 transition-colors">
-        <i class="bi bi-file-earmark-pdf text-3xl text-error/60"></i>
+         class="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-yellow-400/30 transition-colors">
+        <i class="ti ti-file-type-pdf text-3xl text-red-500/60"></i>
         <div>
           <p class="font-semibold text-sm">Comprovante de pagamento</p>
-          <p class="text-xs text-base-content/40">{{ lan.comprovante_extensao|upper|slice:"1:" }} · Clique para abrir</p>
+          <p class="text-xs text-gray-400 dark:text-gray-500">{{ lan.comprovante_extensao|upper|slice:"1:" }} · Clique para abrir</p>
         </div>
-        <i class="bi bi-box-arrow-up-right text-base-content/30 ml-auto"></i>
+        <i class="ti ti-external-link text-gray-400 dark:text-gray-600 ml-auto"></i>
       </a>
       {% endif %}
 
@@ -148,60 +147,60 @@
       {% if lan.status == 'pendente' %}
       <!-- Formulário de baixa -->
       <div class="card bg-{% if lan.is_atrasado %}error{% else %}success{% endif %}/5 border border-{% if lan.is_atrasado %}error{% else %}success{% endif %}/20 overflow-hidden">
-        <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300">
-          <i class="bi bi-check-circle-fill text-{% if lan.is_atrasado %}error{% else %}success{% endif %} text-sm"></i>
-          <span class="section-heading text-sm text-base-content/70 tracking-widest">REGISTRAR PAGAMENTO</span>
+        <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+          <i class="ti ti-circle-check text-{% if lan.is_atrasado %}error{% else %}success{% endif %} text-sm"></i>
+          <span class="section-heading text-sm text-gray-700 dark:text-gray-300 tracking-widest">REGISTRAR PAGAMENTO</span>
         </div>
         <form method="post" action="{% url 'competicao:lancamento_baixar' lan.pk %}"
               enctype="multipart/form-data" class="p-4 space-y-3">
           {% csrf_token %}
           <div>
             <label class="label py-0 mb-1">
-              <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Data do pagamento *</span>
+              <span class="label-text text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Data do pagamento *</span>
             </label>
             {{ baixar_form.data_pagamento }}
           </div>
           <div>
             <label class="label py-0 mb-1">
-              <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Forma de pagamento *</span>
+              <span class="label-text text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Forma de pagamento *</span>
             </label>
             {{ baixar_form.forma_pagamento }}
           </div>
           <div>
             <label class="label py-0 mb-1">
-              <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">ID / Referência</span>
+              <span class="label-text text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">ID / Referência</span>
             </label>
             {{ baixar_form.numero_referencia }}
           </div>
           <div>
             <label class="label py-0 mb-1">
-              <span class="label-text text-xs font-bold uppercase tracking-wider text-base-content/50">Comprovante</span>
+              <span class="label-text text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Comprovante</span>
             </label>
             {{ baixar_form.comprovante }}
           </div>
           <button type="submit"
                   class="btn btn-{% if lan.is_atrasado %}error{% else %}success{% endif %} btn-sm w-full gap-1.5 font-semibold">
-            <i class="bi bi-check-circle-fill"></i> Confirmar Pagamento
+            <i class="ti ti-circle-check"></i> Confirmar Pagamento
           </button>
         </form>
       </div>
 
       {% elif lan.status == 'pago' %}
-      <div class="card bg-success/5 border border-success/20 p-4 text-center space-y-2">
-        <div class="w-12 h-12 rounded-full bg-success/15 flex items-center justify-center mx-auto">
-          <i class="bi bi-check-circle-fill text-success text-2xl"></i>
+      <div class="card bg-green-500/5 border border-green-500/20 p-4 text-center space-y-2">
+        <div class="w-12 h-12 rounded-full bg-green-500/15 flex items-center justify-center mx-auto">
+          <i class="ti ti-circle-check text-green-500 text-2xl"></i>
         </div>
-        <p class="font-bold text-success">Pagamento Confirmado</p>
-        <p class="text-xs text-base-content/40">{{ lan.data_pagamento|date:"d/m/Y" }}</p>
+        <p class="font-bold text-green-500">Pagamento Confirmado</p>
+        <p class="text-xs text-gray-400 dark:text-gray-500">{{ lan.data_pagamento|date:"d/m/Y" }}</p>
         {% if lan.forma_pagamento %}
-        <p class="text-xs text-base-content/50">{{ lan.get_forma_pagamento_display }}</p>
+        <p class="text-xs text-gray-500 dark:text-gray-400">{{ lan.get_forma_pagamento_display }}</p>
         {% endif %}
       </div>
 
       {% elif lan.status == 'cancelado' %}
-      <div class="card bg-base-200 border border-base-300 p-4 text-center space-y-2">
-        <i class="bi bi-x-circle text-3xl text-base-content/30"></i>
-        <p class="font-semibold text-base-content/50">Lançamento Cancelado</p>
+      <div class="card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 text-center space-y-2">
+        <i class="ti ti-circle-x text-3xl text-gray-400 dark:text-gray-600"></i>
+        <p class="font-semibold text-gray-500 dark:text-gray-400">Lançamento Cancelado</p>
       </div>
       {% endif %}
 
@@ -210,4 +209,31 @@
   </div>
 
 </div>
+
+<!-- Modal: excluir lançamento -->
+<div id="modal-excluir-lancamento" tabindex="-1" aria-hidden="true"
+     class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 flex justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+  <div class="relative p-4 w-full max-w-md max-h-full">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 space-y-4">
+      <div class="flex items-center gap-3">
+        <i class="ti ti-alert-triangle text-red-500 text-xl"></i>
+        <h2 class="font-semibold text-gray-900 dark:text-white">Excluir Lançamento</h2>
+      </div>
+      <p class="text-sm text-gray-600 dark:text-gray-400">
+        Excluir o lançamento <strong class="text-gray-900 dark:text-white">{{ lan.numero }}</strong>?
+        Esta ação é irreversível.
+      </p>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" data-modal-hide="modal-excluir-lancamento" class="btn btn-ghost btn-sm">Cancelar</button>
+        <form method="post" action="{% url 'competicao:lancamento_excluir' lan.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger-outline btn-sm gap-1">
+            <i class="ti ti-trash text-sm"></i> Excluir
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endblock %}
