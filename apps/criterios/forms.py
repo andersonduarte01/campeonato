@@ -1,5 +1,15 @@
 from django import forms
-from .models import CriterioClassificacao, FormatoCompeticao
+from .models import CRITERIOS_PADRAO, CriterioClassificacao, FormatoCompeticao
+
+_LABELS_CRITERIO = {
+    'confronto_direto': 'Confronto Direto',
+    'vitorias':         'Número de Vitórias',
+    'saldo_gols':       'Saldo de Gols',
+    'gols_pro':         'Gols Marcados',
+    'gol_fora':         'Gol Fora de Casa',
+    'menor_vermelho':   'Menor nº de Cartões Vermelhos',
+    'menor_amarelo':    'Menor nº de Cartões Amarelos',
+}
 
 _INPUT    = 'form-input'
 _NUMBER   = 'form-input w-24'
@@ -26,9 +36,13 @@ class FormatoCompeticaoForm(forms.ModelForm):
 
 
 class CriterioClassificacaoForm(forms.ModelForm):
+    """Cada critério tem um checkbox (liga/desliga) e um select de
+    prioridade (1..N). `ordem_criterios` não é editado diretamente — é
+    derivado dos selects de prioridade no save()."""
+
     class Meta:
         model = CriterioClassificacao
-        exclude = ['federacao']
+        exclude = ['federacao', 'ordem_criterios']
         widgets = {
             'nome':             forms.TextInput(attrs={'class': _INPUT}),
             'confronto_direto': forms.CheckboxInput(attrs={'class': _CHECKBOX}),
@@ -39,3 +53,31 @@ class CriterioClassificacaoForm(forms.ModelForm):
             'menor_vermelho':   forms.CheckboxInput(attrs={'class': _CHECKBOX}),
             'menor_amarelo':    forms.CheckboxInput(attrs={'class': _CHECKBOX}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        ordem_atual = (self.instance.pk and self.instance.ordem_criterios) or CRITERIOS_PADRAO
+        posicao = {chave: i + 1 for i, chave in enumerate(ordem_atual)}
+        opcoes = [(i, str(i)) for i in range(1, len(CRITERIOS_PADRAO) + 1)]
+        for chave in CRITERIOS_PADRAO:
+            self.fields[f'prioridade_{chave}'] = forms.ChoiceField(
+                choices=opcoes,
+                initial=posicao.get(chave, len(CRITERIOS_PADRAO)),
+                label=f'Prioridade — {_LABELS_CRITERIO[chave]}',
+                widget=forms.Select(attrs={'class': 'form-select w-20'}),
+            )
+
+    def _ordem_dos_campos_prioridade(self):
+        pares = [
+            (chave, int(self.cleaned_data.get(f'prioridade_{chave}', 99)))
+            for chave in CRITERIOS_PADRAO
+        ]
+        pares.sort(key=lambda par: par[1])
+        return [chave for chave, _ in pares]
+
+    def save(self, commit=True):
+        instancia = super().save(commit=False)
+        instancia.ordem_criterios = self._ordem_dos_campos_prioridade()
+        if commit:
+            instancia.save()
+        return instancia

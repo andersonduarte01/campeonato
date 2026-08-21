@@ -124,7 +124,17 @@
       "PowerShell(python manage.py test apps.auditoria apps.core apps.competicao apps.criterios apps.registro apps.equipe 2>&1 | Select-Object -Last 12)",
       "PowerShell(Get-Item \"C:\\\\projetos_antigos\\\\champs\\\\campeonato\\\\theme\\\\static\\\\css\\\\dist\\\\styles.css\" | Select-Object Name, @{N='KB';E={[math]::Round\\($_.Length/1KB,1\\)}}, LastWriteTime)",
       "Bash(Select-String \"btn-success|btn-warning|btn-danger[^-]\")",
-      "Bash(Select-Object Filename, LineNumber, Line)"
+      "Bash(Select-Object Filename, LineNumber, Line)",
+      "Bash(git fetch *)",
+      "Bash(git stash *)",
+      "Bash(pip list *)",
+      "Bash(pip uninstall *)",
+      "Bash(awk -F: '{sum+=$2; print} END{print \"TOTAL:\", sum}')",
+      "Bash(xargs wc -l)",
+      "Bash(iconv -f utf-16 -t utf-8 requirements.txt)",
+      "Bash(iconv -f utf-8 -t utf-8)",
+      "Bash(xargs -I{} echo {})",
+      "Bash(awk -F: '$1>1550 && $1<1650')"
     ]
   }
 }

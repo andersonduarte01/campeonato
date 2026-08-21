@@ -195,6 +195,7 @@ class Competicao(models.Model):
                 'gol_fora': crit.gol_fora,
                 'menor_vermelho': crit.menor_vermelho,
                 'menor_amarelo': crit.menor_amarelo,
+                'ordem_criterios': crit.ordem_criterios,
             }
 
     @property
@@ -639,17 +640,26 @@ class Jogo(models.Model):
         return self.resultado_tipo != self.RESULTADO_NORMAL
 
     def exige_desempate(self):
-        """Retorna True se o placar está empatado, o jogo NÃO é W.O. e a
-        competição não permite empates. Nesse caso a finalização depende de
-        pênaltis registrados no confronto (mata-mata) ou é bloqueada."""
+        """Retorna True se o placar está empatado, o jogo NÃO é W.O., e a
+        partida precisa de um vencedor decisivo. Nesse caso a finalização
+        depende de pênaltis registrados no confronto (mata-mata) ou é
+        bloqueada.
+
+        Mata-mata de jogo único sempre exige decisão (independe do
+        `permite_empate` da competição — esse flag é sobre a fase de liga/
+        grupos, onde empate é um resultado normal). Ida e volta não força
+        decisão jogo a jogo: o empate agregado é resolvido pelo
+        ConfrontoMatamate (gol fora/pênaltis) depois da volta.
+        """
         if self.por_wo:
             return False
         if self.gols_casa != self.gols_fora:
             return False
-        comp = self.rodada.competicao if self.rodada_id else None
-        if comp is None:
+        if not self.rodada_id:
             return False
-        return not comp.permite_empate
+        if self.rodada.etapa_id:
+            return not self.rodada.etapa.ida_e_volta
+        return not self.rodada.competicao.permite_empate
 
     def save(self, *args, **kwargs):
         self._reconciliar_status_e_booleans()
@@ -676,8 +686,18 @@ class Jogo(models.Model):
 
         Regra: quando o caller alterou os booleans (padrão antigo) e não o
         `status`, deriva `status` a partir dos booleans; caso contrário,
-        deriva os booleans a partir de `status`.
+        deriva os booleans a partir de `status`. `status` é sempre a fonte
+        de verdade final — os booleans são recalculados a partir dele no
+        fim deste método, mesmo quando setados diretamente.
+
+        Só 4 das 8 combinações de (finalizado, em_andamento, anulado) fazem
+        sentido (elas são mutuamente exclusivas). Setar uma combinação
+        inválida diretamente (ex.: finalizado=True e em_andamento=True ao
+        mesmo tempo) é erro de programação — antes falhava em silêncio
+        (o save() descartava a mudança sem avisar); agora levanta erro.
         """
+        from .dominio.excecoes import RegraVioladaError
+
         booleans_atuais = (bool(self.finalizado), bool(self.em_andamento), bool(self.anulado))
         antigo = None
         if self.pk:
@@ -698,8 +718,14 @@ class Jogo(models.Model):
             status_mudou = self.status != antigo.status
         if booleans_mudaram and not status_mudou:
             derivado = self._MAPA_BOOLEANS_PARA_STATUS.get(booleans_atuais)
-            if derivado is not None:
-                self.status = derivado
+            if derivado is None:
+                raise RegraVioladaError(
+                    'Combinação inválida de status do jogo: finalizado='
+                    f'{booleans_atuais[0]}, em_andamento={booleans_atuais[1]}, '
+                    f'anulado={booleans_atuais[2]}. Esses três campos são '
+                    "mutuamente exclusivos — use o campo 'status' diretamente."
+                )
+            self.status = derivado
         if antigo is None:
             wo_mudou = bool(self.wo)
             resultado_mudou = self.resultado_tipo != self.RESULTADO_NORMAL

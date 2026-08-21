@@ -20,7 +20,7 @@ from .forms import CompeticaoForm, ConfrontoPenaltisForm
 from .forms import EscalacaoJogoForm
 from .models import (
     Cartao, Classificacao, ClassificacaoGrupo, Competicao, ConfrontoMatamate,
-    EscalacaoJogo, EtapaKnockout, Fase, Grupo, InscricaoAtleta, InscricaoEquipe,
+    EscalacaoJogo, EtapaKnockout, Fase, Gol, Grupo, InscricaoAtleta, InscricaoEquipe,
     Jogo, ParticipacaoFase, Rodada, Sumula, Suspensao, ZonaClassificacao,
 )
 
@@ -942,6 +942,46 @@ class LigaStrategyTests(TestCase):
         self.assertEqual(rodadas, 1)
         self.assertEqual(Jogo.objects.filter(rodada__competicao=self.comp).count(), 1)
 
+    def test_turno_unico_nao_favorece_o_time_fixo_do_circulo(self):
+        """O time na posição 0 do círculo não pode jogar 100% em casa.
+
+        Regressão do viés clássico do método do círculo: sem a correção,
+        o time fixo do círculo manda todos os seus jogos, enquanto os
+        demais alternam naturalmente.
+        """
+        for n in (5, 6, 7, 8, 9, 20):
+            with self.subTest(n=n):
+                comp = criar_competicao(self.fed, self.formato, nome=f'Liga {n}')
+                equipes = criar_equipes(self.fed, n, prefixo=f'T{n}-')
+                inscrever(comp, equipes)
+                LigaStrategy().gerar_jogos(comp)
+                jogos = Jogo.objects.filter(rodada__competicao=comp)
+                mando = {
+                    eq: (jogos.filter(equipe_casa=eq).count(), jogos.filter(equipe_fora=eq).count())
+                    for eq in equipes
+                }
+                for eq, (casa, fora) in mando.items():
+                    self.assertLessEqual(
+                        abs(casa - fora), 1,
+                        f'{eq} com mando desbalanceado em n={n}: casa={casa} fora={fora}',
+                    )
+
+    def test_ida_e_volta_equilibra_mando_perfeitamente(self):
+        formato_iv = FormatoCompeticao.objects.create(
+            nome='Liga Ida e Volta', pontos_corridos=True, turnos=2,
+        )
+        for n in (5, 6, 7, 8):
+            with self.subTest(n=n):
+                comp = criar_competicao(self.fed, formato_iv, nome=f'Liga IV {n}')
+                equipes = criar_equipes(self.fed, n, prefixo=f'IV{n}-')
+                inscrever(comp, equipes)
+                LigaStrategy().gerar_jogos(comp)
+                jogos = Jogo.objects.filter(rodada__competicao=comp)
+                for eq in equipes:
+                    casa = jogos.filter(equipe_casa=eq).count()
+                    fora = jogos.filter(equipe_fora=eq).count()
+                    self.assertEqual(casa, fora, f'{eq} com mando desbalanceado em ida/volta n={n}')
+
 
 class GruposStrategyTests(TestCase):
     def setUp(self):
@@ -1190,6 +1230,19 @@ class JogoStatusTests(TestCase):
         j = self._jogo(gols_casa=3, gols_fora=0, wo=True)
         self.assertEqual(j.resultado_tipo, Jogo.RESULTADO_WO_FORA)
         self.assertTrue(j.por_wo)
+
+    def test_combinacao_invalida_de_booleans_na_criacao_levanta_erro(self):
+        """finalizado e em_andamento juntos não fazem sentido — antes o
+        save() descartava a mudança em silêncio; agora levanta erro."""
+        with self.assertRaises(RegraVioladaError):
+            self._jogo(finalizado=True, em_andamento=True)
+
+    def test_combinacao_invalida_de_booleans_na_atualizacao_levanta_erro(self):
+        j = self._jogo()
+        j.finalizado = True
+        j.anulado = True
+        with self.assertRaises(RegraVioladaError):
+            j.save()
 
 
 class WOServiceTests(TestCase):
@@ -1592,6 +1645,34 @@ class PermiteEmpateTests(TestCase):
         j.refresh_from_db()
         self.assertFalse(j.exige_desempate())
 
+    def test_mata_mata_jogo_unico_exige_desempate_mesmo_com_permite_empate(self):
+        """Empate na liga/grupos é normal; num mata-mata de jogo único, nunca."""
+        self.formato.permite_empate = True
+        self.formato.save()
+        self.comp.refresh_from_db()
+        self.assertTrue(self.comp.permite_empate)
+
+        etapa = EtapaKnockout.objects.create(competicao=self.comp, tipo=EtapaKnockout.FINAL)
+        rodada = Rodada.objects.create(competicao=self.comp, etapa=etapa, numero=1)
+        j = Jogo.objects.create(
+            rodada=rodada, equipe_casa=self.eq1, equipe_fora=self.eq2,
+            gols_casa=1, gols_fora=1,
+        )
+        self.assertTrue(j.exige_desempate())
+
+    def test_mata_mata_ida_e_volta_nao_exige_desempate_por_perna(self):
+        """No agregado ida/volta, cada jogo isolado pode terminar empatado —
+        quem resolve o empate é o ConfrontoMatamate (gol fora/pênaltis)."""
+        etapa = EtapaKnockout.objects.create(
+            competicao=self.comp, tipo=EtapaKnockout.FINAL, ida_e_volta=True,
+        )
+        rodada = Rodada.objects.create(competicao=self.comp, etapa=etapa, numero=1)
+        j = Jogo.objects.create(
+            rodada=rodada, equipe_casa=self.eq1, equipe_fora=self.eq2,
+            gols_casa=1, gols_fora=1,
+        )
+        self.assertFalse(j.exige_desempate())
+
     def test_gol_fora_desempata_no_ida_e_volta(self):
         criterio = CriterioClassificacao.objects.create(nome='Com gol fora', gol_fora=True)
         formato = FormatoCompeticao.objects.create(
@@ -1745,3 +1826,157 @@ class ZonaClassificacaoTests(TestCase):
         )
         confronto.refresh_from_db()
         self.assertIsNone(confronto.penaltis_mandante)
+
+
+# ---------------------------------------------------------------------------
+# Homologação unificada: jogo_homologar_view e sumula_homologar_view não
+# podem mais divergir sobre o status oficial da partida.
+# ---------------------------------------------------------------------------
+
+class HomologacaoUnificadaTests(TestCase):
+    def setUp(self):
+        self.fed = criar_federacao()
+        self.admin = criar_admin(self.fed)
+        self.formato = FormatoCompeticao.objects.create(nome='Liga', pontos_corridos=True)
+        self.comp = criar_competicao(self.fed, self.formato)
+        self.comp.status = Competicao.ANDAMENTO
+        self.comp.save()
+        self.eq1, self.eq2 = criar_equipes(self.fed, 2)
+        inscrever(self.comp, [self.eq1, self.eq2])
+        self.rodada = Rodada.objects.create(competicao=self.comp, numero=1)
+        self.client.force_login(self.admin)
+
+    def _jogo(self, **kwargs):
+        return Jogo.objects.create(
+            rodada=self.rodada, equipe_casa=self.eq1, equipe_fora=self.eq2, **kwargs,
+        )
+
+    def test_homologar_pelo_jogo_sem_sumula_funciona_como_atalho(self):
+        """Sem súmula em uso, o atalho simples continua funcionando —
+        preserva o caso de uso leve (liga sem súmula digital)."""
+        j = self._jogo(status=Jogo.STATUS_PROVISORIO, gols_casa=2, gols_fora=1)
+        self.client.post(reverse('competicao:jogo_homologar', kwargs={'pk': j.pk}))
+        j.refresh_from_db()
+        self.assertEqual(j.status, Jogo.STATUS_HOMOLOGADO)
+
+    def test_homologar_pelo_jogo_com_sumula_em_aberto_e_bloqueado(self):
+        """Súmula em uso (fora do rascunho) vira a autoridade — não dá
+        para homologar o jogo por baixo dela enquanto ela seguir aberta."""
+        j = self._jogo(status=Jogo.STATUS_FINALIZADO, gols_casa=1, gols_fora=0)
+        sumula = Sumula.objects.create(jogo=j, status=Sumula.STATUS_ABERTA)
+        self.client.post(reverse('competicao:jogo_homologar', kwargs={'pk': j.pk}))
+        j.refresh_from_db()
+        sumula.refresh_from_db()
+        self.assertEqual(j.status, Jogo.STATUS_FINALIZADO)
+        self.assertEqual(sumula.status, Sumula.STATUS_ABERTA)
+
+    def test_homologar_pelo_jogo_com_sumula_encerrada_homologa_as_duas(self):
+        """Regressão do bug original: homologar pelo jogo tinha que
+        também homologar a súmula, nunca deixar uma desincronizada."""
+        j = self._jogo(status=Jogo.STATUS_FINALIZADO, gols_casa=1, gols_fora=0)
+        sumula = Sumula.objects.create(jogo=j, status=Sumula.STATUS_ENCERRADA)
+        self.client.post(reverse('competicao:jogo_homologar', kwargs={'pk': j.pk}))
+        j.refresh_from_db()
+        sumula.refresh_from_db()
+        self.assertEqual(j.status, Jogo.STATUS_HOMOLOGADO)
+        self.assertEqual(sumula.status, Sumula.STATUS_HOMOLOGADA)
+        self.assertEqual(sumula.homologada_por, self.admin)
+
+    def test_homologar_pela_sumula_tambem_atualiza_o_jogo(self):
+        j = self._jogo(status=Jogo.STATUS_FINALIZADO, gols_casa=3, gols_fora=1)
+        sumula = Sumula.objects.create(jogo=j, status=Sumula.STATUS_ENCERRADA)
+        self.client.post(reverse('competicao:sumula_homologar', kwargs={'pk': sumula.pk}))
+        j.refresh_from_db()
+        sumula.refresh_from_db()
+        self.assertEqual(j.status, Jogo.STATUS_HOMOLOGADO)
+        self.assertEqual(sumula.status, Sumula.STATUS_HOMOLOGADA)
+
+
+# ---------------------------------------------------------------------------
+# Placar com fonte única: uma vez que existem gols reais lançados, o
+# formulário de edição manual de placar não pode mais divergir deles.
+# ---------------------------------------------------------------------------
+
+class PlacarFonteUnicaTests(TestCase):
+    def setUp(self):
+        self.fed = criar_federacao()
+        self.admin = criar_admin(self.fed)
+        self.formato = FormatoCompeticao.objects.create(nome='Liga', pontos_corridos=True)
+        self.comp = criar_competicao(self.fed, self.formato)
+        self.comp.status = Competicao.ANDAMENTO
+        self.comp.save()
+        self.eq1, self.eq2 = criar_equipes(self.fed, 2)
+        inscrever(self.comp, [self.eq1, self.eq2])
+        self.rodada = Rodada.objects.create(competicao=self.comp, numero=1)
+        self.atleta = Atleta.objects.create(equipe=self.eq1, nome='Jogador 1', posicao='ATACANTE')
+        self.client.force_login(self.admin)
+
+    def test_editar_placar_manual_bloqueado_quando_ja_tem_gols(self):
+        j = Jogo.objects.create(rodada=self.rodada, equipe_casa=self.eq1, equipe_fora=self.eq2)
+        Gol.objects.create(jogo=j, atleta=self.atleta, equipe=self.eq1, minuto=10)
+        j.refresh_from_db()
+        gols_antes = (j.gols_casa, j.gols_fora)
+        self.client.post(
+            reverse('competicao:jogo_editar', kwargs={'pk': j.pk}),
+            {'gols_casa': 9, 'gols_fora': 9, 'publico': '', 'observacoes': ''},
+        )
+        j.refresh_from_db()
+        self.assertEqual((j.gols_casa, j.gols_fora), gols_antes)
+
+    def test_editar_placar_manual_funciona_sem_gols_lancados(self):
+        """Preserva o atalho simples: sem gol nenhum lançado, digitar o
+        placar direto continua funcionando normalmente."""
+        j = Jogo.objects.create(rodada=self.rodada, equipe_casa=self.eq1, equipe_fora=self.eq2)
+        self.client.post(
+            reverse('competicao:jogo_editar', kwargs={'pk': j.pk}),
+            {'gols_casa': 3, 'gols_fora': 2, 'publico': '', 'observacoes': ''},
+        )
+        j.refresh_from_db()
+        self.assertEqual((j.gols_casa, j.gols_fora), (3, 2))
+
+
+# ---------------------------------------------------------------------------
+# `tem_provisorio` precisa refletir o fluxo real de "ao vivo" (gol a gol),
+# não só o atalho raro de digitar o placar manualmente.
+# ---------------------------------------------------------------------------
+
+class TemProvisorioTests(TestCase):
+    def setUp(self):
+        self.fed = criar_federacao()
+        self.admin = criar_admin(self.fed)
+        self.formato = FormatoCompeticao.objects.create(nome='Liga', pontos_corridos=True)
+        self.criterio = CriterioClassificacao.objects.create(nome='Padrão')
+        self.comp = criar_competicao(
+            self.fed, self.formato, criterio_classificacao=self.criterio,
+        )
+        self.comp.status = Competicao.ANDAMENTO
+        self.comp.save()
+        self.eq1, self.eq2 = criar_equipes(self.fed, 2)
+        inscrever(self.comp, [self.eq1, self.eq2])
+        self.rodada = Rodada.objects.create(competicao=self.comp, numero=1)
+        self.client.force_login(self.admin)
+
+    def _tem_provisorio(self):
+        resp = self.client.get(reverse('competicao:classificacao', kwargs={'pk': self.comp.pk}))
+        return resp.context['tem_provisorio']
+
+    def test_jogo_em_andamento_conta_como_provisorio(self):
+        Jogo.objects.create(
+            rodada=self.rodada, equipe_casa=self.eq1, equipe_fora=self.eq2,
+            status=Jogo.STATUS_EM_ANDAMENTO,
+        )
+        self.assertTrue(self._tem_provisorio())
+
+    def test_jogo_agendado_nao_conta_como_provisorio(self):
+        Jogo.objects.create(
+            rodada=self.rodada, equipe_casa=self.eq1, equipe_fora=self.eq2,
+            status=Jogo.STATUS_AGENDADO,
+        )
+        self.assertFalse(self._tem_provisorio())
+
+    def test_jogo_homologado_nao_conta_como_provisorio(self):
+        Jogo.objects.create(
+            rodada=self.rodada, equipe_casa=self.eq1, equipe_fora=self.eq2,
+            status=Jogo.STATUS_HOMOLOGADO,
+        )
+        self.assertFalse(self._tem_provisorio())

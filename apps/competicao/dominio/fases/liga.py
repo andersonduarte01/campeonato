@@ -44,7 +44,7 @@ class LigaStrategy(TipoFaseStrategy):
             for numero in range(1, num_rodadas + 1):
                 rodada = Rodada.objects.create(competicao=competicao, numero=offset + numero)
                 rodadas_criadas += 1
-                criar_jogos_da_rodada(rodada, atual, turno)
+                criar_jogos_da_rodada(rodada, atual, turno, numero_no_turno=numero)
                 atual = rotacionar(atual)
             offset += num_rodadas
 
@@ -84,5 +84,5 @@ class LigaStrategy(TipoFaseStrategy):
             atual = rotacionar(atual)
 
         rodada = Rodada.objects.create(competicao=competicao, numero=proxima)
-        criar_jogos_da_rodada(rodada, atual, turno)
+        criar_jogos_da_rodada(rodada, atual, turno, numero_no_turno=rotacoes + 1)
         return proxima, total

@@ -195,7 +195,7 @@ class ClassificacaoView(PermissaoFederacaoMixin, DetailView):
         ctx['classificacao'] = aplicar_criterios(comp, classificacao_raw)
         ctx['tem_provisorio'] = Jogo.objects.filter(
             rodada__competicao=comp,
-            status=Jogo.STATUS_PROVISORIO,
+            status__in=(Jogo.STATUS_PROVISORIO, Jogo.STATUS_EM_ANDAMENTO),
             anulado=False,
         ).exists()
         ctx['artilharia'] = (
@@ -346,6 +346,14 @@ class JogoUpdateView(PermissaoFederacaoMixin, SuccessMessageMixin, UpdateView):
                 'O placar está sob autoridade da súmula encerrada e não pode ser editado manualmente.',
             )
             return redirect(reverse('competicao:jogo_detalhe', kwargs={'pk': jogo.pk}))
+        if jogo.gols.exists():
+            messages.warning(
+                request,
+                'Este jogo já tem gols lançados individualmente — o placar é calculado '
+                'a partir deles. Para corrigir o resultado, edite ou remova os gols '
+                'em vez de digitar o placar diretamente.',
+            )
+            return redirect(reverse('competicao:jogo_detalhe', kwargs={'pk': jogo.pk}))
         return super().post(request, *args, **kwargs)
 
     def form_valid(self, form):
@@ -491,6 +499,32 @@ def jogo_iniciar_view(request, pk):
     return redirect(reverse('competicao:jogo_detalhe', kwargs={'pk': pk}))
 
 
+def _homologar_jogo(jogo, sumula, usuario):
+    """Autoridade única de homologação — usada tanto pela tela do jogo
+    quanto pela tela da súmula, para as duas nunca divergirem.
+
+    Se existe uma súmula em uso real (passou de rascunho), ela precisa
+    estar encerrada e é homologada junto — vira a fonte de verdade do
+    placar. Se não existe súmula (ou nunca saiu do rascunho), é o atalho
+    simples de homologar só pelo placar, sem burocracia de súmula.
+    """
+    from django.utils import timezone
+
+    if sumula is not None:
+        from .signals import _sincronizar_placar
+        _sincronizar_placar(jogo)
+        jogo.refresh_from_db()
+        sumula.status = Sumula.STATUS_HOMOLOGADA
+        sumula.homologada_por = usuario
+        sumula.homologada_em = timezone.now()
+        sumula.save(update_fields=['status', 'homologada_por', 'homologada_em'])
+        from .notifications import notificar_sumula_homologada
+        notificar_sumula_homologada(sumula)
+
+    jogo.status = Jogo.STATUS_HOMOLOGADO
+    jogo.save(update_fields=['status'])
+
+
 @requer_papel(*PODE_SECRETARIAR)
 @requer_status(Competicao.ANDAMENTO, obter=por_relacao(Jogo, 'rodada__competicao'))
 def jogo_homologar_view(request, pk):
@@ -499,17 +533,17 @@ def jogo_homologar_view(request, pk):
         if jogo.status not in (Jogo.STATUS_PROVISORIO, Jogo.STATUS_FINALIZADO):
             messages.warning(request, 'Apenas jogos com resultado registrado podem ser homologados.')
         else:
-            try:
-                sumula = jogo.sumula
-                if sumula.status in (Sumula.STATUS_ENCERRADA, Sumula.STATUS_HOMOLOGADA):
-                    from .signals import _sincronizar_placar
-                    _sincronizar_placar(jogo)
-                    jogo.refresh_from_db()
-            except Sumula.DoesNotExist:
-                pass
-            jogo.status = Jogo.STATUS_HOMOLOGADO
-            jogo.save(update_fields=['status'])
-            messages.success(request, 'Jogo homologado com sucesso.')
+            sumula = Sumula.objects.filter(jogo=jogo).first()
+            sumula_em_uso = sumula is not None and sumula.status != Sumula.STATUS_RASCUNHO
+            if sumula_em_uso and sumula.status != Sumula.STATUS_ENCERRADA:
+                messages.warning(
+                    request,
+                    'Esta partida já tem uma súmula em andamento — encerre a súmula '
+                    'primeiro (na tela da súmula) antes de homologar o jogo.',
+                )
+            else:
+                _homologar_jogo(jogo, sumula if sumula_em_uso else None, request.user)
+                messages.success(request, 'Jogo homologado com sucesso.')
     return redirect(reverse('competicao:jogo_detalhe', kwargs={'pk': pk}))
 
 
@@ -2083,7 +2117,7 @@ class PublicClassificacaoView(DetailView):
         ctx['classificacao'] = aplicar_criterios(comp, classificacao_raw)
         ctx['tem_provisorio'] = Jogo.objects.filter(
             rodada__competicao=comp,
-            status=Jogo.STATUS_PROVISORIO,
+            status__in=(Jogo.STATUS_PROVISORIO, Jogo.STATUS_EM_ANDAMENTO),
             anulado=False,
         ).exists()
         ctx['artilharia'] = (
@@ -2439,16 +2473,7 @@ def sumula_homologar_view(request, pk):
     sumula = get_object_or_404(Sumula, pk=pk, jogo__rodada__competicao__federacao=request.federacao)
     if request.method == 'POST':
         if sumula.pode_homologar():
-            from django.utils import timezone
-            sumula.status = Sumula.STATUS_HOMOLOGADA
-            sumula.homologada_por = request.user
-            sumula.homologada_em = timezone.now()
-            sumula.save(update_fields=['status', 'homologada_por', 'homologada_em'])
-            jogo = sumula.jogo
-            jogo.status = Jogo.STATUS_HOMOLOGADO
-            jogo.save(update_fields=['status'])
-            from .notifications import notificar_sumula_homologada
-            notificar_sumula_homologada(sumula)
+            _homologar_jogo(sumula.jogo, sumula, request.user)
             messages.success(request, 'Súmula homologada com sucesso.')
         else:
             messages.warning(request, f'Não é possível homologar no status "{sumula.get_status_display()}".')

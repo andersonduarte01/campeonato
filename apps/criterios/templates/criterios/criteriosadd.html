@@ -62,40 +62,61 @@
                       flex items-center justify-center text-xs font-bold text-blue-500">2</div>
           <div>
             <h2 class="font-bold text-sm text-gray-600 dark:text-gray-400 uppercase tracking-wider">Critérios de Desempate</h2>
-            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Aplicados nesta ordem quando duas equipes têm a mesma pontuação.</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Marque os critérios ativos e defina a prioridade (1 = aplicado primeiro) de cada um.</p>
           </div>
         </div>
         <div class="space-y-1">
           <label class="flex items-center justify-between gap-4 px-3 py-2.5 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
             <div>
               <span class="text-sm font-medium text-gray-800 dark:text-gray-200">Confronto Direto</span>
-              <p class="text-xs text-gray-400">Resultado entre as equipes empatadas (padrão CBF)</p>
+              <p class="text-xs text-gray-400">Resultado entre as equipes empatadas</p>
             </div>
-            {{ form.confronto_direto }}
+            <div class="flex items-center gap-3">
+              {{ form.prioridade_confronto_direto }}
+              {{ form.confronto_direto }}
+            </div>
           </label>
           <label class="flex items-center justify-between gap-4 px-3 py-2.5 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
             <span class="text-sm font-medium text-gray-800 dark:text-gray-200">Número de Vitórias</span>
-            {{ form.vitorias }}
+            <div class="flex items-center gap-3">
+              {{ form.prioridade_vitorias }}
+              {{ form.vitorias }}
+            </div>
           </label>
           <label class="flex items-center justify-between gap-4 px-3 py-2.5 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
             <span class="text-sm font-medium text-gray-800 dark:text-gray-200">Saldo de Gols</span>
-            {{ form.saldo_gols }}
+            <div class="flex items-center gap-3">
+              {{ form.prioridade_saldo_gols }}
+              {{ form.saldo_gols }}
+            </div>
           </label>
           <label class="flex items-center justify-between gap-4 px-3 py-2.5 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
             <span class="text-sm font-medium text-gray-800 dark:text-gray-200">Gols Marcados</span>
-            {{ form.gols_pro }}
+            <div class="flex items-center gap-3">
+              {{ form.prioridade_gols_pro }}
+              {{ form.gols_pro }}
+            </div>
           </label>
           <label class="flex items-center justify-between gap-4 px-3 py-2.5 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
             <span class="text-sm font-medium text-gray-800 dark:text-gray-200">Gol Fora de Casa</span>
-            {{ form.gol_fora }}
+            <div class="flex items-center gap-3">
+              {{ form.prioridade_gol_fora }}
+              {{ form.gol_fora }}
+            </div>
           </label>
           <label class="flex items-center justify-between gap-4 px-3 py-2.5 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
             <span class="text-sm font-medium text-gray-800 dark:text-gray-200">Menor nº de Cartões Vermelhos</span>
-            {{ form.menor_vermelho }}
+            <div class="flex items-center gap-3">
+              {{ form.prioridade_menor_vermelho }}
+              {{ form.menor_vermelho }}
+            </div>
           </label>
           <label class="flex items-center justify-between gap-4 px-3 py-2.5 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
             <span class="text-sm font-medium text-gray-800 dark:text-gray-200">Menor nº de Cartões Amarelos</span>
-            {{ form.menor_amarelo }}
+            <div class="flex items-center gap-3">
+              {{ form.prioridade_menor_amarelo }}
+              {{ form.menor_amarelo }}
+            </div>
           </label>
         </div>
       </div>

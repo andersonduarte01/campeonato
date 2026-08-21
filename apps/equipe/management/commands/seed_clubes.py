@@ -1,14 +1,75 @@
+import os
 import random
 import datetime
+from io import BytesIO
 
+from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand, CommandError
 from faker import Faker
+from PIL import Image, ImageDraw, ImageFont
 
 from apps.core.models import Federacao
 from apps.equipe.models import Atleta, Equipe
 from apps.registro.models import RegistroFederativo
 
 fake = Faker('pt_BR')
+
+CORES_ESCUDO = [
+    ('#7F1D1D', '#FEF2F2'), ('#1E3A8A', '#EFF6FF'), ('#14532D', '#F0FDF4'),
+    ('#78350F', '#FFFBEB'), ('#581C87', '#FAF5FF'), ('#164E63', '#ECFEFF'),
+    ('#1F2937', '#F9FAFB'), ('#831843', '#FDF2F8'), ('#065F46', '#ECFDF5'),
+    ('#7C2D12', '#FFF7ED'),
+]
+
+
+FONTES_CANDIDATAS = [
+    'C:/Windows/Fonts/arialbd.ttf',
+    'C:/Windows/Fonts/arial.ttf',
+    '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
+    '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+    '/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf',
+]
+
+
+def _fonte(tamanho):
+    for caminho in FONTES_CANDIDATAS:
+        if os.path.exists(caminho):
+            return ImageFont.truetype(caminho, tamanho)
+    try:
+        return ImageFont.load_default(size=tamanho)
+    except TypeError:
+        return ImageFont.load_default()
+
+
+def _gerar_escudo(sigla):
+    fundo, texto = random.choice(CORES_ESCUDO)
+    tamanho = 512
+    img = Image.new('RGB', (tamanho, tamanho), fundo)
+    draw = ImageDraw.Draw(img)
+
+    margem = 24
+    draw.ellipse(
+        [margem, margem, tamanho - margem, tamanho - margem],
+        outline=texto, width=10,
+    )
+    draw.ellipse(
+        [margem + 22, margem + 22, tamanho - margem - 22, tamanho - margem - 22],
+        outline=texto, width=3,
+    )
+
+    letras = (sigla or '??')[:3].upper()
+    fonte = _fonte(200)
+    bbox = draw.textbbox((0, 0), letras, font=fonte)
+    largura_texto = bbox[2] - bbox[0]
+    altura_texto = bbox[3] - bbox[1]
+    draw.text(
+        ((tamanho - largura_texto) / 2 - bbox[0], (tamanho - altura_texto) / 2 - bbox[1]),
+        letras, fill=texto, font=fonte,
+    )
+
+    buffer = BytesIO()
+    img.save(buffer, format='PNG')
+    return ContentFile(buffer.getvalue(), name=f'{letras.lower()}_{random.randint(1000, 9999)}.png')
 
 NOMES_CLUBE = [
     'Sport Club', 'Atlético', 'Esporte Clube', 'Associação Desportiva',
@@ -51,10 +112,10 @@ class Command(BaseCommand):
     help = 'Cria clubes e atletas fictícios via Faker e registra todos na federação'
 
     def add_arguments(self, parser):
-        parser.add_argument('--federacao', type=int, help='ID da federação (padrão: primeira ativa)')
-        parser.add_argument('--clubes',    type=int, default=10,  help='Quantidade de clubes (padrão: 10)')
-        parser.add_argument('--atletas',   type=int, default=16,  help='Atletas por clube (padrão: 16)')
-        parser.add_argument('--limpar',    action='store_true',    help='Remove clubes/registros existentes antes de criar')
+        parser.add_argument('--federacao',    type=int, help='ID da federação (padrão: primeira ativa)')
+        parser.add_argument('--clubes',       type=int, default=20, help='Quantidade de clubes (padrão: 20)')
+        parser.add_argument('--por-posicao',  type=int, default=2,  help='Jogadores por posição, incluindo goleiro (padrão: 2)')
+        parser.add_argument('--limpar',       action='store_true',  help='Remove clubes/registros existentes antes de criar')
 
     def handle(self, *args, **options):
         fed_id = options['federacao']
@@ -74,8 +135,9 @@ class Command(BaseCommand):
             deletados, _ = Equipe.objects.filter(federacao=federacao).delete()
             self.stdout.write(self.style.WARNING(f'  {deletados} registros removidos.'))
 
-        qtd_clubes  = options['clubes']
-        qtd_atletas = options['atletas']
+        qtd_clubes    = options['clubes']
+        por_posicao   = options['por_posicao']
+        qtd_atletas   = por_posicao * len(POSICOES)
 
         nomes_usados = set(
             Equipe.objects.filter(federacao=federacao).values_list('nome_equipe', flat=True)
@@ -110,10 +172,12 @@ class Command(BaseCommand):
                 situacao=Equipe.SITUACAO_FILIADO,
                 telefone=fake.phone_number(),
             )
+            arquivo_escudo = _gerar_escudo(equipe.sigla)
+            equipe.escudo.save(arquivo_escudo.name, arquivo_escudo, save=True)
             clubes_criados += 1
 
-            # Garante pelo menos 1 goleiro
-            posicoes = [POSICOES[0]] + random.choices(POSICOES[1:], k=qtd_atletas - 1)
+            # Exatamente `por_posicao` jogadores para cada uma das 10 posições
+            posicoes = POSICOES * por_posicao
             random.shuffle(posicoes)
 
             atletas = Atleta.objects.bulk_create([

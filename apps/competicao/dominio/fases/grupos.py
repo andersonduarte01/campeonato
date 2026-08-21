@@ -21,7 +21,7 @@ class GruposStrategy(TipoFaseStrategy):
         rodadas_criadas = 0
 
         for grupo in competicao.grupos.prefetch_related('equipes'):
-            equipes = list(grupo.equipes.all())
+            equipes = list(grupo.equipes.order_by('id'))
             if len(equipes) < 2:
                 continue
 
@@ -35,7 +35,7 @@ class GruposStrategy(TipoFaseStrategy):
                         competicao=competicao, grupo=grupo, numero=offset + numero,
                     )
                     rodadas_criadas += 1
-                    criar_jogos_da_rodada(rodada, atual, turno)
+                    criar_jogos_da_rodada(rodada, atual, turno, numero_no_turno=numero)
                     atual = rotacionar(atual)
                 offset += num_rodadas
 

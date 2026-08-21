@@ -1,25 +1,44 @@
 from django.db.models import Count, F, Sum
 
+from apps.criterios.models import CRITERIOS_PADRAO
+
+
+def _ordem_ativa(criterio):
+    """Chaves de critério ativas, na ordem de prioridade configurada.
+
+    Funciona tanto com uma instância real de CriterioClassificacao quanto
+    com o SimpleNamespace reconstruído a partir do snapshot congelado —
+    por isso usa getattr() em vez de depender de um método do model.
+    """
+    ordem = getattr(criterio, 'ordem_criterios', None) or CRITERIOS_PADRAO
+    return [c for c in ordem if c in CRITERIOS_PADRAO and getattr(criterio, c, False)]
+
 
 class ClassificadorService:
     """Ordena tabelas de classificação respeitando o CriterioClassificacao
-    efetivo da competição (snapshot quando existir)."""
+    efetivo da competição (snapshot quando existir).
+
+    A ordem de aplicação dos critérios de desempate é configurável por
+    competição (via `ordem_criterios`) — não é fixa. Cada critério ativo é
+    aplicado em cascata: só desempata quem ainda estiver empatado depois
+    dos critérios de maior prioridade.
+    """
 
     def __init__(self, competicao):
         self.competicao = competicao
 
     def ordenar(self, classificacoes, grupo=None):
-        """Ordena Classificacao (geral) ou ClassificacaoGrupo, com
-        confronto direto como primeiro desempate quando habilitado."""
+        """Ordena Classificacao (geral) ou ClassificacaoGrupo."""
         criterio = self.competicao.criterio_efetivo
         items = list(classificacoes)
         if not items:
             return items
 
-        ctx = self._build_ctx(items, criterio, grupo)
-
         if not criterio:
             return sorted(items, key=lambda c: (-c.pontos, -c.vitorias, -c.saldo_gols, -c.gols_pro))
+
+        ordem = _ordem_ativa(criterio)
+        ctx = self._build_ctx(items, criterio, grupo)
 
         by_points = sorted(items, key=lambda c: -c.pontos)
         result = []
@@ -30,7 +49,7 @@ class ClassificadorService:
                 j += 1
             group = by_points[i:j]
             if len(group) > 1:
-                group = self._resolver_empate(group, criterio, ctx, grupo)
+                group = self._resolver_empate(group, ordem, ctx, grupo)
             result.extend(group)
             i = j
 
@@ -118,51 +137,53 @@ class ClassificadorService:
 
         return h2h
 
-    @staticmethod
-    def _sort_restante(items, criterio, ctx):
-        def key(cl):
-            k = []
-            if criterio.vitorias:
-                k.append(-cl.vitorias)
-            if criterio.saldo_gols:
-                k.append(-cl.saldo_gols)
-            if criterio.gols_pro:
-                k.append(-cl.gols_pro)
-            if criterio.gol_fora:
-                k.append(-(ctx['gols_fora'].get(cl.equipe_id, 0)))
-            if criterio.menor_vermelho:
-                k.append(ctx['vermelhos'].get(cl.equipe_id, 0))
-            if criterio.menor_amarelo:
-                k.append(ctx['amarelos'].get(cl.equipe_id, 0))
-            k.append(-cl.gols_pro)
-            return tuple(k)
-        return sorted(items, key=key)
+    def _chave_criterio(self, chave, item, ctx, h2h):
+        """Valor de ordenação (menor = melhor) de um item para um critério."""
+        if chave == 'confronto_direto':
+            d = h2h[item.equipe_id]
+            return (-d['pts'], -d['sg'], -d['gp'])
+        if chave == 'vitorias':
+            return (-item.vitorias,)
+        if chave == 'saldo_gols':
+            return (-item.saldo_gols,)
+        if chave == 'gols_pro':
+            return (-item.gols_pro,)
+        if chave == 'gol_fora':
+            return (-ctx['gols_fora'].get(item.equipe_id, 0),)
+        if chave == 'menor_vermelho':
+            return (ctx['vermelhos'].get(item.equipe_id, 0),)
+        if chave == 'menor_amarelo':
+            return (ctx['amarelos'].get(item.equipe_id, 0),)
+        return (0,)
 
-    def _resolver_empate(self, items, criterio, ctx, grupo):
-        if not criterio or len(items) <= 1:
+    def _resolver_empate(self, items, ordem, ctx, grupo):
+        """Aplica os critérios ativos em cascata, na ordem configurada.
+
+        Cada critério só desempata quem ainda está empatado nos critérios
+        de prioridade mais alta já aplicados — igual a uma mini-liga: o
+        confronto direto, por exemplo, é recalculado só entre quem chegar
+        empatado até a vez dele, não entre o grupo inteiro do início.
+        """
+        if len(items) <= 1 or not ordem:
             return items
 
-        if criterio.confronto_direto:
-            h2h = self._computar_h2h(items, grupo)
-            items = sorted(items, key=lambda c: (
-                -h2h[c.equipe_id]['pts'],
-                -h2h[c.equipe_id]['sg'],
-                -h2h[c.equipe_id]['gp'],
-            ))
-            result = []
-            i = 0
-            while i < len(items):
-                j = i
-                while j < len(items) and h2h[items[j].equipe_id] == h2h[items[i].equipe_id]:
-                    j += 1
-                sub = items[i:j]
-                if len(sub) > 1:
-                    sub = self._sort_restante(sub, criterio, ctx)
-                result.extend(sub)
-                i = j
-            return result
+        chave, resto = ordem[0], ordem[1:]
+        h2h = self._computar_h2h(items, grupo) if chave == 'confronto_direto' else None
+        keyfunc = lambda item: self._chave_criterio(chave, item, ctx, h2h)
 
-        return self._sort_restante(items, criterio, ctx)
+        ordenado = sorted(items, key=keyfunc)
+        resultado = []
+        i = 0
+        while i < len(ordenado):
+            j = i
+            while j < len(ordenado) and keyfunc(ordenado[j]) == keyfunc(ordenado[i]):
+                j += 1
+            subgrupo = ordenado[i:j]
+            if len(subgrupo) > 1:
+                subgrupo = self._resolver_empate(subgrupo, resto, ctx, grupo)
+            resultado.extend(subgrupo)
+            i = j
+        return resultado
 
 
 def aplicar_criterios(competicao, classificacoes, grupo=None):

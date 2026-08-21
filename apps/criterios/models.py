@@ -51,6 +51,19 @@ class FormatoCompeticao(models.Model):
         return self.nome
 
 
+#: Chaves válidas de critério de desempate e sua ordem CBF por padrão.
+#: `ordem_criterios` grava uma permutação desta lista — só a ordem muda,
+#: o conjunto de chaves é sempre este.
+CRITERIOS_PADRAO = [
+    'confronto_direto', 'vitorias', 'saldo_gols',
+    'gols_pro', 'gol_fora', 'menor_vermelho', 'menor_amarelo',
+]
+
+
+def _ordem_padrao():
+    return list(CRITERIOS_PADRAO)
+
+
 class CriterioClassificacao(models.Model):
     federacao = models.ForeignKey(
         'core.Federacao', on_delete=models.CASCADE,
@@ -59,7 +72,10 @@ class CriterioClassificacao(models.Model):
     )
     nome = models.CharField(max_length=100, verbose_name='Nome')
 
-    # Critérios de desempate — ordem fixa conforme padrão CBF
+    # Cada BooleanField liga/desliga o critério. A ORDEM de aplicação entre
+    # os ativos vem de `ordem_criterios` — não é fixa (nem toda federação
+    # segue o padrão CBF: a FIFA, por exemplo, aplica confronto direto
+    # antes do saldo de gols geral; o CBF tradicional aplica depois).
     confronto_direto = models.BooleanField(default=True, verbose_name='Confronto Direto')
     vitorias = models.BooleanField(default=True, verbose_name='Número de Vitórias')
     saldo_gols = models.BooleanField(default=True, verbose_name='Saldo de Gols')
@@ -67,6 +83,17 @@ class CriterioClassificacao(models.Model):
     gol_fora = models.BooleanField(default=False, verbose_name='Gol Fora de Casa')
     menor_vermelho = models.BooleanField(default=False, verbose_name='Menor nº de Cartões Vermelhos')
     menor_amarelo = models.BooleanField(default=False, verbose_name='Menor nº de Cartões Amarelos')
+
+    #: Ordem de prioridade de aplicação dos critérios ativos (lista de
+    #: chaves de CRITERIOS_PADRAO, da maior para a menor prioridade).
+    #: Chaves desativadas na lista são simplesmente ignoradas na hora de
+    #: aplicar — não precisa removê-las daqui.
+    ordem_criterios = models.JSONField(default=_ordem_padrao, blank=True)
+
+    def ordem_ativa(self):
+        """Chaves de `ordem_criterios` que estão ligadas, na ordem configurada."""
+        ordem = self.ordem_criterios or CRITERIOS_PADRAO
+        return [c for c in ordem if c in CRITERIOS_PADRAO and getattr(self, c, False)]
 
     class Meta:
         unique_together = [('federacao', 'nome')]
